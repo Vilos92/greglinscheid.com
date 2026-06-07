@@ -1,0 +1,46 @@
+---
+import {getCollection} from 'astro:content';
+
+import BaseLayout from '../../components/BaseLayout.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Prose from '../../components/Prose.astro';
+import {
+  blogList,
+  blogListItem,
+  blogListLink,
+  blogListTitle,
+  heroImage,
+  postDate
+} from '../../styles/prose.css';
+import {formatTitle, siteDescription} from '../../site';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<BaseLayout title={formatTitle('Blog')} description={siteDescription}>
+  <Prose>
+    <h1>Blog</h1>
+
+    <ul class={blogList}>
+      {
+        posts.map(post => (
+          <li class={blogListItem}>
+            <a href={`/blog/${post.id}/`} class={blogListLink}>
+              {post.data.heroImage ? (
+                <img src={post.data.heroImage} alt="" class={heroImage} aria-hidden="true" />
+              ) : undefined}
+              <div>
+                <h2 class={blogListTitle}>{post.data.title}</h2>
+                <p class={postDate}>
+                  <FormattedDate date={post.data.pubDate} />
+                </p>
+              </div>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Prose>
+</BaseLayout>

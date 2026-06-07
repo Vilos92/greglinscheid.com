@@ -1,17 +1,83 @@
 ---
+import {getCollection} from 'astro:content';
 
+import BaseLayout from '../components/BaseLayout.astro';
+import ProjectList from '../components/ProjectList.astro';
+import Prose from '../components/Prose.astro';
+import {activeProjects, olderProjects, workspaceTools} from '../data/projects';
+import {inlineImage, siteTitle as siteTitleStyle} from '../styles/prose.css';
+import {sectionLead} from '../styles/projects.css';
+import {siteDescription, siteTitle} from '../site';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+const latestPost = posts[0];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title={siteTitle} description={siteDescription}>
+  <Prose>
+    <h1 class={siteTitleStyle}>greglinscheid.com</h1>
+
+    <img src="/greg-portrait.jpg" alt="Greg" width="208" height="260" />
+
+    <p>Welcome to my website!</p>
+
+    <h2>Blog</h2>
+
+    <p>If I write anything, you can find it in <a href="/blog/">my blog</a>.</p>
+
+    {
+      latestPost ? (
+        <p>
+          Latest entry: <a href={`/blog/${latestPost.id}/`}>{latestPost.data.title}</a>
+        </p>
+      ) : undefined
+    }
+
+    <h2>Workspace</h2>
+
+    <p class={sectionLead}>Config and apps I use to keep my machine and tasks in order.</p>
+
+    <ProjectList projects={workspaceTools} />
+
+    <h2>Software Projects</h2>
+
+    <p class={sectionLead}>
+      Here are some things I've worked on for fun. You can also fuzzy-find any repo I own on{' '}
+      <a href="https://vilos92.com">vilos92.com</a>.
+    </p>
+
+    <ProjectList projects={activeProjects} />
+
+    <img src="/blog/hello-world.jpg" alt="Milo" class={inlineImage} />
+
+    <h2>Older Software Projects</h2>
+
+    <ProjectList projects={olderProjects} />
+
+    <h2>Contact and Resume</h2>
+
+    <p>
+      You can reach out to me at{' '}
+      <a href="mailto:linscheid.greg@gmail.com">linscheid.greg@gmail.com</a>.
+    </p>
+
+    <p>
+      You can download a copy of my resume <a href="/Resume - Greg Linscheid.pdf">here</a>.
+    </p>
+
+    <h2>Acknowledgements</h2>
+
+    <p>
+      The wonderful artwork that I use for my profile picture was painted by the incredibly talented
+      <a href="https://www.chuteway.com/">Harrison Chu</a>.
+    </p>
+
+    <h2>Dedicated</h2>
+
+    <p>To Milo and Cyn.</p>
+
+    <img src="/milo-index.jpg" alt="Milo" class={inlineImage} />
+  </Prose>
+</BaseLayout>

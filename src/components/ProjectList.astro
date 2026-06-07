@@ -1,0 +1,49 @@
+---
+import type {Project} from '../data/projects';
+import {projectList, projectName} from '../styles/projects.css';
+
+interface Props {
+  projects: readonly Project[];
+}
+
+const {projects} = Astro.props;
+---
+
+<ul class={projectList}>
+  {
+    projects.map(project => (
+      <li>
+        <a class={projectName} href={project.href}>
+          {project.name}
+        </a>
+        <ul>
+          {
+            project.details.map(detail => (
+              <li>
+                {
+                  detail.kind === 'line' ? (
+                    detail.parts.map(part =>
+                      part.kind === 'text' ? (
+                        part.value
+                      ) : part.kind === 'code' ? (
+                        <code>{part.value}</code>
+                      ) : (
+                        <a href={part.href}>{part.label}</a>
+                      )
+                    )
+                  ) : detail.kind === 'text' ? (
+                    detail.value
+                  ) : detail.kind === 'code' ? (
+                    <code>{detail.value}</code>
+                  ) : (
+                    <a href={detail.href}>{detail.label}</a>
+                  )
+                }
+              </li>
+            ))
+          }
+        </ul>
+      </li>
+    ))
+  }
+</ul>

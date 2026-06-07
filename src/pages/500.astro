@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../components/BaseLayout.astro';
+import Prose from '../components/Prose.astro';
+import {centeredSection, inlineImage} from '../styles/prose.css';
+import {formatTitle, siteDescription} from '../site';
+---
+
+<BaseLayout title={formatTitle('500')} description={siteDescription}>
+  <section class={centeredSection}>
+    <Prose>
+      <h1>500</h1>
+      <p>Looks like we are having some issues on our end, please hold tight.</p>
+      <img src="/milo.png" alt="Milo" class={inlineImage} />
+    </Prose>
+  </section>
+</BaseLayout>
