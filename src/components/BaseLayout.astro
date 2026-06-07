@@ -8,10 +8,10 @@ interface Props {
   title: string;
   description: string;
   image?: string;
-  showBreadcrumbs?: boolean;
+  hasBreadcrumbs?: boolean;
 }
 
-const {title, description, image, showBreadcrumbs = true} = Astro.props;
+const {title, description, image, hasBreadcrumbs = true} = Astro.props;
 ---
 
 <!doctype html>
@@ -22,7 +22,7 @@ const {title, description, image, showBreadcrumbs = true} = Astro.props;
   <body>
     <a class={skipLink} href={`#${MAIN_CONTENT_ID}`}>Skip to content</a>
     <main class={main} id={MAIN_CONTENT_ID} tabindex="-1">
-      {showBreadcrumbs ? <Breadcrumbs /> : undefined}
+      {hasBreadcrumbs ? <Breadcrumbs /> : undefined}
       <slot />
     </main>
     <Footer />
