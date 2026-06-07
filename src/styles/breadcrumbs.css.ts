@@ -35,8 +35,7 @@ export const breadcrumbList = style({
   '@media': {
     [media.coarsePointer]: {
       flexWrap: 'nowrap',
-      overflowX: 'auto',
-      WebkitOverflowScrolling: 'touch'
+      overflowX: 'auto'
     }
   }
 });
