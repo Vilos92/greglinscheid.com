@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../components/BaseLayout.astro';
+import Prose from '../components/Prose.astro';
+import {centeredSection, inlineImage} from '../styles/prose.css';
+import {formatTitle, siteDescription} from '../site';
+---
+
+<BaseLayout title={formatTitle('404')} description={siteDescription}>
+  <section class={centeredSection}>
+    <Prose>
+      <h1>404</h1>
+      <p>Sorry friend, this is not the page you are looking for.</p>
+      <img src="/milo.png" alt="Milo" class={inlineImage} />
+    </Prose>
+  </section>
+</BaseLayout>

@@ -1,0 +1,35 @@
+---
+import {
+  breadcrumbCurrent,
+  breadcrumbItem,
+  breadcrumbLink,
+  breadcrumbList,
+  breadcrumbs
+} from '../styles/breadcrumbs.css';
+
+const pathParts = Astro.url.pathname.split('/').filter(Boolean);
+---
+
+<nav class={breadcrumbs} aria-label="Breadcrumb">
+  <ol class={breadcrumbList}>
+    <li class={breadcrumbItem}>
+      {pathParts.length > 0 ? <a class={breadcrumbLink} href="/">Home</a> : <span class={breadcrumbCurrent}>Home</span>}
+    </li>
+    {
+      pathParts.map((crumb, index) => {
+        const label = crumb
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        const isLast = index === pathParts.length - 1;
+        const href = `/${pathParts.slice(0, index + 1).join('/')}/`;
+
+        return (
+          <li class={breadcrumbItem}>
+            {isLast ? <span class={breadcrumbCurrent}>{label}</span> : <a class={breadcrumbLink} href={href}>{label}</a>}
+          </li>
+        );
+      })
+    }
+  </ol>
+</nav>

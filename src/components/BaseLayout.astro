@@ -1,0 +1,30 @@
+---
+import BaseHead from './BaseHead.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+import Footer from './Footer.astro';
+import {MAIN_CONTENT_ID, main, skipLink} from '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  hasBreadcrumbs?: boolean;
+}
+
+const {title, description, image, hasBreadcrumbs = true} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} image={image} />
+  </head>
+  <body>
+    <a class={skipLink} href={`#${MAIN_CONTENT_ID}`}>Skip to content</a>
+    <main class={main} id={MAIN_CONTENT_ID} tabindex="-1">
+      {hasBreadcrumbs ? <Breadcrumbs /> : undefined}
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

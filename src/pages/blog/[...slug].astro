@@ -1,0 +1,51 @@
+---
+import {type CollectionEntry, getCollection, render} from 'astro:content';
+
+import BaseLayout from '../../components/BaseLayout.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Prose from '../../components/Prose.astro';
+import {heroImage, postDate, postMeta, postTitle} from '../../styles/prose.css';
+import {formatTitle, siteDescription} from '../../site';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+
+  return posts.map(post => ({
+    params: {slug: post.id},
+    props: {post}
+  }));
+}
+
+type Props = {
+  post: CollectionEntry<'blog'>;
+};
+
+const {post} = Astro.props;
+const {Content} = await render(post);
+---
+
+<BaseLayout title={formatTitle(post.data.title)} description={post.data.description}>
+  <article>
+    <Prose>
+      {post.data.heroImage ? (
+        <img src={post.data.heroImage} alt={post.data.title} class={heroImage} />
+      ) : undefined}
+      <div class={postMeta}>
+        <h1 class={postTitle}>{post.data.title}</h1>
+        <p class={postDate}>
+          <FormattedDate date={post.data.pubDate} />
+          {
+            post.data.updatedDate ? (
+              <span>
+                {' '}
+                · Last updated on <FormattedDate date={post.data.updatedDate} />
+              </span>
+            ) : undefined
+          }
+        </p>
+        <hr />
+      </div>
+      <Content />
+    </Prose>
+  </article>
+</BaseLayout>

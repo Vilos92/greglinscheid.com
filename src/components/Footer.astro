@@ -1,0 +1,18 @@
+---
+import {footer, footerCopy, footerLink, footerNav, footerSep} from '../styles/footer.css';
+
+const year = new Date().getFullYear();
+---
+
+<footer class={footer}>
+  <p class={footerCopy}>&copy; {year} Greg Linscheid</p>
+  <nav class={footerNav} aria-label="Elsewhere">
+    <a class={footerLink} href="https://github.com/Vilos92" rel="noopener noreferrer" target="_blank">
+      GitHub
+    </a>
+    <span class={footerSep} aria-hidden="true">·</span>
+    <a class={footerLink} href="https://vilos92.com" rel="noopener noreferrer" target="_blank">
+      vilos92.com
+    </a>
+  </nav>
+</footer>
