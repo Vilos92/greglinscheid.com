@@ -1,21 +1,21 @@
 ---
-title: 'Building vilos92.com'
-description: 'A tiny project hub on Preact, Vite+, and Cloudflare Workers: static public repo list, fuzzy search, short URLs'
+title: 'vilos92.com: my GitHub project hub'
+description: 'Short URLs and fuzzy search for every repo. Built with Preact, Vite+, and Cloudflare Workers'
 pubDate: 'June 8 2026'
-heroImage: '/blog/building-vilos92-com.jpg'
+heroImage: '/blog/vilos92-com.jpg'
 ---
 
 ## Seriously, why did you build this?
 
 As I mentioned in [my last blog post](/blog/the-new-new-greglinscheid-com/), I wanted a reason to write a blog post about something other than blog posts, so here we... ah I did it again.
 
-Anyways, the real motivation: I hate going to GitHub and then finding my projects in their clunky, slow UI. It works, and for many years it wasn't something I considered worth fixing.
+Anyways, the real motivation: I hate going to GitHub and then finding my projects in their clunky, slow UI. It works, though, and for many years it wasn't something I considered worth fixing.
 
 But now with LLMs, prototyping and building simple projects is quite cheap.
 
 So, [vilos92.com](https://vilos92.com) is a project hub: one search box on `/`, and short paths like `vilos92.com/gdex` that redirect to the matching GitHub repo. Miss a slug and you land back on the hub with the query pre-filled so you can pick from fuzzy matches.
 
-The whole app is deliberately small. It's a prerendered Preact page, a Hono worker for redirects and resolve, and a checked-in JSON file for the repo catalog. Source: [Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com).
+Source: [Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com).
 
 ## Where the repo list comes from
 
@@ -132,11 +132,11 @@ export function resolveSlugPath(pathname: string): RedirectResult {
 
 Fuzzy matching uses a score threshold and a gap between first- and second-place matches so ambiguous slugs (e.g. two repos that both match `ck`) fall through to hub search instead of a wrong redirect.
 
-All in all, this setup does what I need: fast personal links to my repos, fuzzy enough to forgive typos, and shareable short URLs that redirect to GitHub.
+All in all, this setup does what I need: I can typo a slug and still land on the right repo, and I have short links that feel more personal.
 
 ## Quality gate
 
-This project follows the same playbook as [this site's rebuild](/blog/the-new-new-greglinscheid-com/): `vp check`, Vitest, fallow audit in CI. Hub search and routing logic are heavily unit-tested (`routing.test.ts`, `hub-search*.test.ts`, `slug-fuzzy.test.ts`) because the redirect and combobox behavior is easy to regress.
+Same playbook as the rest of my recent projects: `vp check`, Vitest, fallow audit in CI. Hub search and routing logic are heavily unit-tested (`routing.test.ts`, `hub-search*.test.ts`, `slug-fuzzy.test.ts`) because the redirect and combobox behavior is easy to regress.
 
 Live at [vilos92.com](https://vilos92.com), source at [github.com/Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com). Repo list sync: `bun run sync:projects`.
 
