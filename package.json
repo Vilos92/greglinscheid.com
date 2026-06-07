@@ -14,7 +14,8 @@
     "test": "vp test",
     "check": "vp check",
     "fallow": "fallow --summary",
-    "fallow:audit": "fallow audit"
+    "fallow:audit": "fallow audit",
+    "deploy": "bun run build && wrangler deploy"
   },
   "devDependencies": {
     "@astrojs/mdx": "^6.0.2",
@@ -25,7 +26,8 @@
     "astro": "^6.4.4",
     "fallow": "^2.66.1",
     "typescript": "~6.0.2",
-    "vite-plus": "latest"
+    "vite-plus": "latest",
+    "wrangler": "^4.87.0"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
