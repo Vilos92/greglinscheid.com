@@ -5,7 +5,7 @@ pubDate: 'June 29 2024'
 heroImage: '/blog/hello-world.jpg'
 ---
 
-> **Update:** greglinscheid.com has been rebuilt in a new repo. See [Rebuilding greglinscheid.com](/blog/rebuilding-greglinscheid-com/) for the stack, tooling, and why.
+> **Update:** greglinscheid.com has been rebuilt in a new repo. See [The new new greglinscheid.com](/blog/the-new-new-greglinscheid-com/) for the stack, tooling, and why.
 
 > **Originally published on the [astro-greg](https://github.com/Vilos92/astro-greg) site.** This post was written for the previous version of greglinscheid.com.
 
