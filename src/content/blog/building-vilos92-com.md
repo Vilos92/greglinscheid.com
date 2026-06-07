@@ -1,20 +1,21 @@
 ---
 title: 'Building vilos92.com'
-description: 'A tiny project hub on Preact, Vite+, and Cloudflare Workers — static public repo list, fuzzy search, short URLs'
-pubDate: 'June 7 2026'
+description: 'A tiny project hub on Preact, Vite+, and Cloudflare Workers: static public repo list, fuzzy search, short URLs'
+pubDate: 'June 8 2026'
+heroImage: '/blog/building-vilos92-com.jpg'
 ---
 
-<writing from greg>
+## Seriously, why did you build this?
 
-<!-- Why you wanted vilos92.com — personal motivation, how you use it day to day, one or two sentences on what problem it solves for you. -->
+As I mentioned in [my last blog post](/blog/the-new-new-greglinscheid-com/), I wanted a reason to write a blog post about something other than blog posts, so here we... ah I did it again.
 
-</writing from greg>
+Anyways, the real motivation: I hate going to GitHub and then finding my projects in their clunky, slow UI. It works, and for many years it wasn't something I considered worth fixing.
 
-## What it is
+But now with LLMs, prototyping and building simple projects is quite cheap.
 
-[vilos92.com](https://vilos92.com) is a project hub: one search box on `/`, and short paths like `vilos92.com/gdex` that redirect to the matching GitHub repo. Miss a slug and you land back on the hub with the query pre-filled so you can pick from fuzzy matches.
+So, [vilos92.com](https://vilos92.com) is a project hub: one search box on `/`, and short paths like `vilos92.com/gdex` that redirect to the matching GitHub repo. Miss a slug and you land back on the hub with the query pre-filled so you can pick from fuzzy matches.
 
-The whole app is deliberately small — a prerendered Preact page, a Hono worker for redirects and resolve, and a checked-in JSON file for the repo catalog. Source: [Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com).
+The whole app is deliberately small. It's a prerendered Preact page, a Hono worker for redirects and resolve, and a checked-in JSON file for the repo catalog. Source: [Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com).
 
 ## Where the repo list comes from
 
@@ -49,13 +50,7 @@ export const projects = projectsSchema.parse(projectsJson);
 export const publicProjects = projects.filter(project => !project.private);
 ```
 
-**Public repos** feed the client-side search combobox — names and slugs ship in the static bundle, so typing never hits the network. **Private repos** stay out of that list; the worker still knows about them for slug resolution when you explicitly submit a query (see below). Re-run `sync:projects` when you add or rename repos, commit the diff, deploy.
-
-<writing from greg>
-
-<!-- Anything personal about curating the list, how often you sync, forks you exclude, etc. -->
-
-</writing from greg>
+**Public repos** feed the client-side search combobox. Names and slugs ship in the static bundle, so typing never hits the network. **Private repos** stay out of that list. The worker still knows about them for slug resolution when you explicitly submit a query (see below). Re-run `sync:projects` when you add or rename repos, commit the diff, deploy.
 
 ## Stack
 
@@ -64,11 +59,11 @@ export const publicProjects = projects.filter(project => !project.private);
 | UI         | Preact 10 + Vanilla Extract (`*.css.ts`)                                |
 | Toolchain  | [Vite+](https://viteplus.dev/guide/) (`vp dev`, `vp check`, `vp build`) |
 | Worker     | [Hono](https://hono.dev/) on Cloudflare Workers                         |
-| Deploy     | `wrangler deploy` — `src/worker.ts` is the entry                        |
+| Deploy     | `wrangler deploy`, entry `src/worker.ts`                                |
 | Search     | [fuzzysort](https://github.com/farzher/fuzzysort) over public slugs     |
-| Validation | Zod for `projects.json`; Vitest + fallow in CI                          |
+| Validation | Zod for `projects.json`, Vitest + fallow in CI                          |
 
-Wrangler config is minimal — worker name, compatibility date, main module:
+Wrangler config is minimal: worker name, compatibility date, main module:
 
 ```jsonc
 {
@@ -85,7 +80,7 @@ The Vite config uses `@cloudflare/vite-plugin`, `@preact/preset-vite` with **pre
 <script type="module" src="/src/hub-app.tsx" prerender></script>
 ```
 
-Build-time prerender renders `HubApp` to HTML; the client hydrates on load:
+Build-time prerender renders `HubApp` to HTML so that the client can hydrate on load:
 
 ```typescript
 export async function prerender() {
@@ -108,8 +103,8 @@ Despite the feature set (combobox, keyboard nav, URL sync, slug redirects), the 
 
 Why it stays fast:
 
-1. **Prerendered shell** — first paint is HTML, not a blank `#root`.
-2. **No search API** — `publicProjects` is in the bundle; `fuzzysort` runs locally as you type:
+1. **Prerendered shell**: first paint is HTML, not a blank `#root`.
+2. **No search API**: `publicProjects` is in the bundle. `fuzzysort` runs locally as you type:
 
 ```typescript
 export function searchPublicProjects(projects: readonly Project[], query: string, limit = 8) {
@@ -117,8 +112,8 @@ export function searchPublicProjects(projects: readonly Project[], query: string
 }
 ```
 
-3. **Worker only on submit** — choosing or submitting a slug calls `/api/resolve?q=…`; the worker returns `{ok, slug, name, url}` or `{ok: false}`. Success opens GitHub in a new tab.
-4. **302 redirects for bookmarkable paths** — `GET /:slug` never serves a page; it redirects to GitHub or back to `/?q=slug`:
+3. **Worker only on submit**: choosing or submitting a slug calls `/api/resolve?q=…`. The worker returns `{ok, slug, name, url}` or `{ok: false}`. Success opens GitHub in a new tab.
+4. **302 redirects for bookmarkable paths**: `GET /:slug` never serves a page. It redirects to GitHub or back to `/?q=slug`:
 
 ```typescript
 export function resolveSlugPath(pathname: string): RedirectResult {
@@ -137,24 +132,14 @@ export function resolveSlugPath(pathname: string): RedirectResult {
 
 Fuzzy matching uses a score threshold and a gap between first- and second-place matches so ambiguous slugs (e.g. two repos that both match `ck`) fall through to hub search instead of a wrong redirect.
 
-<writing from greg>
-
-<!-- Your take on performance tradeoffs, whether the bundle size matters to you, "feels instant" anecdotes, etc. -->
-
-</writing from greg>
+All in all, this setup does what I need: fast personal links to my repos, fuzzy enough to forgive typos, and shareable short URLs that redirect to GitHub.
 
 ## Quality gate
 
-Same playbook as [this site's rebuild](/blog/the-new-new-greglinscheid-com/): `vp check`, Vitest, fallow audit in CI. Hub search and routing logic are heavily unit-tested (`routing.test.ts`, `hub-search*.test.ts`, `slug-fuzzy.test.ts`) because the redirect and combobox behavior is easy to regress.
+This project follows the same playbook as [this site's rebuild](/blog/the-new-new-greglinscheid-com/): `vp check`, Vitest, fallow audit in CI. Hub search and routing logic are heavily unit-tested (`routing.test.ts`, `hub-search*.test.ts`, `slug-fuzzy.test.ts`) because the redirect and combobox behavior is easy to regress.
 
-## Links
+Live at [vilos92.com](https://vilos92.com), source at [github.com/Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com). Repo list sync: `bun run sync:projects`.
 
-- Live: [vilos92.com](https://vilos92.com)
-- Repo: [github.com/Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com)
-- Sync script: `bun run sync:projects`
+## What's next
 
-<writing from greg>
-
-<!-- Closing — what's next for the hub, or a wink that this post isn't about blog posts. -->
-
-</writing from greg>
+I'd like to post about [gdex](https://github.com/Vilos92/gdex) sometime, but we'll see if this homepage burst can keep pace.
