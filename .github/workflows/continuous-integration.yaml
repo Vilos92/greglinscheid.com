@@ -62,5 +62,7 @@ jobs:
           # audit needs a merge base; depth-1 checkout has no local main ref
           fetch-depth: 0
       - uses: ./.github/actions/install-bun-and-dependencies
+      - name: Astro sync
+        run: bun run astro sync
       - name: Fallow audit
         run: bun run fallow:audit -- --base ${{ github.event.pull_request.base.sha || 'origin/main' }}
