@@ -31,14 +31,33 @@ export const breadcrumbList = style({
   gap: '0.4rem',
   listStyle: 'none',
   margin: 0,
-  padding: 0
+  padding: 0,
+  '@media': {
+    [media.coarsePointer]: {
+      flexWrap: 'nowrap',
+      overflowX: 'auto',
+      WebkitOverflowScrolling: 'touch'
+    }
+  }
 });
 
-export const breadcrumbItem = style({});
+export const breadcrumbItem = style({
+  display: 'flex',
+  flexShrink: 0,
+  alignItems: 'center',
+  gap: '0.4rem',
+  whiteSpace: 'nowrap',
+  '@media': {
+    [media.coarsePointer]: {
+      minHeight: touchTargetMin,
+      padding: '0.25rem 0'
+    }
+  }
+});
 
 globalStyle(`${breadcrumbItem}:not(:first-child)::before`, {
   content: "'/'",
-  marginRight: '0.4rem',
+  lineHeight: 1,
   color: palette.textMuted,
   '@media': {
     [media.dark]: {
@@ -48,16 +67,12 @@ globalStyle(`${breadcrumbItem}:not(:first-child)::before`, {
 });
 
 export const breadcrumbLink = style({
+  lineHeight: 1,
   textDecoration: 'none',
   color: palette.link,
   '@media': {
     [media.dark]: {
       color: palette.linkDark
-    },
-    [media.coarsePointer]: {
-      display: 'inline-block',
-      padding: '0.25rem 0',
-      minHeight: touchTargetMin
     }
   }
 });
@@ -73,6 +88,7 @@ globalStyle(`${breadcrumbLink}:hover`, {
 });
 
 export const breadcrumbCurrent = style({
+  lineHeight: 1,
   color: palette.text,
   fontWeight: 600,
   '@media': {

@@ -39,7 +39,7 @@ A few key things to remember:
 
 ### (Optional) Install the `cloudflared` Client
 
-To test your tunnel before running it inside Docker, you can install the `cloudflared` client on your local machine. This is not a prerequisite for the final setup, but it's useful for validation. You can find installation instructions [here](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/).
+To test your tunnel before running it inside Docker, you can install the `cloudflared` client on your local machine. This is not a prerequisite for the final setup, but it's useful for validation. You can find [Cloudflare Tunnel installation instructions](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/) on their docs site.
 
 ---
 
@@ -68,7 +68,7 @@ RUN apk add --no-cache \
 RUN pip3 install --break-system-packages copyparty
 
 # Install cloudflared
-RUN curl -L [https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64](https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64) -o /usr/local/bin/cloudflared \
+RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared \
     && chmod +x /usr/local/bin/cloudflared
 
 # Create app directory
@@ -169,7 +169,7 @@ You must provide a configuration file to define users, mount shared folders (vol
 [/Mac Vault]
   /Volumes/Mac Vault
   accs:
-    r: greg, friend
+    r: admin, friend
 
 # Admins and friends can upload files. Only admins can read/write/delete.
 [/Upload Vault]
