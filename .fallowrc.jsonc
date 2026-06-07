@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": ["src/site.{ts,tsx,js,jsx}"],
+  "audit": {
+    "healthBaseline": ".fallow/health-baseline.json",
+    "dupesBaseline": ".fallow/dupes-baseline.json"
+  },
+  "rules": {
+    "boundary-violation": "error",
+    "circular-dependencies": "error",
+    "coverage-gaps": "error",
+    "duplicate-exports": "error",
+    "empty-catalog-groups": "error",
+    "feature-flags": "error",
+    "misconfigured-dependency-overrides": "error",
+    "private-type-leaks": "error",
+    "stale-suppressions": "error",
+    "test-only-dependencies": "error",
+    "type-only-dependencies": "error",
+    "unlisted-dependencies": "error",
+    "unresolved-catalog-references": "error",
+    "unresolved-imports": "error",
+    "unused-catalog-entries": "error",
+    "unused-class-members": "error",
+    "unused-dependencies": "error",
+    "unused-dependency-overrides": "error",
+    "unused-dev-dependencies": "error",
+    "unused-enum-members": "error",
+    "unused-exports": "error",
+    "unused-files": "error",
+    "unused-optional-dependencies": "error",
+    "unused-types": "error"
+  }
+}
