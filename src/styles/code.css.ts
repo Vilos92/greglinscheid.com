@@ -7,8 +7,9 @@ import {fonts, palette} from './tokens';
  * Styles.
  */
 
-// Shiki dual themes: Astro sets --shiki-light/dark vars on .astro-code spans.
-// https://docs.astro.build/en/guides/syntax-highlighting/
+// Shiki `.astro-code` layout + theming. `defaultColor: false` in `astro.config.mjs` emits
+// `--shiki-*` vars only. We theme in CSS (not Shiki inline `light-dark()` — that stayed on
+// the light branch in dark mode here). `@media (prefers-color-scheme: dark)` uses dark vars.
 
 globalStyle('pre.astro-code', {
   fontFamily: fonts.mono,
@@ -17,11 +18,16 @@ globalStyle('pre.astro-code', {
   borderRadius: '10px',
   padding: '1.1em 1.25em',
   overflowX: 'auto',
+  maxWidth: '100%',
   margin: '1.5em 0',
   border: `1px solid ${palette.border}`,
+  color: 'light-dark(var(--shiki-light), var(--shiki-dark))',
+  backgroundColor: 'light-dark(var(--shiki-light-bg), var(--shiki-dark-bg))',
   '@media': {
     [media.dark]: {
-      borderColor: palette.borderDark
+      borderColor: palette.borderDark,
+      color: 'var(--shiki-dark)',
+      backgroundColor: 'var(--shiki-dark-bg)'
     },
     [media.highContrast]: {
       borderWidth: '2px'
@@ -30,18 +36,10 @@ globalStyle('pre.astro-code', {
 });
 
 globalStyle('pre.astro-code span', {
-  color: 'var(--shiki-light)',
-  backgroundColor: 'var(--shiki-light-bg)',
-  fontStyle: 'var(--shiki-light-font-style)',
-  fontWeight: 'var(--shiki-light-font-weight)',
-  textDecoration: 'var(--shiki-light-text-decoration)',
+  color: 'light-dark(var(--shiki-light), var(--shiki-dark))',
   '@media': {
     [media.dark]: {
-      color: 'var(--shiki-dark)',
-      backgroundColor: 'var(--shiki-dark-bg)',
-      fontStyle: 'var(--shiki-dark-font-style)',
-      fontWeight: 'var(--shiki-dark-font-weight)',
-      textDecoration: 'var(--shiki-dark-text-decoration)'
+      color: 'var(--shiki-dark)'
     }
   }
 });
