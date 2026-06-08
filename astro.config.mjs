@@ -25,7 +25,9 @@ export default defineConfig({
       themes: {
         light: 'github-light',
         dark: 'github-dark'
-      }
+      },
+      // CSS vars only — colors live in `code.css.ts` (`light-dark()` + dark-mode var fallback).
+      defaultColor: false
     }
   },
   integrations: [

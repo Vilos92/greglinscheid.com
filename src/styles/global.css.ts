@@ -19,6 +19,8 @@ globalStyle('html', {
   lineHeight: 1.65,
   color: palette.text,
   backgroundColor: palette.pageBg,
+  // Enables CSS `light-dark()` on code blocks. Dark vars fallback in `code.css.ts`.
+  colorScheme: 'light dark',
   textRendering: 'optimizeLegibility',
   WebkitFontSmoothing: 'antialiased',
   MozOsxFontSmoothing: 'grayscale',
