@@ -13,9 +13,9 @@ Anyways, the real motivation: I hate going to GitHub and then finding my project
 
 But now with LLMs, prototyping and building simple projects is quite cheap.
 
-So, [vilos92.com](https://vilos92.com) is a project hub: one search box on `/`, and short paths like `vilos92.com/gdex` that redirect to the matching GitHub repo. Miss a slug and you land back on the hub with the query pre-filled so you can pick from fuzzy matches.
+So, [vilos92.com](https://vilos92.com) is a project hub: one search box on `/`, and short paths like [vilos92.com/gdex](https://vilos92.com/gdex) that redirect to the matching GitHub repo. Miss a slug and you land back on the hub with the query pre-filled so you can pick from fuzzy matches.
 
-Source: [Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com).
+Source: [vilos92.com/vilos92.com](https://vilos92.com/vilos92.com).
 
 ## Where the repo list comes from
 
@@ -138,8 +138,8 @@ All in all, this setup does what I need: I can typo a slug and still land on the
 
 Same playbook as the rest of my recent projects: `vp check`, Vitest, fallow audit in CI. Hub search and routing logic are heavily unit-tested (`routing.test.ts`, `hub-search*.test.ts`, `slug-fuzzy.test.ts`) because the redirect and combobox behavior is easy to regress.
 
-Live at [vilos92.com](https://vilos92.com), source at [github.com/Vilos92/vilos92.com](https://github.com/Vilos92/vilos92.com). Repo list sync: `bun run sync:projects`.
+Live at [vilos92.com](https://vilos92.com), source at [vilos92.com/vilos92.com](https://vilos92.com/vilos92.com). Repo list sync: `bun run sync:projects`.
 
 ## What's next
 
-I'd like to post about [gdex](https://github.com/Vilos92/gdex) sometime, but we'll see if this homepage burst can keep pace.
+I'd like to post about [gdex](https://vilos92.com/gdex) sometime, but we'll see if this homepage burst can keep pace.
