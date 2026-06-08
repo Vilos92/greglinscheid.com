@@ -1,6 +1,7 @@
 {
   "name": "greglinscheid.com",
   "version": "0.0.1",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "astro dev",
