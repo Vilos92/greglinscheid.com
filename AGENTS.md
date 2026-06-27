@@ -30,9 +30,13 @@ Living conventions for this repo. Ask whether new habits belong here vs `README.
 - Prefer **`undefined` over `null`**. Model absence as `undefined`; Zod **`.optional()`**, not **`.nullable().optional()`**. No `?? null` unless a contract requires `null`.
 - **`??` vs `||`:** **`??`** for nullish default only; **`||`** for booleans / deliberate truthiness. Empty-string-as-absent → named helper, not `value || fallback`.
 - No **`x ?? undefined`** when `x` is already `T | undefined` without `null`.
-- **Exports:** module-private until another file imports (or we ship a stable public API).
+- **Exports:** module-private until another file imports (or we ship a stable public API). Fallow flags unused exports—wire, **`entry`**, or delete (see **Validation** / **Fallow entry**).
 - **`?` vs `| undefined`:** optional props (`prop?:`) for wide/omitted keys; internal call sites use required `prop: T | undefined`. **Exception:** DOM-style props (`class?`, etc.) stay optional—omit at call sites when unused.
 - **Readonly arrays** for read-only / pass-through data (`readonly T[]` or named aliases).
+
+## Imports
+
+- Use **`import type`** for type-only imports in `src/**/*.ts` / `*.tsx` frontmatter and shared modules.
 
 ## Astro
 
@@ -40,17 +44,26 @@ Living conventions for this repo. Ask whether new habits belong here vs `README.
 - **`astro.config.mjs`** and **`src/env.d.ts`** are tooling/types, not ship surfaces for Fallow (see below).
 - Shared site metadata and TS modules live under **`src/`** (e.g. **`src/site.ts`**).
 
+## Vanilla Extract
+
+- **`*.css.ts`** under **`src/styles/`** (`global.css.ts`, `prose.css.ts`, …); import from layouts and pages that need them.
+- **`data-*` attribute variants over class composition.** Encode discrete state with `data-` attributes and match them in `selectors`. Do not toggle separate BEM modifier classes.
+- **Runtime-varying values via `createVar` + `setElementVar`.** CSS variables that change at runtime flow through a `createVar()` in `.css.ts` and are updated by `setElementVar` from `@vanilla-extract/dynamic`. The static rule stays in `.css.ts`; only the value moves at runtime.
+- **Imperative `element.style` is the last resort.** Reach for it only when neither pattern above fits.
+
 ## File layout (section comments)
 
-**TypeScript** (`src/**/*.ts`, `*.tsx`): section markers are **multi-line block comments** (sentence-case label + period). Blank line before and after each block:
+**TypeScript** (`src/**/*.ts`, `*.tsx`): section markers are **multi-line block comments** (sentence-case label + period). Blank line before and after each block, and between the comment and the code below it:
 
 ```
 /*
  * Types.
  */
+
+type Foo = …;
 ```
 
-Do **not** collapse these to single-line `/* Types. */`.
+Do **not** collapse these to single-line `/* Types. */`. Skip section markers on lean single-export files where they add ceremony only.
 
 Top-down: entry first, **Helpers.** last.
 
@@ -72,18 +85,25 @@ Top-down: entry first, **Helpers.** last.
 
 - Functional style; early returns; small helpers over deep nesting.
 - Prefer **`map` / `filter` / `reduce`**; no **`forEach`**—use **`for`…`of`** (or indexed `for`) when imperative.
+- **`no-nested-ternary`** and **`curly: all`** are Oxlint errors (via `vp check`)—always brace blocks; no nested ternaries.
 
 ## Comments
 
-- **Why** over **what**. Short **JSDoc** when the contract is non-obvious.
+- **Why** over **what**. Drop comments that only restate mechanics the code already shows.
+- **State intent positively.** Explain what we do and why, not what we avoid or what could fail. Prefer `// ensures Y` over `// prevents X` when the code already makes X impossible.
+- **Layer once.** Put shared why on a constant, type field, or entry closure. Do not repeat the same rationale at every call site.
+- **JSDoc** on exports and non-trivial helpers when the contract is not obvious—often one crisp line is enough. Do not document module-private types (see **Exports**).
 - In prose, backtick **identifiers** (`siteUrl`), not section headers.
 - **Section blocks** (see **File layout**) label structure only — no extra explanation inside the marker.
+- **`@sideEffect` (house tag):** flag non-pure functions, even when prose is trimmed to the tag alone. Terse clause names the effect (e.g. "Mutates DOM.", "Async I/O."). On exports and closures, use a multi-line block: why line, then `@sideEffect`. Covers mutation, async I/O, non-determinism, and DOM/event registration. Not standard JSDoc/TSDoc. Pure functions get **no** tag.
 
 ## Naming
 
 - **Booleans:** predicate prefixes (`is`, `has`, `did`, `should`, `can`, …) for locals, props, and fields — not bare adjectives or state nouns (`open` → `isOpen`, `loading` → `isLoading`).
-- **Boolean helpers** (non–type-guard functions): **`check`** prefix — e.g. `checkIsDraft`, not `isDraft`. Reserve **`is` / `has` / …** on functions for type guards only.
+- **Boolean predicates:** name functions that return yes/no so the call reads as a question (`canShowDraft`, `hasProjects`, `checkIsDraft`). Prefer `can` / `has` / `check` / `should` over `getIs…` / `getShould…`—that pattern reads like a property accessor for a stored flag. Reserve **`is` / `has` / …** on functions for type guards only.
+- **`compute` / `calc`** for calculated non-boolean results (`computePageTitle`).
 - **Locals:** readable names (`pageTitle`), not `e` / `x` unless scope is tiny.
+- **Name for what a thing is, not where it lives.** When a folder or module already conveys context, do not restate it as an identifier prefix.
 
 ## Fail fast
 
