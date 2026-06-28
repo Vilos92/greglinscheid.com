@@ -35,6 +35,12 @@ const SNAP_STEP = 15;
 // Cap clipper work for very large dropped meshes; the sample ship (~11.5k) stays full.
 const FACE_BUDGET = 20000;
 
+// Idle showcase: drift through poses until the user takes over.
+const IDLE_STEPS = 6;
+const IDLE_SPEED_RAD = 0.6;
+const IDLE_DWELL_MS = 1600;
+const IDLE_ARRIVE_RAD = 0.02;
+
 /*
  * Script.
  */
@@ -105,6 +111,15 @@ function initStudio(): void {
   let requestSeq = 0;
   let latestRequestId = 0;
 
+  // Idle showcase runs until the first interaction (and never with reduced motion).
+  let isIdle = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idleRaf: number | undefined;
+  let idlePhase: 'dwell' | 'move' = 'dwell';
+  let idleTargets: THREE.Quaternion[] = [];
+  let idleIndex = 0;
+  let idleDwellUntil = 0;
+  let idleLast = 0;
+
   /*
    * Loading.
    */
@@ -136,6 +151,7 @@ function initStudio(): void {
       }
       const buffer = await response.arrayBuffer();
       await loadModel(buffer);
+      maybeStartIdle();
     } catch (error) {
       setStatus(messageFrom(error), true);
     }
@@ -143,6 +159,7 @@ function initStudio(): void {
 
   /** @sideEffect Reads a dropped File and loads it. */
   async function loadFile(file: File): Promise<void> {
+    stopIdle();
     setStatus(`Loading ${file.name}…`, false);
     try {
       const buffer = await file.arrayBuffer();
@@ -336,6 +353,78 @@ function initStudio(): void {
     };
   }
 
+  /*
+   * Idle showcase.
+   */
+
+  // Start drifting through poses, but only on the bundled model and only if the
+  // user has not already taken over.
+  function maybeStartIdle(): void {
+    if (!isIdle || three === undefined || orientation === undefined) {
+      return;
+    }
+    idleTargets = buildIdleTargets(three, orientation);
+    idleIndex = 0;
+    idlePhase = 'dwell';
+    idleDwellUntil = performance.now() + IDLE_DWELL_MS;
+    idleLast = performance.now();
+    idleRaf = requestAnimationFrame(idleTick);
+  }
+
+  /** @sideEffect Stops the showcase for good once the user interacts. */
+  function stopIdle(): void {
+    if (!isIdle) {
+      return;
+    }
+    isIdle = false;
+    if (idleRaf !== undefined) {
+      cancelAnimationFrame(idleRaf);
+      idleRaf = undefined;
+    }
+  }
+
+  function idleTick(now: number): void {
+    if (!isIdle) {
+      return;
+    }
+    stepIdle(now);
+    idleRaf = requestAnimationFrame(idleTick);
+  }
+
+  function stepIdle(now: number): void {
+    if (three === undefined || orientation === undefined) {
+      return;
+    }
+    if (idlePhase === 'dwell') {
+      stepIdleDwell(now);
+    } else {
+      stepIdleMove(now, orientation);
+    }
+  }
+
+  function stepIdleDwell(now: number): void {
+    if (now >= idleDwellUntil) {
+      idlePhase = 'move';
+      idleLast = now;
+    }
+  }
+
+  // Ease the 3D model toward the target; paint the SVG only once it settles.
+  function stepIdleMove(now: number, current: THREE.Quaternion): void {
+    const target = idleTargets[idleIndex];
+    const dt = Math.min((now - idleLast) / 1000, 0.05);
+    idleLast = now;
+    current.rotateTowards(target, IDLE_SPEED_RAD * dt);
+    syncControls();
+    applyPoseToViewport();
+    if (current.angleTo(target) < IDLE_ARRIVE_RAD) {
+      requestEmit();
+      idleIndex = (idleIndex + 1) % idleTargets.length;
+      idlePhase = 'dwell';
+      idleDwellUntil = now + IDLE_DWELL_MS;
+    }
+  }
+
   // The emitted SVG inherits `currentColor`/`--icon-color`; both are public
   // contract names, so set them as literal custom properties on the host.
   function recolorPreview(): void {
@@ -509,6 +598,12 @@ function initStudio(): void {
     copyText(snippetInline.textContent ?? '', copyInlineButton)
   );
   copyMaskButton.addEventListener('click', () => copyText(snippetMask.textContent ?? '', copyMaskButton));
+
+  // Any interaction anywhere in the tool retires the idle showcase.
+  const studioRoot = viewportEl.closest('[data-studio-root]');
+  studioRoot?.addEventListener('pointerdown', stopIdle);
+  studioRoot?.addEventListener('input', stopIdle);
+  studioRoot?.addEventListener('change', stopIdle);
 
   viewportEl.addEventListener('pointerdown', onPointerDown);
   viewportEl.addEventListener('pointermove', onPointerMove);
@@ -731,6 +826,20 @@ function quatToMat3(three: ThreeModule, quaternion: THREE.Quaternion): Mat3 {
 
 function orientationFromMat3(three: ThreeModule, m: Mat3): THREE.Quaternion {
   return new three.Quaternion().setFromRotationMatrix(mat3ToMatrix4(three, m));
+}
+
+// A loop of showcase orientations: orbit the base pose around vertical with a
+// gentle pitch wobble so each stop shows a distinct silhouette.
+function buildIdleTargets(three: ThreeModule, base: THREE.Quaternion): THREE.Quaternion[] {
+  const up = new three.Vector3(0, 0, 1);
+  const side = new three.Vector3(1, 0, 0);
+  const targets: THREE.Quaternion[] = [];
+  for (let step = 1; step <= IDLE_STEPS; step++) {
+    const yaw = new three.Quaternion().setFromAxisAngle(up, (step / IDLE_STEPS) * Math.PI * 2);
+    const pitch = new three.Quaternion().setFromAxisAngle(side, Math.sin(step * 1.7) * 0.5);
+    targets.push(yaw.multiply(pitch).multiply(base.clone()));
+  }
+  return targets;
 }
 
 /** @sideEffect Writes to the clipboard and flashes the button label. */
