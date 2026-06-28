@@ -1,8 +1,8 @@
 import {describe, expect, it} from 'vitest';
 
-import {emitFlatSvg} from './emit';
+import {emitFlatSvg, emitShadedSvg} from './emit';
 import type {Mat3, RawPrimitive} from './geometry';
-import {buildMesh, LOCKED_AXES, LOCKED_ORIENTATION, projectAndCull} from './geometry';
+import {buildMesh, LOCKED_AXES, LOCKED_ORIENTATION, projectAndCull, projectShaded} from './geometry';
 
 /*
  * Constants.
@@ -96,5 +96,30 @@ describe('emitFlatSvg', () => {
   it('is deterministic for the same scene and options', () => {
     const options = {ariaHidden: true, useColorVar: false} as const;
     expect(emitFlatSvg(scene, options)).toBe(emitFlatSvg(scene, options));
+  });
+});
+
+describe('shaded output', () => {
+  const mesh = buildMesh([cube], '+X', '+Z', 0);
+
+  it('tags front faces with a 0..1 shade', () => {
+    const scene = projectShaded(mesh, LOCKED_ORIENTATION);
+    expect(scene.centered).toHaveLength(8);
+    expect(scene.faces.length).toBeGreaterThan(0);
+    for (const face of scene.faces) {
+      expect(face.shade).toBeGreaterThanOrEqual(0);
+      expect(face.shade).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('emits stacked currentColor paths with per-band opacity', () => {
+    const svg = emitShadedSvg(projectShaded(mesh, LOCKED_ORIENTATION), {
+      ariaHidden: true,
+      useColorVar: false
+    });
+    expect(svg).toContain('viewBox="0 0 512 512"');
+    expect(svg).toContain('fill="currentColor"');
+    expect(svg).toContain('fill-opacity=');
+    expect((svg.match(/<path/g) ?? []).length).toBeGreaterThan(1);
   });
 });

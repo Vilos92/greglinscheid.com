@@ -80,6 +80,7 @@ function initStudio(): void {
 
   const colorInput = requireElement<HTMLInputElement>(ids.color);
   const opacityRange = requireElement<HTMLInputElement>(ids.opacity);
+  const shadeToggle = requireElement<HTMLInputElement>(ids.shade);
   const useVarToggle = requireElement<HTMLInputElement>(ids.useVar);
   const ariaHiddenToggle = requireElement<HTMLInputElement>(ids.ariaHidden);
   const titleInput = requireElement<HTMLInputElement>(ids.title);
@@ -313,7 +314,8 @@ function initStudio(): void {
       type: 'emit',
       id: requestSeq,
       orientation: quatToMat3(ctx.three, ctx.orientation),
-      options: emitOptions()
+      options: emitOptions(),
+      shaded: shadeToggle.checked
     };
     ctx.worker.postMessage(message);
   }
@@ -586,6 +588,7 @@ function initStudio(): void {
 
   colorInput.addEventListener('input', recolorPreview);
   opacityRange.addEventListener('input', recolorPreview);
+  shadeToggle.addEventListener('change', requestEmit);
   useVarToggle.addEventListener('change', requestEmit);
   ariaHiddenToggle.addEventListener('change', () => {
     titleInput.disabled = ariaHiddenToggle.checked;

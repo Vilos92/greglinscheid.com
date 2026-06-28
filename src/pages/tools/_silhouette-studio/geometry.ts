@@ -17,6 +17,10 @@ export type Vec2 = [number, number];
 export type LoadedMesh = {vertices: Vec3[]; faces: [number, number, number][]};
 export type CulledScene = {visible: VisibleFace[]; centered: Vec2[]};
 
+// Front-facing triangles tagged with a 0..1 Lambert shade for the cel-shaded output.
+export type ShadedFace = {tri: [number, number, number]; shade: number};
+export type ShadedScene = {centered: Vec2[]; faces: ShadedFace[]};
+
 type VisibleFace = {
   tri: [number, number, number];
 };
@@ -27,6 +31,9 @@ type VisibleFace = {
 
 const CAMPOS: Vec3 = [-6.2, -3.6, 3.6];
 const FIT_PX = 430;
+
+// Light for the cel-shaded output: high, to the left, toward the viewer.
+const LIGHT: Vec3 = normalize([-3, -5, 7]);
 
 export const CANVAS = 512;
 
@@ -83,6 +90,42 @@ export function buildMesh(
 
 /** Project a mesh under an orientation into fitted canvas space. */
 export function projectAndCull(mesh: LoadedMesh, orientation: Mat3): CulledScene {
+  const {visible, centered} = project(mesh, orientation);
+  return {visible, centered};
+}
+
+/** Project front faces tagged with a Lambert shade for the cel-shaded output. */
+export function projectShaded(mesh: LoadedMesh, orientation: Mat3): ShadedScene {
+  const {posed, centered} = project(mesh, orientation);
+  const viewForward = normalize(scale(CAMPOS, -1));
+
+  const faces: ShadedFace[] = [];
+  for (const tri of mesh.faces) {
+    const points = tri.map(i => posed[i]);
+    const center = mean(points);
+    let normal = cross(subtract(points[1], points[0]), subtract(points[2], points[0]));
+    const normalLength = length(normal);
+    if (normalLength < 1e-12) {
+      continue;
+    }
+    normal = scale(normal, 1 / normalLength);
+    if (dot(normal, center) < 0) {
+      normal = scale(normal, -1);
+    }
+    if (dot(normal, viewForward) >= 0) {
+      continue;
+    }
+    faces.push({tri, shade: Math.max(0, dot(normal, LIGHT))});
+  }
+
+  return {centered, faces};
+}
+
+// Shared projection + canvas fit used by both the flat and shaded outputs.
+function project(
+  mesh: LoadedMesh,
+  orientation: Mat3
+): {posed: Vec3[]; visible: VisibleFace[]; centered: Vec2[]} {
   const posed = mesh.vertices.map(vertex => multiplyRowByMatTranspose(vertex, orientation));
 
   const viewForward = normalize(scale(CAMPOS, -1));
@@ -111,7 +154,7 @@ export function projectAndCull(mesh: LoadedMesh, orientation: Mat3): CulledScene
     ([x, y]) => [x * scaleFactor + offset[0], y * scaleFactor + offset[1]] satisfies Vec2
   );
 
-  return {visible, centered};
+  return {posed, visible, centered};
 }
 
 /*

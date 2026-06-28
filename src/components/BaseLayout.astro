@@ -8,17 +8,36 @@ interface Props {
   title: string;
   description: string;
   image?: string;
+  imageAlt?: string;
+  keywords?: string;
+  jsonLd?: Record<string, unknown>;
   hasBreadcrumbs?: boolean;
   fullBleed?: boolean;
 }
 
-const {title, description, image, hasBreadcrumbs = true, fullBleed = false} = Astro.props;
+const {
+  title,
+  description,
+  image,
+  imageAlt,
+  keywords,
+  jsonLd,
+  hasBreadcrumbs = true,
+  fullBleed = false
+} = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} image={image} />
+    <BaseHead
+      title={title}
+      description={description}
+      image={image}
+      imageAlt={imageAlt}
+      keywords={keywords}
+      jsonLd={jsonLd}
+    />
   </head>
   <body>
     <a class={skipLink} href={`#${MAIN_CONTENT_ID}`}>Skip to content</a>

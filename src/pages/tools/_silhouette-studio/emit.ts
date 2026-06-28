@@ -1,6 +1,6 @@
 import ClipperLib from 'clipper-lib';
 
-import type {CulledScene, Vec2} from './geometry';
+import type {CulledScene, ShadedScene, Vec2} from './geometry';
 import {CANVAS} from './geometry';
 
 /*
@@ -19,25 +19,15 @@ export type EmitOptions = {
 
 const CLIPPER_SCALE = 10;
 
+// Cel-shaded output: shadow → highlight opacity ramp over fixed bands.
+const BAND_OPACITY = [1, 0.72, 0.5, 0.3];
+const SHADE_CLOSE = 0.8;
+const SHADE_TOLERANCE = 1.2;
+const SHADE_MIN_AREA = 10;
+
 /** Emit a single-<path> SVG string from a culled scene. */
 export function emitFlatSvg(scene: CulledScene, options: EmitOptions): string {
-  const clipper = new ClipperLib.Clipper();
-
-  for (const face of scene.visible) {
-    const ring = ensureCounterClockwise(face.tri.map(i => snapPoint(scene.centered[i])));
-    if (ringArea(ring) <= 0.05) {
-      continue;
-    }
-    clipper.AddPath(toClipperPath(ring), ClipperLib.PolyType.ptSubject, true);
-  }
-
-  const unioned: ClipperLib.Paths = [];
-  clipper.Execute(
-    ClipperLib.ClipType.ctUnion,
-    unioned,
-    ClipperLib.PolyFillType.pftNonZero,
-    ClipperLib.PolyFillType.pftNonZero
-  );
+  const unioned = unionTriangles(scene.visible.map(face => face.tri.map(i => scene.centered[i])));
   const cleaned = ClipperLib.Clipper.CleanPolygons(unioned, 1);
 
   const ranked = cleaned
@@ -57,23 +47,90 @@ export function emitFlatSvg(scene: CulledScene, options: EmitOptions): string {
     throw new Error('Flat silhouette union produced no paths');
   }
 
-  const fill = options.useColorVar ? 'var(--icon-color, currentColor)' : 'currentColor';
-  let attrs = '';
-  let titleEl = '';
-  if (options.ariaHidden) {
-    attrs = ' aria-hidden="true"';
-  } else if (options.title !== undefined && options.title !== '') {
-    const escaped = options.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    attrs = ' role="img"';
-    titleEl = `<title>${escaped}</title>`;
+  const {attrs, titleEl, fill} = svgWrapperParts(options);
+  return `<svg${attrs} viewBox="0 0 ${CANVAS} ${CANVAS}" xmlns="http://www.w3.org/2000/svg">${titleEl}<path fill="${fill}" d="${ringToPath(recentered)}"/></svg>\n`;
+}
+
+/** Emit a cel-shaded SVG: stacked currentColor paths at fixed opacity bands. */
+export function emitShadedSvg(scene: ShadedScene, options: EmitOptions): string {
+  const buckets: Vec2[][][] = BAND_OPACITY.map(() => []);
+  for (const face of scene.faces) {
+    const band = Math.min(BAND_OPACITY.length - 1, Math.floor(face.shade * BAND_OPACITY.length));
+    buckets[band].push(face.tri.map(index => scene.centered[index]));
   }
 
-  return `<svg${attrs} viewBox="0 0 ${CANVAS} ${CANVAS}" xmlns="http://www.w3.org/2000/svg">${titleEl}<path fill="${fill}" d="${ringToPath(recentered)}"/></svg>\n`;
+  const {attrs, titleEl, fill} = svgWrapperParts(options);
+  const layers: string[] = [];
+  for (let band = 0; band < buckets.length; band++) {
+    const rings = unionBand(buckets[band]);
+    if (rings.length === 0) {
+      continue;
+    }
+    const d = rings.map(ringToIntPath).join(' ');
+    layers.push(`<path fill="${fill}" fill-opacity="${BAND_OPACITY[band]}" d="${d}"/>`);
+  }
+
+  if (layers.length === 0) {
+    throw new Error('Shaded silhouette produced no paths');
+  }
+
+  return `<svg${attrs} viewBox="0 0 ${CANVAS} ${CANVAS}" xmlns="http://www.w3.org/2000/svg">${titleEl}${layers.join('')}</svg>\n`;
 }
 
 /*
  * Helpers.
  */
+
+// Shared <svg> attributes, optional <title>, and path fill across both outputs.
+function svgWrapperParts(options: EmitOptions): {attrs: string; titleEl: string; fill: string} {
+  const fill = options.useColorVar ? 'var(--icon-color, currentColor)' : 'currentColor';
+  if (options.ariaHidden) {
+    return {attrs: ' aria-hidden="true"', titleEl: '', fill};
+  }
+  if (options.title !== undefined && options.title !== '') {
+    const escaped = options.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return {attrs: ' role="img"', titleEl: `<title>${escaped}</title>`, fill};
+  }
+  return {attrs: '', titleEl: '', fill};
+}
+
+// Non-zero union of triangle rings (snapped to the clipper grid).
+function unionTriangles(triangles: readonly Vec2[][]): ClipperLib.Paths {
+  const clipper = new ClipperLib.Clipper();
+  for (const triangle of triangles) {
+    const ring = ensureCounterClockwise(triangle.map(snapPoint));
+    if (ringArea(ring) <= 0.05) {
+      continue;
+    }
+    clipper.AddPath(toClipperPath(ring), ClipperLib.PolyType.ptSubject, true);
+  }
+
+  const unioned: ClipperLib.Paths = [];
+  clipper.Execute(
+    ClipperLib.ClipType.ctUnion,
+    unioned,
+    ClipperLib.PolyFillType.pftNonZero,
+    ClipperLib.PolyFillType.pftNonZero
+  );
+  return unioned;
+}
+
+// Union one shade band's triangles, close hairline gaps, simplify, drop specks.
+function unionBand(triangles: readonly Vec2[][]): Vec2[][] {
+  const grown = offsetClipperPaths(unionTriangles(triangles), SHADE_CLOSE * CLIPPER_SCALE);
+  const closed = offsetClipperPaths(grown, -SHADE_CLOSE * CLIPPER_SCALE);
+  return closed
+    .map(path => simplifyRing(fromClipperPath(path), SHADE_TOLERANCE))
+    .filter(ring => ring.length >= 3 && ringArea(ring) >= SHADE_MIN_AREA);
+}
+
+function ringToIntPath(ring: Vec2[]): string {
+  const [first, ...rest] = ring;
+  if (first === undefined) {
+    return '';
+  }
+  return `M${Math.round(first[0])} ${Math.round(first[1])} ${rest.map(p => `L${Math.round(p[0])} ${Math.round(p[1])}`).join(' ')} Z`;
+}
 
 function ensureCounterClockwise(ring: Vec2[]): Vec2[] {
   return signedRingArea(ring) < 0 ? [...ring].reverse() : ring;

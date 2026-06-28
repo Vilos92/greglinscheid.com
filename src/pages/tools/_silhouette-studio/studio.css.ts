@@ -29,6 +29,7 @@ export const ids = {
   up: 'studio-up',
   color: 'studio-color',
   opacity: 'studio-opacity',
+  shade: 'studio-shade',
   useVar: 'studio-use-var',
   ariaHidden: 'studio-aria-hidden',
   title: 'studio-title',

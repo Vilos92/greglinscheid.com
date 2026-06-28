@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 import type {EmitOptions} from './emit';
-import {emitFlatSvg} from './emit';
+import {emitFlatSvg, emitShadedSvg} from './emit';
 import type {LoadedMesh, Mat3} from './geometry';
-import {projectAndCull} from './geometry';
+import {projectAndCull, projectShaded} from './geometry';
 import type {WorkerReply, WorkerRequest} from './protocol';
 
 /*
@@ -26,17 +26,25 @@ ctx.onmessage = (event: MessageEvent<WorkerRequest>): void => {
   if (mesh === undefined) {
     return;
   }
-  ctx.postMessage(emitReply(mesh, request.id, request.orientation, request.options));
+  ctx.postMessage(emitReply(mesh, request.id, request.orientation, request.options, request.shaded));
 };
 
 /*
  * Helpers.
  */
 
-function emitReply(loaded: LoadedMesh, id: number, orientation: Mat3, options: EmitOptions): WorkerReply {
+function emitReply(
+  loaded: LoadedMesh,
+  id: number,
+  orientation: Mat3,
+  options: EmitOptions,
+  shaded: boolean
+): WorkerReply {
   try {
-    const scene = projectAndCull(loaded, orientation);
-    return {type: 'svg', id, svg: emitFlatSvg(scene, options)};
+    const svg = shaded
+      ? emitShadedSvg(projectShaded(loaded, orientation), options)
+      : emitFlatSvg(projectAndCull(loaded, orientation), options);
+    return {type: 'svg', id, svg};
   } catch (error) {
     return {type: 'error', id, message: error instanceof Error ? error.message : 'Silhouette failed'};
   }

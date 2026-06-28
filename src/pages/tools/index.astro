@@ -1,10 +1,17 @@
 ---
 import BaseLayout from '../../components/BaseLayout.astro';
 import Prose from '../../components/Prose.astro';
-import {formatTitle, siteDescription} from '../../site';
+import {formatTitle} from '../../site';
+
+const pageDescription =
+  'Free, self-contained browser tools by Greg Linscheid — including Silhouette Studio, which turns a 3D model into a clean, recolorable SVG icon.';
 ---
 
-<BaseLayout title={formatTitle('Tools')} description={siteDescription}>
+<BaseLayout
+  title={formatTitle('Tools')}
+  description={pageDescription}
+  keywords="browser tools, web tools, SVG tools, Silhouette Studio, 3D to SVG"
+>
   <Prose>
     <h1>Tools</h1>
 

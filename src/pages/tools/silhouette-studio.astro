@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../components/BaseLayout.astro';
-import {formatTitle, siteDescription} from '../../site';
+import {siteTitle, siteUrl} from '../../site';
 import {
   attribution,
   button,
@@ -34,11 +34,34 @@ import {
 } from './_silhouette-studio/studio.css';
 
 const axes = ['+X', '-X', '+Y', '-Y', '+Z', '-Z'] as const;
+
+const pageTitle = 'Silhouette Studio — 3D model to clean SVG icon | Greg Linscheid';
+const pageDescription =
+  'Free browser tool to turn a 3D model (GLB) into a clean, recolorable single-path or cel-shaded SVG icon. Pose it live with an arcball — nothing is uploaded.';
+const pageUrl = `${siteUrl}/tools/silhouette-studio/`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Silhouette Studio',
+  url: pageUrl,
+  description: pageDescription,
+  applicationCategory: 'DesignApplication',
+  operatingSystem: 'Any (modern web browser)',
+  browserRequirements: 'Requires JavaScript and WebGL',
+  isAccessibleForFree: true,
+  offers: {'@type': 'Offer', price: '0', priceCurrency: 'USD'},
+  creator: {'@type': 'Person', name: siteTitle, url: siteUrl}
+};
 ---
 
 <BaseLayout
-  title={formatTitle('Silhouette Studio')}
-  description="Drop in a 3D model, pose it live, and export a clean single-path SVG icon."
+  title={pageTitle}
+  description={pageDescription}
+  image="/og/silhouette-studio.png"
+  imageAlt="Silhouette Studio — turn a 3D model into a clean SVG icon"
+  keywords="SVG icon generator, 3D model to SVG, GLB to SVG, silhouette generator, mesh to SVG, currentColor icon, cel-shaded SVG, free SVG tool"
+  jsonLd={jsonLd}
   fullBleed
 >
   <div data-studio-root>
@@ -130,6 +153,11 @@ const axes = ['+X', '-X', '+Y', '-Y', '+Z', '-Z'] as const;
           <label class={label} for={ids.opacity}>Opacity</label>
           <input id={ids.opacity} class={slider} type="range" min="0" max="100" value="100" />
         </div>
+
+        <label class={checkboxRow}>
+          <input id={ids.shade} type="checkbox" />
+          Shaded (cel-shaded opacity bands of <code>currentColor</code>)
+        </label>
 
         <label class={checkboxRow}>
           <input id={ids.useVar} type="checkbox" />
