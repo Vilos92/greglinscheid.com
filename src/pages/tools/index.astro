@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../../components/BaseLayout.astro';
+import Prose from '../../components/Prose.astro';
+import {formatTitle, siteDescription} from '../../site';
+---
+
+<BaseLayout title={formatTitle('Tools')} description={siteDescription}>
+  <Prose>
+    <h1>Tools</h1>
+
+    <p>Small self-contained, browser-side tools I've built.</p>
+
+    <ul>
+      <li>
+        <a href="/tools/silhouette-studio/">Silhouette Studio</a> — Drop in a 3D model, pose it live, and export a clean single-path SVG icon.
+      </li>
+    </ul>
+  </Prose>
+</BaseLayout>

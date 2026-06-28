@@ -41,6 +41,19 @@ export const workspaceTools: readonly Project[] = [
   }
 ];
 
+export const tools: readonly Project[] = [
+  {
+    name: 'Silhouette Studio',
+    href: '/tools/silhouette-studio/',
+    details: [
+      {
+        kind: 'text',
+        value: 'Drop in a 3D model, pose it live, and export a clean single-path SVG icon.'
+      }
+    ]
+  }
+];
+
 export const activeProjects: readonly Project[] = [
   {
     name: 'MilkTea',

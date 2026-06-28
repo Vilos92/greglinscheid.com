@@ -4,7 +4,7 @@ import {getCollection} from 'astro:content';
 import BaseLayout from '../components/BaseLayout.astro';
 import ProjectList from '../components/ProjectList.astro';
 import Prose from '../components/Prose.astro';
-import {activeProjects, olderProjects, workspaceTools} from '../data/projects';
+import {activeProjects, olderProjects, tools, workspaceTools} from '../data/projects';
 import {inlineImage, siteTitle as siteTitleStyle} from '../styles/prose.css';
 import {sectionLead} from '../styles/projects.css';
 import {siteDescription, siteTitle} from '../site';
@@ -34,6 +34,14 @@ const latestPost = posts[0];
         </p>
       ) : undefined
     }
+
+    <h2>Tools</h2>
+
+    <p class={sectionLead}>
+      Small browser-side tools I've built. <a href="/tools/">Browse all</a>.
+    </p>
+
+    <ProjectList projects={tools} />
 
     <h2>Workspace</h2>
 

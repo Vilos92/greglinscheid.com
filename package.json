@@ -18,10 +18,16 @@
     "fallow:audit": "fallow audit",
     "deploy": "bun run build && wrangler deploy"
   },
+  "dependencies": {
+    "clipper-lib": "^6.4.2",
+    "three": "^0.185.0"
+  },
   "devDependencies": {
     "@astrojs/mdx": "^6.0.2",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
+    "@types/clipper-lib": "^6.4.0",
+    "@types/three": "^0.185.0",
     "@vanilla-extract/css": "^1.20.1",
     "@vanilla-extract/vite-plugin": "^5.2.2",
     "astro": "^6.4.4",

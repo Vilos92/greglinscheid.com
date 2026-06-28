@@ -1,0 +1,182 @@
+---
+import BaseLayout from '../../components/BaseLayout.astro';
+import {formatTitle, siteDescription} from '../../site';
+import {
+  attribution,
+  button,
+  buttonRow,
+  canvas,
+  checkboxRow,
+  colorInput,
+  controls,
+  copyButton,
+  dropZone,
+  fieldRow,
+  fieldset,
+  grid,
+  ids,
+  intro,
+  label,
+  legend,
+  number,
+  preview,
+  scanFrame,
+  select,
+  slider,
+  sliderRow,
+  snippetBlock,
+  snippetHeading,
+  snippetPre,
+  snippets,
+  status,
+  titleInput,
+  viewport
+} from './_silhouette-studio/studio.css';
+
+const axes = ['+X', '-X', '+Y', '-Y', '+Z', '-Z'] as const;
+---
+
+<BaseLayout
+  title={formatTitle('Silhouette Studio')}
+  description="Drop in a 3D model, pose it live, and export a clean single-path SVG icon."
+  fullBleed
+>
+  <div data-studio-root>
+    <header>
+      <h1>Silhouette Studio</h1>
+      <p class={intro}>
+        Drop in a <code>.glb</code> model, pose it with the trackball or the sliders, and export a
+        clean single-path SVG icon. Everything runs in your browser — nothing is uploaded. The
+        preview renders the exact path that gets exported, so the bytes are deterministic for a given
+        model, pose, and options.
+      </p>
+    </header>
+
+    <div class={grid}>
+      <div id={ids.viewport} class={viewport}>
+        <canvas id={ids.canvas} class={canvas}></canvas>
+        <svg class={scanFrame} viewBox="0 0 512 512" aria-hidden="true">
+          <rect x="1" y="1" width="510" height="510" fill="none" stroke="currentColor" stroke-opacity="0.25" />
+          <rect
+            x="41"
+            y="41"
+            width="430"
+            height="430"
+            fill="none"
+            stroke="currentColor"
+            stroke-opacity="0.35"
+            stroke-dasharray="6 8"
+          />
+        </svg>
+        <div id={ids.dropZone} class={dropZone} data-hidden="false">
+          <strong>Drop a .glb model</strong>
+          <span>or click to browse</span>
+          <input id={ids.fileInput} type="file" accept=".glb,model/gltf-binary" hidden />
+        </div>
+      </div>
+
+      <div id={ids.preview} class={preview}></div>
+    </div>
+
+    <p id={ids.status} class={status} role="status" aria-live="polite"></p>
+
+    <div class={controls}>
+      <fieldset class={fieldset}>
+        <legend class={legend}>Pose</legend>
+
+        <div class={sliderRow}>
+          <label class={label} for={ids.bank}>Pitch</label>
+          <input id={ids.bank} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+          <input id={ids.bankNumber} class={number} type="number" min="-180" max="180" value="0" />
+        </div>
+        <div class={sliderRow}>
+          <label class={label} for={ids.pitch}>Yaw</label>
+          <input id={ids.pitch} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+          <input id={ids.pitchNumber} class={number} type="number" min="-180" max="180" value="0" />
+        </div>
+        <div class={sliderRow}>
+          <label class={label} for={ids.spin}>Roll</label>
+          <input id={ids.spin} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+          <input id={ids.spinNumber} class={number} type="number" min="-180" max="180" value="0" />
+        </div>
+
+        <div class={buttonRow}>
+          <label class={checkboxRow}>
+            <input id={ids.snap} type="checkbox" />
+            Snap to 15°
+          </label>
+          <button id={ids.reset} class={button} type="button">Reset</button>
+          <button id={ids.preset} class={button} type="button">Locked pose</button>
+        </div>
+
+        <div class={fieldRow}>
+          <label class={label} for={ids.forward}>Forward</label>
+          <select id={ids.forward} class={select}>
+            {axes.map(axis => <option value={axis} selected={axis === '-X'}>{axis}</option>)}
+          </select>
+          <label class={label} for={ids.up}>Up</label>
+          <select id={ids.up} class={select}>
+            {axes.map(axis => <option value={axis} selected={axis === '+Y'}>{axis}</option>)}
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset class={fieldset}>
+        <legend class={legend}>Output</legend>
+
+        <div class={fieldRow}>
+          <label class={label} for={ids.color}>Color</label>
+          <input id={ids.color} class={colorInput} type="color" value="#b45309" />
+          <label class={label} for={ids.opacity}>Opacity</label>
+          <input id={ids.opacity} class={slider} type="range" min="0" max="100" value="100" />
+        </div>
+
+        <label class={checkboxRow}>
+          <input id={ids.useVar} type="checkbox" />
+          Use <code>var(--icon-color, currentColor)</code> instead of plain <code>currentColor</code>
+        </label>
+
+        <label class={checkboxRow}>
+          <input id={ids.ariaHidden} type="checkbox" checked />
+          <code>aria-hidden="true"</code> (decorative)
+        </label>
+
+        <div class={fieldRow}>
+          <label class={label} for={ids.title}>Title</label>
+          <input id={ids.title} class={titleInput} type="text" placeholder="Accessible label (sets role + <title>)" disabled />
+        </div>
+
+        <div class={buttonRow}>
+          <button id={ids.download} class={button} type="button">Download SVG</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class={snippets}>
+      <div class={snippetBlock}>
+        <h2 class={snippetHeading}>Inline (inherits <code>currentColor</code>)</h2>
+        <button id={ids.copyInline} class={copyButton} type="button">Copy</button>
+        <pre class={snippetPre}><code id={ids.snippetInline}></code></pre>
+      </div>
+
+      <div class={snippetBlock}>
+        <h2 class={snippetHeading}>External file via <code>mask-image</code></h2>
+        <p>
+          An <code>&lt;img&gt;</code> can't inherit <code>currentColor</code>. To recolor an external
+          SVG, drive it through a CSS mask instead:
+        </p>
+        <button id={ids.copyMask} class={copyButton} type="button">Copy</button>
+        <pre class={snippetPre}><code id={ids.snippetMask}></code></pre>
+      </div>
+    </div>
+
+    <p class={attribution}>
+      Sample model: <a href="https://sketchfab.com/3d-models/spaceship-fighter-version-2-meshy-6-ff69bc6de8584bb4b2d6fac0b5a1d2ed">Spaceship Fighter</a>
+      by Ethan Cox (EthanfromEngland), licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+    </p>
+  </div>
+
+  <script>
+    import './_silhouette-studio/studio.ts';
+  </script>
+</BaseLayout>
