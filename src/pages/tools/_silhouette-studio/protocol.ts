@@ -1,4 +1,4 @@
-import type {EmitOptions} from './emit';
+import type {EmitMode, EmitOptions} from './emit';
 import type {LoadedMesh, Mat3} from './geometry';
 
 /*
@@ -8,7 +8,7 @@ import type {LoadedMesh, Mat3} from './geometry';
 // Main thread → worker.
 export type WorkerRequest =
   | {type: 'mesh'; mesh: LoadedMesh}
-  | {type: 'emit'; id: number; orientation: Mat3; options: EmitOptions; shaded: boolean};
+  | {type: 'emit'; id: number; orientation: Mat3; options: EmitOptions; mode: EmitMode};
 
 // Worker → main thread.
 export type WorkerReply =

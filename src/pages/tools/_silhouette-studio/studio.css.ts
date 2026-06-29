@@ -29,13 +29,12 @@ export const ids = {
   up: 'studio-up',
   color: 'studio-color',
   opacity: 'studio-opacity',
-  shade: 'studio-shade',
+  mode: 'studio-mode',
   useVar: 'studio-use-var',
   ariaHidden: 'studio-aria-hidden',
   title: 'studio-title',
   download: 'studio-download',
   snippetInline: 'studio-snippet-inline',
-  snippetMask: 'studio-snippet-mask',
   copyInline: 'studio-copy-inline',
   copyMask: 'studio-copy-mask'
 } as const;
@@ -51,7 +50,7 @@ export const intro = style({
 
 export const grid = style({
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
+  gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
   gap: '1.5rem',
   alignItems: 'start',
   '@media': {
@@ -62,6 +61,7 @@ export const grid = style({
 });
 
 const pane = style({
+  boxSizing: 'border-box',
   position: 'relative',
   aspectRatio: '1 / 1',
   width: '100%',
@@ -91,6 +91,8 @@ export const viewport = style([
 ]);
 
 export const canvas = style({
+  position: 'absolute',
+  inset: 0,
   display: 'block',
   width: '100%',
   height: '100%'
@@ -353,44 +355,116 @@ export const snippets = style({
 });
 
 export const snippetBlock = style({
-  position: 'relative'
+  // Let the grid track shrink instead of stretching to the snippet's width.
+  minWidth: 0
+});
+
+export const snippetHead = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '0.75rem',
+  marginBottom: '0.5rem'
 });
 
 export const snippetHeading = style({
-  margin: '0 0 0.5rem',
+  margin: 0,
   fontSize: '0.95rem',
   fontWeight: 600
 });
 
+// Mirrors shiki's github-light/github-dark themes so this matches the <Code> block.
 export const snippetPre = style({
   margin: 0,
-  padding: '0.9rem 1rem',
-  overflowX: 'auto',
+  padding: '1.1em 1.25em',
+  maxWidth: '100%',
+  maxHeight: '15rem',
+  overflowY: 'auto',
+  // The exported SVG is one long line; wrap it instead of blowing out the width.
+  whiteSpace: 'pre-wrap',
+  overflowWrap: 'anywhere',
   fontFamily: fonts.mono,
-  fontSize: '0.8rem',
-  lineHeight: 1.5,
-  color: palette.codeText,
-  backgroundColor: palette.codeBg,
-  borderRadius: '8px',
+  fontSize: '0.82em',
+  lineHeight: 1.55,
+  color: '#1f2328',
+  backgroundColor: '#ffffff',
+  border: `1px solid ${palette.border}`,
+  borderRadius: '10px',
   '@media': {
     [media.dark]: {
-      color: palette.codeTextDark,
-      backgroundColor: palette.codeBgDark
+      color: '#e1e4e8',
+      backgroundColor: '#24292e',
+      borderColor: palette.borderDark
     }
   }
 });
 
-export const copyButton = style([
-  button,
-  {
-    position: 'absolute',
-    top: '0.5rem',
-    right: '0.5rem',
-    fontSize: '0.75rem',
-    fontWeight: 500,
-    padding: '0.3rem 0.6rem'
+// Token colors mirror shiki's github-light / github-dark themes.
+export const codeTag = style({color: '#116329', '@media': {[media.dark]: {color: '#7ee787'}}});
+export const codeAttr = style({color: '#0550ae', '@media': {[media.dark]: {color: '#79b8ff'}}});
+export const codeString = style({color: '#0a3069', '@media': {[media.dark]: {color: '#a5d6ff'}}});
+
+// Icon copy button (gdex-style): fixed size so it never resizes on click.
+export const copyButton = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  width: '2rem',
+  height: '2rem',
+  padding: 0,
+  color: palette.textMuted,
+  backgroundColor: palette.surface,
+  border: `1px solid ${palette.border}`,
+  borderRadius: '6px',
+  cursor: 'pointer',
+  transition: 'color 120ms ease, border-color 120ms ease',
+  '@media': {
+    [media.dark]: {
+      color: palette.textMutedDark,
+      backgroundColor: palette.surfaceDark,
+      borderColor: palette.borderDark
+    },
+    [media.reducedMotion]: {
+      transition: 'none'
+    },
+    [media.coarsePointer]: {
+      width: touchTargetMin,
+      height: touchTargetMin
+    }
+  },
+  selectors: {
+    '&:hover': {
+      borderColor: palette.accent
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${palette.accent}`,
+      outlineOffset: '2px'
+    },
+    '&[data-copied="true"]': {
+      color: palette.accent,
+      borderColor: palette.accent
+    }
   }
-]);
+});
+
+export const copyIconDefault = style({
+  width: '16px',
+  height: '16px',
+  display: 'block',
+  selectors: {
+    [`${copyButton}[data-copied="true"] &`]: {display: 'none'}
+  }
+});
+
+export const copyIconCopied = style({
+  width: '16px',
+  height: '16px',
+  display: 'none',
+  selectors: {
+    [`${copyButton}[data-copied="true"] &`]: {display: 'block'}
+  }
+});
 
 export const attribution = style({
   marginTop: '2.5rem',

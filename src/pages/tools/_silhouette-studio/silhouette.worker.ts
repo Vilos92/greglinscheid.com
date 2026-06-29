@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
-import type {EmitOptions} from './emit';
-import {emitFlatSvg, emitShadedSvg} from './emit';
+import type {EmitMode, EmitOptions} from './emit';
+import {emitCombinedSvg, emitFlatSvg, emitShadedSvg} from './emit';
 import type {LoadedMesh, Mat3} from './geometry';
 import {projectAndCull, projectShaded} from './geometry';
 import type {WorkerReply, WorkerRequest} from './protocol';
@@ -26,7 +26,7 @@ ctx.onmessage = (event: MessageEvent<WorkerRequest>): void => {
   if (mesh === undefined) {
     return;
   }
-  ctx.postMessage(emitReply(mesh, request.id, request.orientation, request.options, request.shaded));
+  ctx.postMessage(emitReply(mesh, request.id, request.orientation, request.options, request.mode));
 };
 
 /*
@@ -38,14 +38,21 @@ function emitReply(
   id: number,
   orientation: Mat3,
   options: EmitOptions,
-  shaded: boolean
+  mode: EmitMode
 ): WorkerReply {
   try {
-    const svg = shaded
-      ? emitShadedSvg(projectShaded(loaded, orientation), options)
-      : emitFlatSvg(projectAndCull(loaded, orientation), options);
-    return {type: 'svg', id, svg};
+    return {type: 'svg', id, svg: renderSvg(loaded, orientation, options, mode)};
   } catch (error) {
     return {type: 'error', id, message: error instanceof Error ? error.message : 'Silhouette failed'};
   }
+}
+
+function renderSvg(loaded: LoadedMesh, orientation: Mat3, options: EmitOptions, mode: EmitMode): string {
+  if (mode === 'shaded') {
+    return emitShadedSvg(projectShaded(loaded, orientation), options);
+  }
+  if (mode === 'combined') {
+    return emitCombinedSvg(projectAndCull(loaded, orientation), projectShaded(loaded, orientation), options);
+  }
+  return emitFlatSvg(projectAndCull(loaded, orientation), options);
 }

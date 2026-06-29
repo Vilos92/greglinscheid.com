@@ -1,4 +1,6 @@
 ---
+import {Code} from 'astro:components';
+
 import BaseLayout from '../../components/BaseLayout.astro';
 import {siteTitle, siteUrl} from '../../site';
 import {
@@ -10,6 +12,8 @@ import {
   colorInput,
   controls,
   copyButton,
+  copyIconCopied,
+  copyIconDefault,
   dropZone,
   fieldRow,
   fieldset,
@@ -25,6 +29,7 @@ import {
   slider,
   sliderRow,
   snippetBlock,
+  snippetHead,
   snippetHeading,
   snippetPre,
   snippets,
@@ -34,6 +39,15 @@ import {
 } from './_silhouette-studio/studio.css';
 
 const axes = ['+X', '-X', '+Y', '-Y', '+Z', '-Z'] as const;
+
+// Static usage snippet — never changes, so it's highlighted at build time.
+const maskSnippet = `.icon {
+  -webkit-mask: url(silhouette.svg) center / contain no-repeat;
+  mask: url(silhouette.svg) center / contain no-repeat;
+  background-color: currentColor;
+  width: 1.5rem;
+  height: 1.5rem;
+}`;
 
 const pageTitle = 'Silhouette Studio — 3D model to clean SVG icon | Greg Linscheid';
 const pageDescription =
@@ -79,7 +93,6 @@ const jsonLd = {
       <div id={ids.viewport} class={viewport}>
         <canvas id={ids.canvas} class={canvas}></canvas>
         <svg class={scanFrame} viewBox="0 0 512 512" aria-hidden="true">
-          <rect x="1" y="1" width="510" height="510" fill="none" stroke="currentColor" stroke-opacity="0.25" />
           <rect
             x="41"
             y="41"
@@ -154,10 +167,14 @@ const jsonLd = {
           <input id={ids.opacity} class={slider} type="range" min="0" max="100" value="100" />
         </div>
 
-        <label class={checkboxRow}>
-          <input id={ids.shade} type="checkbox" />
-          Shaded (cel-shaded opacity bands of <code>currentColor</code>)
-        </label>
+        <div class={fieldRow}>
+          <label class={label} for={ids.mode}>Style</label>
+          <select id={ids.mode} class={select}>
+            <option value="flat">Flat color</option>
+            <option value="shaded">Cel-shaded</option>
+            <option value="combined">Cel-shaded + base</option>
+          </select>
+        </div>
 
         <label class={checkboxRow}>
           <input id={ids.useVar} type="checkbox" />
@@ -182,19 +199,43 @@ const jsonLd = {
 
     <div class={snippets}>
       <div class={snippetBlock}>
-        <h2 class={snippetHeading}>Inline (inherits <code>currentColor</code>)</h2>
-        <button id={ids.copyInline} class={copyButton} type="button">Copy</button>
+        <div class={snippetHead}>
+          <h2 class={snippetHeading}>Inline (inherits <code>currentColor</code>)</h2>
+          <button id={ids.copyInline} class={copyButton} type="button" aria-label="Copy" title="Copy">
+            <svg class={copyIconDefault} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.5 2.25h5a.75.75 0 0 1 .75.75V4.25H4.75V3a.75.75 0 0 1 .75-.75h.25z" />
+                <path d="M4.25 5h7.5a.75.75 0 0 1 .75.75v6.75a.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V5.75A.75.75 0 0 1 4.25 5z" />
+              </g>
+            </svg>
+            <svg class={copyIconCopied} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
         <pre class={snippetPre}><code id={ids.snippetInline}></code></pre>
       </div>
 
       <div class={snippetBlock}>
-        <h2 class={snippetHeading}>External file via <code>mask-image</code></h2>
+        <div class={snippetHead}>
+          <h2 class={snippetHeading}>External file via <code>mask-image</code></h2>
+          <button id={ids.copyMask} class={copyButton} type="button" aria-label="Copy" title="Copy" data-clipboard={maskSnippet}>
+            <svg class={copyIconDefault} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.5 2.25h5a.75.75 0 0 1 .75.75V4.25H4.75V3a.75.75 0 0 1 .75-.75h.25z" />
+                <path d="M4.25 5h7.5a.75.75 0 0 1 .75.75v6.75a.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V5.75A.75.75 0 0 1 4.25 5z" />
+              </g>
+            </svg>
+            <svg class={copyIconCopied} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
         <p>
           An <code>&lt;img&gt;</code> can't inherit <code>currentColor</code>. To recolor an external
           SVG, drive it through a CSS mask instead:
         </p>
-        <button id={ids.copyMask} class={copyButton} type="button">Copy</button>
-        <pre class={snippetPre}><code id={ids.snippetMask}></code></pre>
+        <Code code={maskSnippet} lang="css" themes={{light: 'github-light', dark: 'github-dark'}} defaultColor={false} />
       </div>
     </div>
 

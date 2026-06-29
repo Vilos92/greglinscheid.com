@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {emitFlatSvg, emitShadedSvg} from './emit';
+import {emitCombinedSvg, emitFlatSvg, emitShadedSvg} from './emit';
 import type {Mat3, RawPrimitive} from './geometry';
 import {buildMesh, LOCKED_AXES, LOCKED_ORIENTATION, projectAndCull, projectShaded} from './geometry';
 
@@ -120,6 +120,16 @@ describe('shaded output', () => {
     expect(svg).toContain('viewBox="0 0 512 512"');
     expect(svg).toContain('fill="currentColor"');
     expect(svg).toContain('fill-opacity=');
+    expect((svg.match(/<path/g) ?? []).length).toBeGreaterThan(1);
+  });
+
+  it('combined mode layers a translucent flat base under the bands', () => {
+    const svg = emitCombinedSvg(
+      projectAndCull(mesh, LOCKED_ORIENTATION),
+      projectShaded(mesh, LOCKED_ORIENTATION),
+      {ariaHidden: true, useColorVar: false}
+    );
+    expect(svg).toContain('fill-opacity="0.6"');
     expect((svg.match(/<path/g) ?? []).length).toBeGreaterThan(1);
   });
 });

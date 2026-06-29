@@ -1,10 +1,10 @@
 import type * as THREE from 'three';
 
-import type {EmitOptions} from './emit';
+import type {EmitMode, EmitOptions} from './emit';
 import type {AxisToken, LoadedMesh, Mat3, RawPrimitive} from './geometry';
 import type {WorkerReply, WorkerRequest} from './protocol';
 
-import {ids} from './studio.css';
+import {codeAttr, codeString, codeTag, ids} from './studio.css';
 
 /*
  * Types.
@@ -80,14 +80,13 @@ function initStudio(): void {
 
   const colorInput = requireElement<HTMLInputElement>(ids.color);
   const opacityRange = requireElement<HTMLInputElement>(ids.opacity);
-  const shadeToggle = requireElement<HTMLInputElement>(ids.shade);
+  const modeSelect = requireElement<HTMLSelectElement>(ids.mode);
   const useVarToggle = requireElement<HTMLInputElement>(ids.useVar);
   const ariaHiddenToggle = requireElement<HTMLInputElement>(ids.ariaHidden);
   const titleInput = requireElement<HTMLInputElement>(ids.title);
   const downloadButton = requireElement<HTMLButtonElement>(ids.download);
 
   const snippetInline = requireElement<HTMLElement>(ids.snippetInline);
-  const snippetMask = requireElement<HTMLElement>(ids.snippetMask);
   const copyInlineButton = requireElement<HTMLButtonElement>(ids.copyInline);
   const copyMaskButton = requireElement<HTMLButtonElement>(ids.copyMask);
 
@@ -253,7 +252,8 @@ function initStudio(): void {
     if (viewport === undefined) {
       return;
     }
-    const half = radius * 1.15;
+    // ~1.2 keeps even the worst-case pose just inside the dashed scan frame.
+    const half = radius * 1.2;
     viewport.camera.left = -half;
     viewport.camera.right = half;
     viewport.camera.top = half;
@@ -315,7 +315,7 @@ function initStudio(): void {
       id: requestSeq,
       orientation: quatToMat3(ctx.three, ctx.orientation),
       options: emitOptions(),
-      shaded: shadeToggle.checked
+      mode: modeSelect.value as EmitMode
     };
     ctx.worker.postMessage(message);
   }
@@ -436,8 +436,7 @@ function initStudio(): void {
   }
 
   function updateSnippets(): void {
-    snippetInline.textContent = currentSvg.trim();
-    snippetMask.textContent = maskSnippet();
+    snippetInline.innerHTML = highlightSvg(currentSvg.trim());
   }
 
   /*
@@ -588,7 +587,7 @@ function initStudio(): void {
 
   colorInput.addEventListener('input', recolorPreview);
   opacityRange.addEventListener('input', recolorPreview);
-  shadeToggle.addEventListener('change', requestEmit);
+  modeSelect.addEventListener('change', requestEmit);
   useVarToggle.addEventListener('change', requestEmit);
   ariaHiddenToggle.addEventListener('change', () => {
     titleInput.disabled = ariaHiddenToggle.checked;
@@ -600,7 +599,9 @@ function initStudio(): void {
   copyInlineButton.addEventListener('click', () =>
     copyText(snippetInline.textContent ?? '', copyInlineButton)
   );
-  copyMaskButton.addEventListener('click', () => copyText(snippetMask.textContent ?? '', copyMaskButton));
+  copyMaskButton.addEventListener('click', () =>
+    copyText(copyMaskButton.dataset.clipboard ?? '', copyMaskButton)
+  );
 
   // Any interaction anywhere in the tool retires the idle showcase.
   const studioRoot = viewportEl.closest('[data-studio-root]');
@@ -667,18 +668,6 @@ function initStudio(): void {
     URL.revokeObjectURL(url);
   }
 
-  function maskSnippet(): string {
-    return [
-      '.icon {',
-      '  -webkit-mask: url(silhouette.svg) center / contain no-repeat;',
-      '  mask: url(silhouette.svg) center / contain no-repeat;',
-      '  background-color: currentColor;',
-      '  width: 1.5rem;',
-      '  height: 1.5rem;',
-      '}'
-    ].join('\n');
-  }
-
   function setStatus(message: string, isError: boolean): void {
     statusEl.textContent = message;
     statusEl.dataset.error = String(isError);
@@ -740,17 +729,19 @@ function buildDisplayGeometry(
 ): {geometry: THREE.BufferGeometry; radius: number} {
   const geometry = new three.BufferGeometry();
   const positions = new Float32Array(mesh.vertices.length * 3);
+  let maxDistanceSq = 0;
   for (let index = 0; index < mesh.vertices.length; index++) {
-    const vertex = mesh.vertices[index];
-    positions[index * 3] = vertex[0];
-    positions[index * 3 + 1] = vertex[1];
-    positions[index * 3 + 2] = vertex[2];
+    const [x, y, z] = mesh.vertices[index];
+    positions[index * 3] = x;
+    positions[index * 3 + 1] = y;
+    positions[index * 3 + 2] = z;
+    maxDistanceSq = Math.max(maxDistanceSq, x * x + y * y + z * z);
   }
   geometry.setAttribute('position', new three.BufferAttribute(positions, 3));
   geometry.setIndex(mesh.faces.flat());
   geometry.computeVertexNormals();
-  geometry.computeBoundingSphere();
-  return {geometry, radius: geometry.boundingSphere?.radius ?? 6};
+  // Radius about the origin (the rotation/look-at center) so no pose can clip.
+  return {geometry, radius: Math.sqrt(maxDistanceSq) || 6};
 }
 
 function makeDisplayMaterial(three: ThreeModule): THREE.MeshStandardMaterial {
@@ -845,20 +836,54 @@ function buildIdleTargets(three: ThreeModule, base: THREE.Quaternion): THREE.Qua
   return targets;
 }
 
-/** @sideEffect Writes to the clipboard and flashes the button label. */
+/** @sideEffect Writes to the clipboard and flashes the button's copied state. */
 async function copyText(text: string, button: HTMLButtonElement): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
-    const original = button.textContent;
-    button.textContent = 'Copied';
+    button.dataset.copied = 'true';
     window.setTimeout(() => {
-      button.textContent = original;
+      delete button.dataset.copied;
     }, 1200);
   } catch {
-    button.textContent = 'Copy failed';
+    // Leave the button as-is if the clipboard is unavailable.
   }
 }
 
 function messageFrom(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong.';
+}
+
+// Lightweight highlighter for our own predictable SVG output: tags, attribute
+// names, and quoted values. `textContent` of the result is still the raw SVG.
+function highlightSvg(svg: string): string {
+  return svg
+    .split(/(<[^>]*>)/)
+    .map(part => (part.startsWith('<') ? highlightTag(part) : escapeHtml(part)))
+    .join('');
+}
+
+function highlightTag(tag: string): string {
+  return tag.replace(
+    /(<\/?)([A-Za-z][\w-]*)|([A-Za-z][\w-]*)(=)("[^"]*")|(\/?>)/g,
+    (match, open, name, attr, equals, value, close) => {
+      if (name !== undefined) {
+        return escapeHtml(open) + span(codeTag, name);
+      }
+      if (attr !== undefined) {
+        return span(codeAttr, attr) + escapeHtml(equals) + span(codeString, value);
+      }
+      if (close !== undefined) {
+        return escapeHtml(close);
+      }
+      return escapeHtml(match);
+    }
+  );
+}
+
+function span(className: string, text: string): string {
+  return `<span class="${className}">${escapeHtml(text)}</span>`;
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
