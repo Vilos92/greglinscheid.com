@@ -125,19 +125,19 @@ const jsonLd = {
           <legend class={legend}>Pose</legend>
 
           <div class={sliderRow}>
-            <label class={label} for={ids.bank}>Pitch</label>
-            <input id={ids.bank} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.bankNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <label class={label} for={ids.x}>X</label>
+            <input id={ids.x} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+            <input id={ids.xNumber} class={number} type="number" min="-180" max="180" value="0" />
           </div>
           <div class={sliderRow}>
-            <label class={label} for={ids.pitch}>Yaw</label>
-            <input id={ids.pitch} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.pitchNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <label class={label} for={ids.y}>Y</label>
+            <input id={ids.y} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+            <input id={ids.yNumber} class={number} type="number" min="-180" max="180" value="0" />
           </div>
           <div class={sliderRow}>
-            <label class={label} for={ids.spin}>Roll</label>
-            <input id={ids.spin} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.spinNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <label class={label} for={ids.z}>Z</label>
+            <input id={ids.z} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+            <input id={ids.zNumber} class={number} type="number" min="-180" max="180" value="0" />
           </div>
 
           <label class={checkboxRow}>

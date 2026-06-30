@@ -56,7 +56,7 @@ if (document.getElementById(ids.viewport)?.closest('[data-studio-root]') instanc
 
 /**
  * Wire the 3D to SVG page: drop/pose/preview/export.
- * @sideEffect Registers DOM events, fetches the default model, mutates the page.
+ * Registers DOM events, fetches the default model, mutates the page.
  */
 function initStudio(): void {
   const viewportEl = requireElement<HTMLDivElement>(ids.viewport);
@@ -68,12 +68,12 @@ function initStudio(): void {
   const statusEl = requireElement<HTMLParagraphElement>(ids.status);
   const previewEl = requireElement<HTMLDivElement>(ids.preview);
 
-  const bankRange = requireElement<HTMLInputElement>(ids.bank);
-  const pitchRange = requireElement<HTMLInputElement>(ids.pitch);
-  const spinRange = requireElement<HTMLInputElement>(ids.spin);
-  const bankNumber = requireElement<HTMLInputElement>(ids.bankNumber);
-  const pitchNumber = requireElement<HTMLInputElement>(ids.pitchNumber);
-  const spinNumber = requireElement<HTMLInputElement>(ids.spinNumber);
+  const xRange = requireElement<HTMLInputElement>(ids.x);
+  const yRange = requireElement<HTMLInputElement>(ids.y);
+  const zRange = requireElement<HTMLInputElement>(ids.z);
+  const xNumber = requireElement<HTMLInputElement>(ids.xNumber);
+  const yNumber = requireElement<HTMLInputElement>(ids.yNumber);
+  const zNumber = requireElement<HTMLInputElement>(ids.zNumber);
 
   const snapToggle = requireElement<HTMLInputElement>(ids.snap);
   const resetButton = requireElement<HTMLButtonElement>(ids.reset);
@@ -121,7 +121,7 @@ function initStudio(): void {
    * Loading.
    */
 
-  /** @sideEffect Async dynamic import of the clipper-free geometry module. */
+  /** Async dynamic import of the clipper-free geometry module. */
   async function ensureGeometry(): Promise<GeometryModule> {
     if (geometry === undefined) {
       geometry = await import('./geometry');
@@ -138,7 +138,7 @@ function initStudio(): void {
     return worker;
   }
 
-  /** @sideEffect Network fetch of the default GLB, then loads it. */
+  /** Network fetch of the default GLB, then loads it. */
   async function loadDefaultModel(): Promise<void> {
     showLoading();
     try {
@@ -154,7 +154,7 @@ function initStudio(): void {
     }
   }
 
-  /** @sideEffect Reads a chosen File and loads it, replacing the current model. */
+  /** Reads a chosen File and loads it, replacing the current model. */
   async function loadFile(file: File): Promise<void> {
     showLoading();
     try {
@@ -191,7 +191,7 @@ function initStudio(): void {
     dropZoneEl.dataset.hidden = 'false';
   }
 
-  /** @sideEffect Parses the model, builds the mesh, and mounts the viewport. */
+  /** Parses the model, builds the mesh, and mounts the viewport. */
   async function loadModel(buffer: ArrayBuffer, format: ModelFormat): Promise<void> {
     const [threeModule, geometryModule] = await Promise.all([import('three'), ensureGeometry()]);
     three = threeModule;
@@ -341,7 +341,7 @@ function initStudio(): void {
     ctx.worker.postMessage(message);
   }
 
-  /** @sideEffect Applies the worker reply and runs the freshest pending request. */
+  /** Applies the worker reply and runs the freshest pending request. */
   function onWorkerMessage(event: MessageEvent<WorkerReply>): void {
     isWorkerBusy = false;
     const reply = event.data;
@@ -395,7 +395,7 @@ function initStudio(): void {
     idleRaf = requestAnimationFrame(idleTick);
   }
 
-  /** @sideEffect Stops the showcase for good once the user interacts. */
+  /** Stops the showcase for good once the user interacts. */
   function stopIdle(): void {
     if (!isIdle) {
       return;
@@ -487,15 +487,15 @@ function initStudio(): void {
       return;
     }
     const euler = new three.Euler().setFromQuaternion(orientation, 'XYZ');
-    const bank = String(wrapAngle(radToDeg(euler.x)));
-    const pitch = String(wrapAngle(radToDeg(euler.y)));
-    const spin = String(wrapAngle(radToDeg(euler.z)));
-    bankRange.value = bank;
-    pitchRange.value = pitch;
-    spinRange.value = spin;
-    setNumberValue(bankNumber, bank);
-    setNumberValue(pitchNumber, pitch);
-    setNumberValue(spinNumber, spin);
+    const xValue = String(wrapAngle(radToDeg(euler.x)));
+    const yValue = String(wrapAngle(radToDeg(euler.y)));
+    const zValue = String(wrapAngle(radToDeg(euler.z)));
+    xRange.value = xValue;
+    yRange.value = yValue;
+    zRange.value = zValue;
+    setNumberValue(xNumber, xValue);
+    setNumberValue(yNumber, yValue);
+    setNumberValue(zNumber, zValue);
   }
 
   // Don't overwrite a number field while the user is typing/stepping in it.
@@ -510,9 +510,9 @@ function initStudio(): void {
       return;
     }
     const euler = new three.Euler(
-      degToRad(maybeSnap(Number(bankRange.value))),
-      degToRad(maybeSnap(Number(pitchRange.value))),
-      degToRad(maybeSnap(Number(spinRange.value))),
+      degToRad(maybeSnap(Number(xRange.value))),
+      degToRad(maybeSnap(Number(yRange.value))),
+      degToRad(maybeSnap(Number(zRange.value))),
       'XYZ'
     );
     applyOrientation(new three.Quaternion().setFromEuler(euler));
@@ -597,13 +597,13 @@ function initStudio(): void {
    * Events.
    */
 
-  bankRange.addEventListener('input', onSliderInput);
-  pitchRange.addEventListener('input', onSliderInput);
-  spinRange.addEventListener('input', onSliderInput);
+  xRange.addEventListener('input', onSliderInput);
+  yRange.addEventListener('input', onSliderInput);
+  zRange.addEventListener('input', onSliderInput);
   for (const [slider, numberInput] of [
-    [bankRange, bankNumber],
-    [pitchRange, pitchNumber],
-    [spinRange, spinNumber]
+    [xRange, xNumber],
+    [yRange, yNumber],
+    [zRange, zNumber]
   ] as const) {
     const apply = (): void => onNumberInput(slider, numberInput);
     numberInput.addEventListener('input', apply);
@@ -682,7 +682,7 @@ function initStudio(): void {
    * Local helpers.
    */
 
-  /** @sideEffect Triggers a browser download of the current SVG. */
+  /** Triggers a browser download of the current SVG. */
   function downloadSvg(): void {
     if (currentSvg.length === 0) {
       return;
@@ -900,7 +900,7 @@ function buildIdleTargets(three: ThreeModule, base: THREE.Quaternion): THREE.Qua
   return targets;
 }
 
-/** @sideEffect Writes to the clipboard and flashes the button's copied state. */
+/** Writes to the clipboard and flashes the button's copied state. */
 async function copyText(text: string, button: HTMLButtonElement): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);

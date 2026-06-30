@@ -15,7 +15,7 @@ let mesh: LoadedMesh | undefined;
 
 /**
  * Run the clipper silhouette off the main thread.
- * @sideEffect Holds the current mesh and posts SVG/error replies.
+ * Holds the current mesh and posts SVG/error replies.
  */
 ctx.onmessage = (event: MessageEvent<WorkerRequest>): void => {
   const request = event.data;

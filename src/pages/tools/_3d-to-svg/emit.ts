@@ -115,7 +115,8 @@ function wrapSvg(body: string): string {
   return `<svg viewBox="0 0 ${CANVAS} ${CANVAS}" xmlns="http://www.w3.org/2000/svg">${body}</svg>\n`;
 }
 
-// Non-zero union of triangle rings (snapped to the clipper grid).
+// Merge overlapping triangles into one filled region. Non-zero fill so the
+// triangles' winding does not matter.
 function unionTriangles(triangles: readonly Vec2[][]): ClipperLib.Paths {
   const clipper = new ClipperLib.Clipper();
   for (const triangle of triangles) {
@@ -136,7 +137,8 @@ function unionTriangles(triangles: readonly Vec2[][]): ClipperLib.Paths {
   return unioned;
 }
 
-// Union one shade band's triangles, close hairline gaps, simplify, drop specks.
+// Seal hairline gaps between a band's triangles by growing then shrinking the
+// union, then simplify and drop specks too small to read.
 function unionBand(triangles: readonly Vec2[][]): Vec2[][] {
   const grown = offsetClipperPaths(unionTriangles(triangles), SHADE_CLOSE * CLIPPER_SCALE);
   const closed = offsetClipperPaths(grown, -SHADE_CLOSE * CLIPPER_SCALE);

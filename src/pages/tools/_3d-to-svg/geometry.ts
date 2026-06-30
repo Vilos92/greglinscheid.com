@@ -56,6 +56,11 @@ const AX: Record<AxisToken, Vec3> = {
   '-Z': [0, 0, -1]
 };
 
+// Grids tried fine→coarse: the finest that fits the budget wins. Dropping every
+// Nth face (the naive approach) scatters the surface and punches holes in the
+// silhouette union. Welding vertices onto a grid keeps the surface continuous.
+const CLUSTER_GRIDS = [128, 96, 64, 48, 32, 24, 16, 12, 8];
+
 /** Build a normalized, pose-independent mesh from raw primitives. */
 export function buildMesh(
   primitives: readonly RawPrimitive[],
@@ -175,7 +180,8 @@ function boundsOf(points: readonly Vec2[]): {mn: Vec2; mx: Vec2} {
   return {mn: [minX, minY], mx: [maxX, maxY]};
 }
 
-// Append one primitive's world-space vertices and triangle faces to the accumulators.
+// A primitive's faces index into its own vertices, so offset them by the running
+// vertex count when merging everything into the shared vertex and face lists.
 function accumulatePrimitive(
   primitive: RawPrimitive,
   rawVertices: Vec3[],
@@ -207,11 +213,6 @@ function accumulatePrimitive(
     rawFaces.push([vertexOffset + indices[i], vertexOffset + indices[i + 1], vertexOffset + indices[i + 2]]);
   }
 }
-
-// Grids tried fine→coarse: the finest that fits the budget wins. Dropping every
-// Nth face (the naive approach) scatters the surface and punches holes in the
-// silhouette union; welding vertices onto a grid keeps the surface continuous.
-const CLUSTER_GRIDS = [128, 96, 64, 48, 32, 24, 16, 12, 8];
 
 // A budget of 0 (or an already-small mesh) keeps every face untouched.
 function simplifyMesh(vertices: Vec3[], faces: [number, number, number][], targetFaces: number): LoadedMesh {
@@ -338,9 +339,8 @@ function makeTransform(pitch: number, bank: number): Mat3 {
   return multiplyMat(roll, pitchMatrix);
 }
 
-// Every non-degenerate face contributes to the silhouette: the outline is the
-// union of all projected faces, so back-face culling would only punch holes at
-// grazing angles where a thin surface reads edge-on.
+// The silhouette is the union of all projected faces, so keep every face that has
+// real area — front and back both fill the outline.
 function collectVisibleFaces(faces: [number, number, number][], posed: Vec3[]): VisibleFace[] {
   const visible: VisibleFace[] = [];
 
