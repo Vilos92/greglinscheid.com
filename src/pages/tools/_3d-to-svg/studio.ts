@@ -104,7 +104,7 @@ function initStudio(): void {
   let viewport: Viewport | undefined;
   let currentSvg = '';
 
-  // The clipper silhouette runs in a worker; coalesce so only the freshest
+  // The clipper silhouette runs in a worker. Coalesce so only the freshest
   // pose is ever in flight and stale replies are dropped.
   let worker: Worker | undefined;
   let isWorkerBusy = false;

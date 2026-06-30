@@ -29,25 +29,6 @@ const cube: RawPrimitive = {
   worldMatrix: IDENTITY_MATRIX
 };
 
-// An n×n quad grid of triangles on the z=0 plane: dense, weldable geometry.
-function gridMesh(n: number): RawPrimitive {
-  const positions: number[] = [];
-  for (let j = 0; j <= n; j++) {
-    for (let i = 0; i <= n; i++) {
-      positions.push(i, j, 0);
-    }
-  }
-  const indices: number[] = [];
-  const stride = n + 1;
-  for (let j = 0; j < n; j++) {
-    for (let i = 0; i < n; i++) {
-      const a = j * stride + i;
-      indices.push(a, a + 1, a + stride, a + 1, a + stride + 1, a + stride);
-    }
-  }
-  return {positions, indices, worldMatrix: IDENTITY_MATRIX};
-}
-
 /*
  * Tests.
  */
@@ -141,3 +122,26 @@ describe('shaded output', () => {
     expect((svg.match(/<path/g) ?? []).length).toBeGreaterThan(1);
   });
 });
+
+/*
+ * Helpers.
+ */
+
+// An n×n quad grid of triangles on the z=0 plane: dense, weldable geometry.
+function gridMesh(n: number): RawPrimitive {
+  const positions: number[] = [];
+  for (let j = 0; j <= n; j++) {
+    for (let i = 0; i <= n; i++) {
+      positions.push(i, j, 0);
+    }
+  }
+  const indices: number[] = [];
+  const stride = n + 1;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const a = j * stride + i;
+      indices.push(a, a + 1, a + stride, a + 1, a + stride + 1, a + stride);
+    }
+  }
+  return {positions, indices, worldMatrix: IDENTITY_MATRIX};
+}

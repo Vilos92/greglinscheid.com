@@ -291,8 +291,7 @@ export const label = style({
   fontSize: '0.9rem'
 });
 
-// Style picker: stacked radios so all three modes stay visible (switching them
-// is the point of the tool), rather than hidden behind a select.
+// Style picker: stacked radios so all modes stay visible.
 export const modeField = style({
   display: 'grid',
   gap: '0.5rem'
@@ -404,7 +403,7 @@ export const snippetPre = style({
   maxWidth: '100%',
   maxHeight: '15rem',
   overflowY: 'auto',
-  // The exported SVG is one long line; wrap it instead of blowing out the width.
+  // The exported SVG is one long line. We wrap it instead of blowing out the width.
   whiteSpace: 'pre-wrap',
   overflowWrap: 'anywhere',
   fontFamily: fonts.mono,
