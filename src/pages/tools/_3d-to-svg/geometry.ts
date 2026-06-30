@@ -29,7 +29,10 @@ type VisibleFace = {
  * Constants.
  */
 
-const CAMPOS: Vec3 = [-6.2, -3.6, 3.6];
+// Head-on scan camera, looking down the model's forward axis (+X canonical). Being
+// axis-aligned makes the world frame match the screen, so the X/Y/Z pose sliders
+// read relative to what the viewer sees. The viewport shares this exact position.
+export const CAMPOS: Vec3 = [8, 0, 0];
 const FIT_PX = 430;
 
 // Light for the cel-shaded output: high, to the left, toward the viewer.
@@ -40,11 +43,11 @@ export const CANVAS = 512;
 // Default forward/up axis remap for the bundled ship.
 export const LOCKED_AXES: {forward: AxisToken; up: AxisToken} = {forward: '-X', up: '+Y'};
 
-// The known-good "roll-button" orientation: pitch 6 + bank 40, then an 18°
-// in-plane spin folded in as a rotation about the scan axis.
+// Default load pose: a gentle 3/4 view, reached from head-on by turning about the
+// screen-up axis (world Z) and tilting about the screen-right axis (world Y).
 export const LOCKED_ORIENTATION: Mat3 = multiplyMat(
-  rotationAboutAxis(normalize(scale(CAMPOS, -1)), (-18 * Math.PI) / 180),
-  makeTransform(6, 40)
+  rotationAboutAxis([0, 0, 1], (-35 * Math.PI) / 180),
+  rotationAboutAxis([0, 1, 0], (28 * Math.PI) / 180)
 );
 
 const AX: Record<AxisToken, Vec3> = {
@@ -321,22 +324,6 @@ function rotationAboutAxis(axis: Vec3, angle: number): Mat3 {
     [t * x * y + s * z, t * y * y + c, t * y * z - s * x],
     [t * x * z - s * y, t * y * z + s * x, t * z * z + c]
   ];
-}
-
-function makeTransform(pitch: number, bank: number): Mat3 {
-  const bankRad = (bank * Math.PI) / 180;
-  const pitchRad = (pitch * Math.PI) / 180;
-  const roll: Mat3 = [
-    [1, 0, 0],
-    [0, Math.cos(bankRad), -Math.sin(bankRad)],
-    [0, Math.sin(bankRad), Math.cos(bankRad)]
-  ];
-  const pitchMatrix: Mat3 = [
-    [Math.cos(pitchRad), 0, Math.sin(pitchRad)],
-    [0, 1, 0],
-    [-Math.sin(pitchRad), 0, Math.cos(pitchRad)]
-  ];
-  return multiplyMat(roll, pitchMatrix);
 }
 
 // The silhouette is the union of all projected faces, so keep every face that has

@@ -1,7 +1,7 @@
 import type * as THREE from 'three';
 
 import type {EmitMode} from './emit';
-import type {AxisToken, LoadedMesh, Mat3, RawPrimitive} from './geometry';
+import type {AxisToken, LoadedMesh, Mat3, RawPrimitive, Vec3} from './geometry';
 import type {WorkerReply, WorkerRequest} from './protocol';
 
 import {codeAttr, codeString, codeTag, ids, spinner} from './studio.css';
@@ -200,7 +200,7 @@ function initStudio(): void {
     primitives = await parseModel(threeModule, buffer, format);
     rebuildMesh(geometryModule);
 
-    mountViewport(threeModule);
+    mountViewport(threeModule, geometryModule.CAMPOS);
     rebuildDisplay(threeModule);
     dropZoneEl.dataset.hidden = 'true';
     setStatus('', false);
@@ -227,7 +227,7 @@ function initStudio(): void {
    * Viewport.
    */
 
-  function mountViewport(three: ThreeModule): void {
+  function mountViewport(three: ThreeModule, campos: Vec3): void {
     if (viewport !== undefined) {
       return;
     }
@@ -237,9 +237,14 @@ function initStudio(): void {
 
     const scene = new three.Scene();
     const camera = new three.OrthographicCamera(-6, 6, 6, -6, 0.1, 100);
+    // Share the silhouette's scan camera so the two panes always agree.
+    camera.up.set(0, 0, 1);
+    camera.position.set(campos[0], campos[1], campos[2]);
+    camera.lookAt(0, 0, 0);
 
+    // Front-upper-left key light for legible 3D shading (preview only).
     const key = new three.DirectionalLight(0xffffff, 2.2);
-    key.position.set(-6.2, -3.6, 3.6);
+    key.position.set(6, -6, 8);
     const fill = new three.HemisphereLight(0xffffff, 0x404040, 1.1);
     scene.add(key, fill);
 
@@ -288,16 +293,13 @@ function initStudio(): void {
     applyPoseToViewport();
   }
 
-  // The viewport shares the pipeline's fixed scan camera and shows the model
-  // under the exact same orientation, so the two panes always agree.
+  // The viewport shows the model under the same orientation as the silhouette, so
+  // the two panes always agree (the camera itself is fixed, set once at mount).
   function applyPoseToViewport(): void {
     if (viewport === undefined || orientation === undefined) {
       return;
     }
     viewport.group.quaternion.copy(orientation);
-    viewport.camera.up.set(0, 0, 1);
-    viewport.camera.position.set(-6.2, -3.6, 3.6);
-    viewport.camera.lookAt(0, 0, 0);
     viewport.renderer.render(viewport.scene, viewport.camera);
   }
 

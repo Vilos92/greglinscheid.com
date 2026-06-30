@@ -2,7 +2,7 @@ import {describe, expect, it} from 'vitest';
 
 import {emitFlatSvg, emitShadedSvg} from './emit';
 import type {Mat3, RawPrimitive} from './geometry';
-import {buildMesh, LOCKED_AXES, LOCKED_ORIENTATION, projectAndCull, projectShaded} from './geometry';
+import {buildMesh, CAMPOS, LOCKED_AXES, LOCKED_ORIENTATION, projectAndCull, projectShaded} from './geometry';
 
 /*
  * Constants.
@@ -79,6 +79,12 @@ describe('locked pose', () => {
   it('keeps the bundled ship axes and a valid orientation', () => {
     expect(LOCKED_AXES).toEqual({forward: '-X', up: '+Y'});
     expect(LOCKED_ORIENTATION).toHaveLength(3);
+  });
+
+  it('scans head-on so the pose sliders stay screen-aligned', () => {
+    // Exactly one non-zero component means the camera looks straight down a world
+    // axis, so the world frame matches the screen and X/Y/Z read as the viewer sees.
+    expect(CAMPOS.filter(component => component !== 0)).toHaveLength(1);
   });
 });
 
