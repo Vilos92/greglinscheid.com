@@ -187,3 +187,21 @@ export const main = style({
     }
   }
 });
+
+// Wide container for interactive pages that escape the prose column (e.g. tools).
+export const mainFullBleed = style({
+  // Keep the side padding inside the 100% width so it never overflows the viewport.
+  boxSizing: 'border-box',
+  width: '100%',
+  maxWidth: '1200px',
+  margin: '0 auto',
+  padding: '2em 1.5em',
+  '@media': {
+    [media.content]: {
+      padding: '1.5em 1em'
+    },
+    [media.narrow]: {
+      padding: '1.25em 0.75em'
+    }
+  }
+});

@@ -1,16 +1,23 @@
 ---
 import '../styles/code.css.ts';
 import '../styles/global.css.ts';
+import {siteTitle} from '../site';
 
 interface Props {
   title: string;
   description: string;
   image?: string;
+  imageAlt?: string;
+  keywords?: string;
+  jsonLd?: Record<string, unknown>;
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const {title, description, image = '/blog/hello-world.jpg'} = Astro.props;
+const {title, description, image, imageAlt = siteTitle, keywords, jsonLd} = Astro.props;
+
+// No fallback image: a page that wants a social card passes a real one.
+const imageURL = image === undefined ? undefined : new URL(image, Astro.site);
 ---
 
 <meta charset="utf-8" />
@@ -30,15 +37,27 @@ const {title, description, image = '/blog/hello-world.jpg'} = Astro.props;
 <title>{title}</title>
 <meta name="title" content={title} />
 <meta name="description" content={description} />
+<meta name="author" content={siteTitle} />
+<meta name="robots" content="index, follow" />
+{keywords ? <meta name="keywords" content={keywords} /> : undefined}
 
 <meta property="og:type" content="website" />
+<meta property="og:site_name" content={siteTitle} />
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+{imageURL ? <meta property="og:image" content={imageURL} /> : undefined}
+{imageURL ? <meta property="og:image:alt" content={imageAlt} /> : undefined}
 
-<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:card" content={imageURL ? 'summary_large_image' : 'summary'} />
 <meta name="twitter:url" content={Astro.url} />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
-<meta name="twitter:image" content={new URL(image, Astro.url)} />
+{imageURL ? <meta name="twitter:image" content={imageURL} /> : undefined}
+{imageURL ? <meta name="twitter:image:alt" content={imageAlt} /> : undefined}
+
+{
+  jsonLd ? (
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+  ) : undefined
+}

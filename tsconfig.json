@@ -4,7 +4,11 @@
     "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    // `vp test` aliases `vitest` to the Vite+ test runner at runtime; mirror that for tsc/oxlint.
+    "paths": {
+      "vitest": ["./node_modules/@voidzero-dev/vite-plus-test/dist/index.d.ts"]
+    }
   },
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist"]

@@ -24,7 +24,12 @@ const {post} = Astro.props;
 const {Content} = await render(post);
 ---
 
-<BaseLayout title={formatTitle(post.data.title)} description={post.data.description}>
+<BaseLayout
+  title={formatTitle(post.data.title)}
+  description={post.data.description}
+  image={post.data.heroImage}
+  imageAlt={post.data.title}
+>
   <article>
     <Prose>
       {post.data.heroImage ? (

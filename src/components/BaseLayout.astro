@@ -2,26 +2,46 @@
 import BaseHead from './BaseHead.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import Footer from './Footer.astro';
-import {MAIN_CONTENT_ID, main, skipLink} from '../styles/global.css';
+import {MAIN_CONTENT_ID, main, mainFullBleed, skipLink} from '../styles/global.css';
 
 interface Props {
   title: string;
   description: string;
   image?: string;
+  imageAlt?: string;
+  keywords?: string;
+  jsonLd?: Record<string, unknown>;
   hasBreadcrumbs?: boolean;
+  isFullBleed?: boolean;
 }
 
-const {title, description, image, hasBreadcrumbs = true} = Astro.props;
+const {
+  title,
+  description,
+  image,
+  imageAlt,
+  keywords,
+  jsonLd,
+  hasBreadcrumbs = true,
+  isFullBleed = false
+} = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} image={image} />
+    <BaseHead
+      title={title}
+      description={description}
+      image={image}
+      imageAlt={imageAlt}
+      keywords={keywords}
+      jsonLd={jsonLd}
+    />
   </head>
   <body>
     <a class={skipLink} href={`#${MAIN_CONTENT_ID}`}>Skip to content</a>
-    <main class={main} id={MAIN_CONTENT_ID} tabindex="-1">
+    <main class={isFullBleed ? mainFullBleed : main} id={MAIN_CONTENT_ID} tabindex="-1">
       {hasBreadcrumbs ? <Breadcrumbs /> : undefined}
       <slot />
     </main>

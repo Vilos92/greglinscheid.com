@@ -1,0 +1,207 @@
+---
+import BaseLayout from '../../components/BaseLayout.astro';
+import {siteTitle, siteUrl} from '../../site';
+import {
+  areaOutput,
+  areaPose,
+  areaPreview,
+  areaViewport,
+  attribution,
+  button,
+  buttonRow,
+  canvas,
+  checkboxRow,
+  colorInput,
+  copyButton,
+  copyIconCopied,
+  copyIconDefault,
+  dropZone,
+  fieldRow,
+  fieldset,
+  ids,
+  intro,
+  label,
+  legend,
+  loadButton,
+  loadingOverlay,
+  modeField,
+  modeGroup,
+  modeOption,
+  number,
+  poseGrid,
+  preview,
+  spinner,
+  scanFrame,
+  slider,
+  sliderRow,
+  snippetBlock,
+  snippetHead,
+  snippetHeading,
+  snippetPre,
+  status,
+  viewport
+} from './_3d-to-svg/studio.css';
+
+const pageTitle = '3D to SVG: turn a 3D model into an SVG icon | Greg Linscheid';
+const pageDescription =
+  'A web-based tool that turns a 3D model into a flat or cel-shaded SVG icon. Runs in your browser. Nothing is uploaded.';
+const pageUrl = `${siteUrl}/tools/3d-to-svg/`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: '3D to SVG',
+  url: pageUrl,
+  description: pageDescription,
+  applicationCategory: 'DesignApplication',
+  operatingSystem: 'Any (modern web browser)',
+  browserRequirements: 'Requires JavaScript and WebGL',
+  isAccessibleForFree: true,
+  offers: {'@type': 'Offer', price: '0', priceCurrency: 'USD'},
+  creator: {'@type': 'Person', name: siteTitle, url: siteUrl}
+};
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  image="/og/3d-to-svg.png"
+  imageAlt="A 3D model turned into an SVG icon"
+  keywords="SVG icon generator, 3D model to SVG, GLB to SVG, OBJ to SVG, STL to SVG, mesh to SVG, currentColor icon, cel-shaded SVG, free SVG tool"
+  jsonLd={jsonLd}
+  isFullBleed
+>
+  <div data-studio-root>
+    <header>
+      <h1>3D to SVG</h1>
+      <p class={intro}>
+        Drop a <code>.glb</code>, <code>.obj</code>, or <code>.stl</code> model below and pose it with
+        the mouse or the sliders, then export it as a flat or cel-shaded SVG icon. Everything runs in
+        your browser. Nothing gets uploaded. The preview is the exact path that gets exported, so a
+        given model, pose, and style always produce the same bytes.
+      </p>
+    </header>
+
+    <div class={poseGrid}>
+      <div id={ids.viewport} class:list={[viewport, areaViewport]}>
+        <canvas id={ids.canvas} class={canvas}></canvas>
+        <svg class={scanFrame} viewBox="0 0 512 512" aria-hidden="true">
+          <rect
+            x="41"
+            y="41"
+            width="430"
+            height="430"
+            fill="none"
+            stroke="currentColor"
+            stroke-opacity="0.35"
+            stroke-dasharray="6 8"
+          />
+        </svg>
+        <button id={ids.loadButton} class={loadButton} type="button" aria-label="Load a model" title="Load a model">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 10.5V2.5" />
+              <path d="M5 5.5 8 2.5l3 3" />
+              <path d="M2.75 9.5v2.25a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V9.5" />
+            </g>
+          </svg>
+        </button>
+        <div id={ids.dropZone} class={dropZone} data-hidden="true">
+          <strong>Drop a 3D model</strong>
+          <span>.glb, .obj, or .stl</span>
+          <input id={ids.fileInput} type="file" accept=".glb,.obj,.stl,model/gltf-binary" hidden />
+        </div>
+        <div id={ids.loading} class={loadingOverlay} data-hidden="false">
+          <div class={spinner}></div>
+        </div>
+      </div>
+
+      <div id={ids.preview} class:list={[preview, areaPreview]}></div>
+
+      <fieldset class:list={[fieldset, areaPose]}>
+        <legend class={legend}>Pose</legend>
+
+          <div class={sliderRow}>
+            <label class={label} for={ids.x}>X</label>
+            <input id={ids.x} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+            <input id={ids.xNumber} class={number} type="number" min="-180" max="180" value="0" />
+          </div>
+          <div class={sliderRow}>
+            <label class={label} for={ids.y}>Y</label>
+            <input id={ids.y} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+            <input id={ids.yNumber} class={number} type="number" min="-180" max="180" value="0" />
+          </div>
+          <div class={sliderRow}>
+            <label class={label} for={ids.z}>Z</label>
+            <input id={ids.z} class={slider} type="range" min="-180" max="180" step="1" value="0" />
+            <input id={ids.zNumber} class={number} type="number" min="-180" max="180" value="0" />
+          </div>
+
+          <label class={checkboxRow}>
+            <input id={ids.snap} type="checkbox" />
+            Snap to 15°
+          </label>
+
+          <div class={buttonRow}>
+            <button id={ids.reset} class={button} type="button">Reset</button>
+          </div>
+        </fieldset>
+
+        <fieldset class:list={[fieldset, areaOutput]}>
+          <legend class={legend}>Output</legend>
+
+          <div class={fieldRow}>
+            <label class={label} for={ids.color}>Color</label>
+            <input id={ids.color} class={colorInput} type="color" value="#b45309" />
+          </div>
+
+          <div class={modeField}>
+            <span class={label}>Style</span>
+            <div id={ids.mode} class={modeGroup} role="radiogroup" aria-label="Style">
+              <label class={modeOption}>
+                <input type="radio" name="studio-mode" value="shaded" checked />
+                Cel-shaded
+              </label>
+              <label class={modeOption}>
+                <input type="radio" name="studio-mode" value="flat" />
+                Flat color
+              </label>
+            </div>
+          </div>
+
+          <div class={buttonRow}>
+            <button id={ids.download} class={button} type="button">Download SVG</button>
+          </div>
+        </fieldset>
+    </div>
+
+    <p id={ids.status} class={status} role="status" aria-live="polite"></p>
+
+    <div class={snippetBlock}>
+        <div class={snippetHead}>
+          <h2 class={snippetHeading}>Exported SVG</h2>
+          <button id={ids.copyInline} class={copyButton} type="button" aria-label="Copy" title="Copy">
+            <svg class={copyIconDefault} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.5 2.25h5a.75.75 0 0 1 .75.75V4.25H4.75V3a.75.75 0 0 1 .75-.75h.25z" />
+                <path d="M4.25 5h7.5a.75.75 0 0 1 .75.75v6.75a.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V5.75A.75.75 0 0 1 4.25 5z" />
+              </g>
+            </svg>
+            <svg class={copyIconCopied} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+        <pre id={ids.snippet} class={snippetPre} data-loading="true"><code id={ids.snippetInline}></code></pre>
+      </div>
+
+    <p class={attribution}>
+      Sample model: <a href="https://sketchfab.com/3d-models/spaceship-fighter-version-2-meshy-6-ff69bc6de8584bb4b2d6fac0b5a1d2ed">Spaceship Fighter</a>
+      by Ethan Cox (EthanfromEngland), licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+    </p>
+  </div>
+
+  <script>
+    import './_3d-to-svg/studio.ts';
+  </script>
+</BaseLayout>

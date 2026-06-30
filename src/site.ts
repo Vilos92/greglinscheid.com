@@ -17,5 +17,5 @@ export function formatTitle(pageTitle: string) {
   return `${siteTitle} | ${pageTitle}`;
 }
 
-export {activeProjects, olderProjects, workspaceTools} from './data/projects';
+export {activeProjects, olderProjects, tools, workspaceTools} from './data/projects';
 export type {Project, ProjectDetail, ProjectDetailPart} from './data/projects';

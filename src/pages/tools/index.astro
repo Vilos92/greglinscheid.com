@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../../components/BaseLayout.astro';
+import ProjectList from '../../components/ProjectList.astro';
+import Prose from '../../components/Prose.astro';
+import {tools} from '../../data/projects';
+import {formatTitle} from '../../site';
+import {sectionLead} from '../../styles/projects.css';
+
+const pageDescription =
+  "A collection of web-based tools I've made. 3D to SVG turns a 3D model into an SVG icon.";
+---
+
+<BaseLayout
+  title={formatTitle('Tools')}
+  description={pageDescription}
+  keywords="browser tools, web tools, SVG tools, 3D to SVG, GLB to SVG, OBJ to SVG, STL to SVG"
+>
+  <Prose>
+    <h1>Tools</h1>
+
+    <p class={sectionLead}>A collection of web-based tools I've made.</p>
+
+    <ProjectList projects={tools} />
+  </Prose>
+</BaseLayout>

@@ -41,6 +41,19 @@ export const workspaceTools: readonly Project[] = [
   }
 ];
 
+export const tools: readonly Project[] = [
+  {
+    name: '3D to SVG',
+    href: '/tools/3d-to-svg/',
+    details: [
+      {
+        kind: 'text',
+        value: 'A web-based tool that turns a 3D model into an SVG icon.'
+      }
+    ]
+  }
+];
+
 export const activeProjects: readonly Project[] = [
   {
     name: 'MilkTea',
