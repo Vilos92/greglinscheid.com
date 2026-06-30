@@ -1,4 +1,4 @@
-import {style} from '@vanilla-extract/css';
+import {keyframes, style} from '@vanilla-extract/css';
 
 import {media, touchTargetMin} from '../../../styles/breakpoints';
 import {fonts, palette} from '../../../styles/tokens';
@@ -24,19 +24,14 @@ export const ids = {
   spinNumber: 'studio-spin-number',
   snap: 'studio-snap',
   reset: 'studio-reset',
-  preset: 'studio-preset',
-  forward: 'studio-forward',
-  up: 'studio-up',
   color: 'studio-color',
-  opacity: 'studio-opacity',
   mode: 'studio-mode',
-  useVar: 'studio-use-var',
-  ariaHidden: 'studio-aria-hidden',
-  title: 'studio-title',
   download: 'studio-download',
+  snippet: 'studio-snippet',
   snippetInline: 'studio-snippet-inline',
   copyInline: 'studio-copy-inline',
-  copyMask: 'studio-copy-mask'
+  loading: 'studio-loading',
+  loadButton: 'studio-load'
 } as const;
 
 /*
@@ -44,7 +39,6 @@ export const ids = {
  */
 
 export const intro = style({
-  maxWidth: '46rem',
   marginBottom: '2em'
 });
 
@@ -144,8 +138,55 @@ export const dropZone = style({
   }
 });
 
-export const status = style({
+// Centred loading overlay shown while a model parses, so the default model never
+// flashes the drop prompt before it appears.
+export const loadingOverlay = style({
+  position: 'absolute',
+  inset: 0,
+  zIndex: 2,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  pointerEvents: 'none',
+  selectors: {
+    '&[data-hidden="true"]': {
+      display: 'none'
+    }
+  }
+});
+
+const spin = keyframes({
+  to: {transform: 'rotate(360deg)'}
+});
+
+export const spinner = style({
+  width: '2.25rem',
+  height: '2.25rem',
+  borderRadius: '50%',
+  border: `3px solid ${palette.border}`,
+  borderTopColor: palette.accent,
+  animation: `${spin} 0.8s linear infinite`,
+  '@media': {
+    [media.dark]: {
+      borderColor: palette.borderDark,
+      borderTopColor: palette.accent
+    },
+    [media.reducedMotion]: {
+      animation: 'none'
+    }
+  }
+});
+
+// Row under the viewport: the load button plus any status/error text.
+export const loadRow = style({
   marginTop: '0.75rem',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+  flexWrap: 'wrap'
+});
+
+export const status = style({
   minHeight: '1.4em',
   fontSize: '0.85rem',
   color: palette.textMuted,
@@ -161,8 +202,7 @@ export const status = style({
   }
 });
 
-// Inline preview host. `color` drives currentColor output; `--icon-color`
-// drives the var() output. The script sets both plus opacity at runtime.
+// Inline preview host. `color` drives the SVG's currentColor fill at runtime.
 export const preview = style([
   pane,
   {
@@ -184,8 +224,11 @@ export const controls = style({
   gap: '1.25rem'
 });
 
+// Flex column so the trailing button row can be pinned to the card's bottom
+// (the cards are stretched to equal height by controlsRow).
 export const fieldset = style({
-  display: 'grid',
+  display: 'flex',
+  flexDirection: 'column',
   gap: '0.85rem',
   margin: 0,
   padding: '1.1rem 1.25rem',
@@ -250,26 +293,34 @@ export const label = style({
   fontSize: '0.9rem'
 });
 
-export const select = style({
-  fontFamily: fonts.mono,
-  fontSize: '0.85rem',
-  padding: '0.35rem 0.5rem',
-  color: 'inherit',
-  backgroundColor: palette.surface,
-  border: `1px solid ${palette.border}`,
-  borderRadius: '6px',
-  '@media': {
-    [media.dark]: {
-      backgroundColor: palette.surfaceDark,
-      borderColor: palette.borderDark
-    }
-  }
+// Style picker: stacked radios so all three modes stay visible (switching them
+// is the point of the tool), rather than hidden behind a select.
+export const modeField = style({
+  display: 'grid',
+  gap: '0.5rem'
 });
 
+export const modeGroup = style({
+  display: 'grid',
+  gap: '0.4rem'
+});
+
+export const modeOption = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  fontSize: '0.9rem',
+  accentColor: palette.accent,
+  cursor: 'pointer'
+});
+
+// `marginTop: auto` drops the row to the bottom of its flex-column card so Reset
+// and Download sit at the cards' lower edge regardless of content height.
 export const buttonRow = style({
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '0.6rem'
+  gap: '0.6rem',
+  marginTop: 'auto'
 });
 
 export const button = style({
@@ -325,33 +376,18 @@ export const colorInput = style({
   }
 });
 
-export const titleInput = style({
-  flex: 1,
-  minWidth: '10rem',
-  fontFamily: fonts.sans,
-  fontSize: '0.9rem',
-  padding: '0.35rem 0.5rem',
-  color: 'inherit',
-  backgroundColor: palette.surface,
-  border: `1px solid ${palette.border}`,
-  borderRadius: '6px',
+// The Pose and Output control cards sit side-by-side on wide screens and stack
+// when narrow. The default `stretch` alignment keeps both cards the same height
+// regardless of content. The exported-SVG block spans full width below them.
+export const controlsRow = style({
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+  gap: '1.25rem',
   '@media': {
-    [media.dark]: {
-      backgroundColor: palette.surfaceDark,
-      borderColor: palette.borderDark
-    }
-  },
-  selectors: {
-    '&:disabled': {
-      opacity: 0.5
+    [media.content]: {
+      gridTemplateColumns: '1fr'
     }
   }
-});
-
-export const snippets = style({
-  marginTop: '2rem',
-  display: 'grid',
-  gap: '1.25rem'
 });
 
 export const snippetBlock = style({
@@ -395,6 +431,24 @@ export const snippetPre = style({
       color: '#e1e4e8',
       backgroundColor: '#24292e',
       borderColor: palette.borderDark
+    }
+  },
+  selectors: {
+    // While a model loads, centre a spinner where the SVG markup will land.
+    '&[data-loading="true"]': {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '6rem'
+    },
+    '&[data-loading="true"]::after': {
+      content: '""',
+      width: '2.25rem',
+      height: '2.25rem',
+      borderRadius: '50%',
+      border: `3px solid ${palette.border}`,
+      borderTopColor: palette.accent,
+      animation: `${spin} 0.8s linear infinite`
     }
   }
 });

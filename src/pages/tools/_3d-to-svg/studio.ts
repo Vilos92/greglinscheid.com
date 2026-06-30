@@ -1,10 +1,10 @@
 import type * as THREE from 'three';
 
-import type {EmitMode, EmitOptions} from './emit';
+import type {EmitMode} from './emit';
 import type {AxisToken, LoadedMesh, Mat3, RawPrimitive} from './geometry';
 import type {WorkerReply, WorkerRequest} from './protocol';
 
-import {codeAttr, codeString, codeTag, ids} from './studio.css';
+import {codeAttr, codeString, codeTag, ids, spinner} from './studio.css';
 
 /*
  * Types.
@@ -32,7 +32,8 @@ const ANGLE_LIMIT = 180;
 
 const SNAP_STEP = 15;
 
-// Cap clipper work for very large dropped meshes; the sample ship (~11.5k) stays full.
+// Cap clipper work for dense meshes via vertex-welding decimation (not face
+// dropping, which would hole the silhouette). The sample ship (~11.5k) stays full.
 const FACE_BUDGET = 20000;
 
 // Idle showcase: drift through poses until the user takes over.
@@ -54,7 +55,7 @@ if (document.getElementById(ids.viewport)?.closest('[data-studio-root]') instanc
  */
 
 /**
- * Wire the Silhouette Studio page: drop/pose/preview/export.
+ * Wire the 3D to SVG page: drop/pose/preview/export.
  * @sideEffect Registers DOM events, fetches the default model, mutates the page.
  */
 function initStudio(): void {
@@ -62,6 +63,8 @@ function initStudio(): void {
   const canvasEl = requireElement<HTMLCanvasElement>(ids.canvas);
   const dropZoneEl = requireElement<HTMLDivElement>(ids.dropZone);
   const fileInputEl = requireElement<HTMLInputElement>(ids.fileInput);
+  const loadingEl = requireElement<HTMLDivElement>(ids.loading);
+  const loadButtonEl = requireElement<HTMLButtonElement>(ids.loadButton);
   const statusEl = requireElement<HTMLParagraphElement>(ids.status);
   const previewEl = requireElement<HTMLDivElement>(ids.preview);
 
@@ -74,24 +77,18 @@ function initStudio(): void {
 
   const snapToggle = requireElement<HTMLInputElement>(ids.snap);
   const resetButton = requireElement<HTMLButtonElement>(ids.reset);
-  const presetButton = requireElement<HTMLButtonElement>(ids.preset);
-  const forwardSelect = requireElement<HTMLSelectElement>(ids.forward);
-  const upSelect = requireElement<HTMLSelectElement>(ids.up);
 
   const colorInput = requireElement<HTMLInputElement>(ids.color);
-  const opacityRange = requireElement<HTMLInputElement>(ids.opacity);
-  const modeSelect = requireElement<HTMLSelectElement>(ids.mode);
-  const useVarToggle = requireElement<HTMLInputElement>(ids.useVar);
-  const ariaHiddenToggle = requireElement<HTMLInputElement>(ids.ariaHidden);
-  const titleInput = requireElement<HTMLInputElement>(ids.title);
+  const modeGroup = requireElement<HTMLElement>(ids.mode);
   const downloadButton = requireElement<HTMLButtonElement>(ids.download);
 
+  const snippetPre = requireElement<HTMLPreElement>(ids.snippet);
   const snippetInline = requireElement<HTMLElement>(ids.snippetInline);
   const copyInlineButton = requireElement<HTMLButtonElement>(ids.copyInline);
-  const copyMaskButton = requireElement<HTMLButtonElement>(ids.copyMask);
 
-  let forward: AxisToken = '-X';
-  let up: AxisToken = '+Y';
+  // Fixed axis remap: glTF is Y-up, so this is a sensible default for any model.
+  const forward: AxisToken = '-X';
+  const up: AxisToken = '+Y';
 
   // Canonical pose: one model-orientation quaternion, created once three loads.
   let orientation: THREE.Quaternion | undefined;
@@ -135,7 +132,7 @@ function initStudio(): void {
   // Spawn the clipper worker lazily; its chunk carries clipper, not the page.
   function ensureWorker(): Worker {
     if (worker === undefined) {
-      worker = new Worker(new URL('./silhouette.worker.ts', import.meta.url), {type: 'module'});
+      worker = new Worker(new URL('./svg.worker.ts', import.meta.url), {type: 'module'});
       worker.onmessage = onWorkerMessage;
     }
     return worker;
@@ -143,30 +140,51 @@ function initStudio(): void {
 
   /** @sideEffect Network fetch of the default GLB, then loads it. */
   async function loadDefaultModel(): Promise<void> {
-    setStatus('Loading model…', false);
+    showLoading();
     try {
       const response = await fetch(DEFAULT_MODEL_URL);
       if (!response.ok) {
         throw new Error(`Failed to fetch model (${response.status})`);
       }
-      const buffer = await response.arrayBuffer();
-      await loadModel(buffer);
-      maybeStartIdle();
+      await loadModel(await response.arrayBuffer());
     } catch (error) {
-      setStatus(messageFrom(error), true);
+      onLoadError(error);
+    } finally {
+      hideLoading();
     }
   }
 
-  /** @sideEffect Reads a dropped File and loads it. */
+  /** @sideEffect Reads a chosen File and loads it, replacing the current model. */
   async function loadFile(file: File): Promise<void> {
-    stopIdle();
-    setStatus(`Loading ${file.name}…`, false);
+    showLoading();
     try {
-      const buffer = await file.arrayBuffer();
-      await loadModel(buffer);
+      await loadModel(await file.arrayBuffer());
     } catch (error) {
-      setStatus(messageFrom(error), true);
+      onLoadError(error);
+    } finally {
+      hideLoading();
     }
+  }
+
+  // Loading a model resets the output: clear the old SVG and spin the preview
+  // until the worker returns the first silhouette for the new model.
+  function showLoading(): void {
+    loadingEl.dataset.hidden = 'false';
+    currentSvg = '';
+    previewEl.innerHTML = `<div class="${spinner}"></div>`;
+    snippetInline.textContent = '';
+    snippetPre.dataset.loading = 'true';
+    setStatus('', false);
+  }
+
+  function hideLoading(): void {
+    loadingEl.dataset.hidden = 'true';
+  }
+
+  // On failure, surface the message and reveal the drop prompt so the user can retry.
+  function onLoadError(error: unknown): void {
+    setStatus(messageFrom(error), true);
+    dropZoneEl.dataset.hidden = 'false';
   }
 
   /** @sideEffect Parses the GLB, builds the mesh, and mounts the viewport. */
@@ -188,12 +206,12 @@ function initStudio(): void {
     rebuildDisplay(threeModule);
     dropZoneEl.dataset.hidden = 'true';
     setStatus('', false);
-    if (orientation === undefined) {
-      orientation = orientationFromMat3(threeModule, geometryModule.LOCKED_ORIENTATION);
-    }
+    // Every freshly loaded model starts at the default pose, then drifts.
+    orientation = orientationFromMat3(threeModule, geometryModule.LOCKED_ORIENTATION);
     syncControls();
     applyPoseToViewport();
     requestEmit();
+    restartIdle();
   }
 
   function rebuildMesh(geometryModule: GeometryModule): void {
@@ -242,7 +260,7 @@ function initStudio(): void {
     disposeDisplay(viewport);
 
     const {geometry, radius} = buildDisplayGeometry(three, mesh);
-    const display = new three.Mesh(geometry, makeDisplayMaterial(three));
+    const display = new three.Mesh(geometry, makeDisplayMaterial(three, colorInput.value));
     viewport.group.add(display);
     viewport.display = display;
     fitCamera(radius);
@@ -296,6 +314,12 @@ function initStudio(): void {
     return {three, orientation, worker};
   }
 
+  // The currently checked Style radio. Defaults to shaded if somehow none is.
+  function currentMode(): EmitMode {
+    const checked = modeGroup.querySelector<HTMLInputElement>('input:checked');
+    return (checked?.value ?? 'shaded') as EmitMode;
+  }
+
   // Ask the worker for a fresh silhouette, coalescing while one is in flight.
   function requestEmit(): void {
     const ctx = emitContext();
@@ -314,8 +338,7 @@ function initStudio(): void {
       type: 'emit',
       id: requestSeq,
       orientation: quatToMat3(ctx.three, ctx.orientation),
-      options: emitOptions(),
-      mode: modeSelect.value as EmitMode
+      mode: currentMode()
     };
     ctx.worker.postMessage(message);
   }
@@ -346,21 +369,22 @@ function initStudio(): void {
     updateSnippets();
   }
 
-  function emitOptions(): EmitOptions {
-    const title = titleInput.value.trim();
-    return {
-      ariaHidden: ariaHiddenToggle.checked,
-      title: title.length > 0 ? title : undefined,
-      useColorVar: useVarToggle.checked
-    };
-  }
-
   /*
    * Idle showcase.
    */
 
-  // Start drifting through poses, but only on the bundled model and only if the
-  // user has not already taken over.
+  // Re-arm the idle showcase for a freshly loaded model (unless reduced motion),
+  // cancelling any drift still running from a previous model.
+  function restartIdle(): void {
+    if (idleRaf !== undefined) {
+      cancelAnimationFrame(idleRaf);
+      idleRaf = undefined;
+    }
+    isIdle = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    maybeStartIdle();
+  }
+
+  // Start drifting through poses, but only if the user has not already taken over.
   function maybeStartIdle(): void {
     if (!isIdle || three === undefined || orientation === undefined) {
       return;
@@ -427,15 +451,23 @@ function initStudio(): void {
     }
   }
 
-  // The emitted SVG inherits `currentColor`/`--icon-color`; both are public
-  // contract names, so set them as literal custom properties on the host.
+  // The emitted SVG fills with currentColor, so the host's color tints the preview.
   function recolorPreview(): void {
     previewEl.style.color = colorInput.value;
-    previewEl.style.setProperty('--icon-color', colorInput.value);
-    previewEl.style.opacity = String(Number(opacityRange.value) / 100);
+    recolorModel();
+  }
+
+  // Keep the 3D model's material in sync with the picked color.
+  function recolorModel(): void {
+    if (viewport === undefined || viewport.display === undefined) {
+      return;
+    }
+    (viewport.display.material as THREE.MeshStandardMaterial).color.set(colorInput.value);
+    viewport.renderer.render(viewport.scene, viewport.camera);
   }
 
   function updateSnippets(): void {
+    snippetPre.dataset.loading = 'false';
     snippetInline.innerHTML = highlightSvg(currentSvg.trim());
   }
 
@@ -477,18 +509,6 @@ function initStudio(): void {
 
   function maybeSnap(degrees: number): number {
     return snapToggle.checked ? Math.round(degrees / SNAP_STEP) * SNAP_STEP : degrees;
-  }
-
-  function onForwardOrUpChange(): void {
-    forward = forwardSelect.value as AxisToken;
-    up = upSelect.value as AxisToken;
-    if (geometry === undefined || three === undefined) {
-      return;
-    }
-    rebuildMesh(geometry);
-    rebuildDisplay(three);
-    applyPoseToViewport();
-    requestEmit();
   }
 
   /*
@@ -565,42 +585,19 @@ function initStudio(): void {
   spinNumber.addEventListener('change', onSliderInput);
 
   snapToggle.addEventListener('change', onSliderInput);
+  // Reset returns to the model's default pose (the angle it loads at), not flat-zero.
   resetButton.addEventListener('click', () => {
-    if (three !== undefined) {
-      applyOrientation(new three.Quaternion());
+    if (geometry !== undefined && three !== undefined) {
+      applyOrientation(orientationFromMat3(three, geometry.LOCKED_ORIENTATION));
     }
   });
-  presetButton.addEventListener('click', () => {
-    if (geometry === undefined || three === undefined) {
-      return;
-    }
-    forward = geometry.LOCKED_AXES.forward;
-    up = geometry.LOCKED_AXES.up;
-    forwardSelect.value = forward;
-    upSelect.value = up;
-    rebuildMesh(geometry);
-    rebuildDisplay(three);
-    applyOrientation(orientationFromMat3(three, geometry.LOCKED_ORIENTATION));
-  });
-  forwardSelect.addEventListener('change', onForwardOrUpChange);
-  upSelect.addEventListener('change', onForwardOrUpChange);
 
   colorInput.addEventListener('input', recolorPreview);
-  opacityRange.addEventListener('input', recolorPreview);
-  modeSelect.addEventListener('change', requestEmit);
-  useVarToggle.addEventListener('change', requestEmit);
-  ariaHiddenToggle.addEventListener('change', () => {
-    titleInput.disabled = ariaHiddenToggle.checked;
-    requestEmit();
-  });
-  titleInput.addEventListener('input', requestEmit);
+  modeGroup.addEventListener('change', requestEmit);
   downloadButton.addEventListener('click', downloadSvg);
 
   copyInlineButton.addEventListener('click', () =>
     copyText(snippetInline.textContent ?? '', copyInlineButton)
-  );
-  copyMaskButton.addEventListener('click', () =>
-    copyText(copyMaskButton.dataset.clipboard ?? '', copyMaskButton)
   );
 
   // Any interaction anywhere in the tool retires the idle showcase.
@@ -615,11 +612,14 @@ function initStudio(): void {
   viewportEl.addEventListener('pointercancel', onPointerUp);
 
   dropZoneEl.addEventListener('click', () => fileInputEl.click());
+  loadButtonEl.addEventListener('click', () => fileInputEl.click());
   fileInputEl.addEventListener('change', () => {
     const file = fileInputEl.files?.[0];
     if (file !== undefined) {
       void loadFile(file);
     }
+    // Clear so re-picking the same file still fires `change`.
+    fileInputEl.value = '';
   });
 
   viewportEl.addEventListener('dragover', event => {
@@ -663,7 +663,7 @@ function initStudio(): void {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'silhouette.svg';
+    anchor.download = 'icon.svg';
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -744,9 +744,9 @@ function buildDisplayGeometry(
   return {geometry, radius: Math.sqrt(maxDistanceSq) || 6};
 }
 
-function makeDisplayMaterial(three: ThreeModule): THREE.MeshStandardMaterial {
+function makeDisplayMaterial(three: ThreeModule, color: string): THREE.MeshStandardMaterial {
   return new three.MeshStandardMaterial({
-    color: 0xb45309,
+    color,
     roughness: 0.55,
     metalness: 0.1,
     flatShading: true,

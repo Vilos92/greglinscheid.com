@@ -43,12 +43,12 @@ export const workspaceTools: readonly Project[] = [
 
 export const tools: readonly Project[] = [
   {
-    name: 'Silhouette Studio',
-    href: '/tools/silhouette-studio/',
+    name: '3D to SVG',
+    href: '/tools/3d-to-svg/',
     details: [
       {
         kind: 'text',
-        value: 'Drop in a 3D model, pose it live, and export a clean single-path SVG icon.'
+        value: 'A web-based tool that turns a 3D model into an SVG icon.'
       }
     ]
   }

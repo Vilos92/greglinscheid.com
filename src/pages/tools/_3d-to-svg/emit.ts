@@ -7,17 +7,15 @@ import {CANVAS} from './geometry';
  * Types.
  */
 
-export type EmitOptions = {
-  ariaHidden: boolean;
-  title?: string;
-  useColorVar: boolean;
-};
-
-export type EmitMode = 'flat' | 'shaded' | 'combined';
+export type EmitMode = 'flat' | 'shaded';
 
 /*
  * Constants.
  */
+
+// The output is intentionally minimal: one fill, recolorable via currentColor.
+// Accessibility (aria/title/role) is the consumer's call, so we emit none.
+const FILL = 'currentColor';
 
 const CLIPPER_SCALE = 10;
 
@@ -28,41 +26,29 @@ const SHADE_CLOSE = 0.8;
 const SHADE_TOLERANCE = 1.2;
 const SHADE_MIN_AREA = 10;
 
-// `combined` mode treats the bands as one opacity scale: the lightest step is a
+// Cel-shaded mode treats the bands as one opacity scale: the lightest step is a
 // flat base over the whole silhouette (filling gaps), and every band is
-// pre-divided so painting it over the base composites back onto that same scale
-// — base + band·(1 − base) = target. The lightest band collapses into the base.
+// pre-divided so painting it over the base composites back onto that same scale.
+// base + band·(1 − base) = target. The lightest band collapses into the base.
 const SHADE_FLOOR = BAND_OPACITY[BAND_OPACITY.length - 1];
-const COMBINED_BAND_OPACITY = BAND_OPACITY.map(
+const SHADE_BAND_OPACITY = BAND_OPACITY.map(
   target => Math.round(((target - SHADE_FLOOR) / (1 - SHADE_FLOOR)) * 1000) / 1000
 );
 
 /** Emit a single-<path> SVG string from a culled scene. */
-export function emitFlatSvg(scene: CulledScene, options: EmitOptions): string {
+export function emitFlatSvg(scene: CulledScene): string {
   const recentered = recenterRingToCanvas(flatRing(scene));
   if (ringArea(recentered) <= 3) {
     throw new Error('Flat silhouette union produced no paths');
   }
-  const {attrs, titleEl, fill} = svgWrapperParts(options);
-  return wrapSvg(attrs, titleEl, `<path fill="${fill}" d="${ringToPath(recentered)}"/>`);
+  return wrapSvg(`<path fill="${FILL}" d="${ringToPath(recentered)}"/>`);
 }
 
-/** Emit a cel-shaded SVG: stacked currentColor paths at fixed opacity bands. */
-export function emitShadedSvg(scene: ShadedScene, options: EmitOptions): string {
-  const {attrs, titleEl, fill} = svgWrapperParts(options);
-  const layers = bandLayers(scene, fill, BAND_OPACITY);
-  if (layers.length === 0) {
-    throw new Error('Shaded silhouette produced no paths');
-  }
-  return wrapSvg(attrs, titleEl, layers.join(''));
-}
-
-/** Emit cel-shaded bands over a flat base that holds the scale's lowest step. */
-export function emitCombinedSvg(culled: CulledScene, shaded: ShadedScene, options: EmitOptions): string {
-  const {attrs, titleEl, fill} = svgWrapperParts(options);
-  const base = `<path fill="${fill}" fill-opacity="${SHADE_FLOOR}" d="${ringToPath(flatRing(culled))}"/>`;
-  const layers = bandLayers(shaded, fill, COMBINED_BAND_OPACITY);
-  return wrapSvg(attrs, titleEl, base + layers.join(''));
+/** Emit a cel-shaded SVG: shade bands over a solid base holding the lowest step. */
+export function emitShadedSvg(culled: CulledScene, shaded: ShadedScene): string {
+  const base = `<path fill="${FILL}" fill-opacity="${SHADE_FLOOR}" d="${ringToPath(flatRing(culled))}"/>`;
+  const layers = bandLayers(shaded, SHADE_BAND_OPACITY);
+  return wrapSvg(base + layers.join(''));
 }
 
 /*
@@ -108,7 +94,7 @@ function flatRing(scene: CulledScene): Vec2[] {
 
 // One <path> per shade band, darkest first; bands at opacity 0 are skipped
 // (in combined mode the lightest band is already covered by the base).
-function bandLayers(scene: ShadedScene, fill: string, opacities: readonly number[]): string[] {
+function bandLayers(scene: ShadedScene, opacities: readonly number[]): string[] {
   const buckets = bucketFaces(scene);
   const layers: string[] = [];
   for (let band = 0; band < buckets.length; band++) {
@@ -120,26 +106,13 @@ function bandLayers(scene: ShadedScene, fill: string, opacities: readonly number
       continue;
     }
     const d = rings.map(ringToIntPath).join(' ');
-    layers.push(`<path fill="${fill}" fill-opacity="${opacities[band]}" d="${d}"/>`);
+    layers.push(`<path fill="${FILL}" fill-opacity="${opacities[band]}" d="${d}"/>`);
   }
   return layers;
 }
 
-function wrapSvg(attrs: string, titleEl: string, body: string): string {
-  return `<svg${attrs} viewBox="0 0 ${CANVAS} ${CANVAS}" xmlns="http://www.w3.org/2000/svg">${titleEl}${body}</svg>\n`;
-}
-
-// Shared <svg> attributes, optional <title>, and path fill across both outputs.
-function svgWrapperParts(options: EmitOptions): {attrs: string; titleEl: string; fill: string} {
-  const fill = options.useColorVar ? 'var(--icon-color, currentColor)' : 'currentColor';
-  if (options.ariaHidden) {
-    return {attrs: ' aria-hidden="true"', titleEl: '', fill};
-  }
-  if (options.title !== undefined && options.title !== '') {
-    const escaped = options.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return {attrs: ' role="img"', titleEl: `<title>${escaped}</title>`, fill};
-  }
-  return {attrs: '', titleEl: '', fill};
+function wrapSvg(body: string): string {
+  return `<svg viewBox="0 0 ${CANVAS} ${CANVAS}" xmlns="http://www.w3.org/2000/svg">${body}</svg>\n`;
 }
 
 // Non-zero union of triangle rings (snapped to the clipper grid).

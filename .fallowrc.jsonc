@@ -4,9 +4,9 @@
     "src/site.{ts,tsx,js,jsx}",
     // Tool client modules load via an Astro <script>, dynamic imports, and a Web
     // Worker URL — boundaries Fallow can't trace.
-    "src/pages/tools/_silhouette-studio/geometry.ts",
-    "src/pages/tools/_silhouette-studio/emit.ts",
-    "src/pages/tools/_silhouette-studio/silhouette.worker.ts"
+    "src/pages/tools/_3d-to-svg/geometry.ts",
+    "src/pages/tools/_3d-to-svg/emit.ts",
+    "src/pages/tools/_3d-to-svg/svg.worker.ts"
   ],
   "audit": {
     "healthBaseline": ".fallow/health-baseline.json",

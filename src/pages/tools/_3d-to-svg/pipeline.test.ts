@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {emitCombinedSvg, emitFlatSvg, emitShadedSvg} from './emit';
+import {emitFlatSvg, emitShadedSvg} from './emit';
 import type {Mat3, RawPrimitive} from './geometry';
 import {buildMesh, LOCKED_AXES, LOCKED_ORIENTATION, projectAndCull, projectShaded} from './geometry';
 
@@ -29,6 +29,25 @@ const cube: RawPrimitive = {
   worldMatrix: IDENTITY_MATRIX
 };
 
+// An n×n quad grid of triangles on the z=0 plane: dense, weldable geometry.
+function gridMesh(n: number): RawPrimitive {
+  const positions: number[] = [];
+  for (let j = 0; j <= n; j++) {
+    for (let i = 0; i <= n; i++) {
+      positions.push(i, j, 0);
+    }
+  }
+  const indices: number[] = [];
+  const stride = n + 1;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const a = j * stride + i;
+      indices.push(a, a + 1, a + stride, a + 1, a + stride + 1, a + stride);
+    }
+  }
+  return {positions, indices, worldMatrix: IDENTITY_MATRIX};
+}
+
 /*
  * Tests.
  */
@@ -42,10 +61,13 @@ describe('buildMesh', () => {
     expect(maxAbs).toBeCloseTo(5);
   });
 
-  it('decimates faces toward a target budget', () => {
-    const mesh = buildMesh([cube], '+X', '+Z', 4);
-    expect(mesh.faces.length).toBeLessThan(12);
+  it('decimates a dense mesh toward a target budget by welding vertices', () => {
+    const dense = gridMesh(40); // 41×41 vertices, 3200 faces
+    const mesh = buildMesh([dense], '+X', '+Z', 200);
+    expect(mesh.faces.length).toBeLessThan(3200);
     expect(mesh.faces.length).toBeGreaterThan(0);
+    // Welding collapses the 41×41 vertex grid onto far fewer cells.
+    expect(mesh.vertices.length).toBeLessThan(1681);
   });
 
   it('throws when no geometry is supplied', () => {
@@ -73,29 +95,19 @@ describe('emitFlatSvg', () => {
   const mesh = buildMesh([cube], '+X', '+Z', 0);
   const scene = projectAndCull(mesh, LOCKED_ORIENTATION);
 
-  it('emits a single-path 512 viewBox SVG with currentColor by default', () => {
-    const svg = emitFlatSvg(scene, {ariaHidden: true, useColorVar: false});
+  it('emits a single neutral currentColor path in a 512 viewBox', () => {
+    const svg = emitFlatSvg(scene);
     expect(svg).toContain('viewBox="0 0 512 512"');
-    expect(svg).toContain('aria-hidden="true"');
+    expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
     expect(svg).toContain('fill="currentColor"');
+    expect(svg).not.toContain('aria-hidden');
+    expect(svg).not.toContain('role=');
+    expect(svg).not.toContain('<title>');
     expect(svg.match(/<path/g)).toHaveLength(1);
   });
 
-  it('switches to the icon-color variable when requested', () => {
-    const svg = emitFlatSvg(scene, {ariaHidden: true, useColorVar: true});
-    expect(svg).toContain('fill="var(--icon-color, currentColor)"');
-  });
-
-  it('adds role and a title element for a labelled icon', () => {
-    const svg = emitFlatSvg(scene, {ariaHidden: false, title: 'Ship <icon>', useColorVar: false});
-    expect(svg).toContain('role="img"');
-    expect(svg).toContain('<title>Ship &lt;icon&gt;</title>');
-    expect(svg).not.toContain('aria-hidden');
-  });
-
-  it('is deterministic for the same scene and options', () => {
-    const options = {ariaHidden: true, useColorVar: false} as const;
-    expect(emitFlatSvg(scene, options)).toBe(emitFlatSvg(scene, options));
+  it('is deterministic for the same scene', () => {
+    expect(emitFlatSvg(scene)).toBe(emitFlatSvg(scene));
   });
 });
 
@@ -112,23 +124,13 @@ describe('shaded output', () => {
     }
   });
 
-  it('emits stacked currentColor paths with per-band opacity', () => {
-    const svg = emitShadedSvg(projectShaded(mesh, LOCKED_ORIENTATION), {
-      ariaHidden: true,
-      useColorVar: false
-    });
+  it('layers shade bands over a solid base, all in currentColor', () => {
+    const svg = emitShadedSvg(
+      projectAndCull(mesh, LOCKED_ORIENTATION),
+      projectShaded(mesh, LOCKED_ORIENTATION)
+    );
     expect(svg).toContain('viewBox="0 0 512 512"');
     expect(svg).toContain('fill="currentColor"');
-    expect(svg).toContain('fill-opacity=');
-    expect((svg.match(/<path/g) ?? []).length).toBeGreaterThan(1);
-  });
-
-  it('combined mode layers a translucent flat base under the bands', () => {
-    const svg = emitCombinedSvg(
-      projectAndCull(mesh, LOCKED_ORIENTATION),
-      projectShaded(mesh, LOCKED_ORIENTATION),
-      {ariaHidden: true, useColorVar: false}
-    );
     expect(svg).toContain('fill-opacity="0.6"');
     expect((svg.match(/<path/g) ?? []).length).toBeGreaterThan(1);
   });

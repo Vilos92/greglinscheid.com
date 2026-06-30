@@ -73,7 +73,6 @@ export function buildMesh(
     throw new Error('No mesh geometry found');
   }
 
-  const faces = decimateFaces(rawFaces, targetFaces);
   const remap = remapMatrix(forward, up);
   const remapped = rawVertices.map(vertex => multiplyRowByMatTranspose(vertex, remap));
   const centroid = mean(remapped);
@@ -83,9 +82,9 @@ export function buildMesh(
     maxAbs = Math.max(maxAbs, Math.abs(vertex[0]), Math.abs(vertex[1]), Math.abs(vertex[2]));
   }
   const normalizeScale = maxAbs === 0 ? 1 : 5 / maxAbs;
-  const vertices = centered.map(vertex => scale(vertex, normalizeScale));
+  const normalized = centered.map(vertex => scale(vertex, normalizeScale));
 
-  return {vertices, faces};
+  return simplifyMesh(normalized, rawFaces, targetFaces);
 }
 
 /** Project a mesh under an orientation into fitted canvas space. */
@@ -209,16 +208,98 @@ function accumulatePrimitive(
   }
 }
 
-// Evenly thin faces toward a budget; a budget of 0 keeps every face.
-function decimateFaces(
-  faces: readonly [number, number, number][],
-  targetFaces: number
-): [number, number, number][] {
+// Grids tried fine→coarse: the finest that fits the budget wins. Dropping every
+// Nth face (the naive approach) scatters the surface and punches holes in the
+// silhouette union; welding vertices onto a grid keeps the surface continuous.
+const CLUSTER_GRIDS = [128, 96, 64, 48, 32, 24, 16, 12, 8];
+
+// A budget of 0 (or an already-small mesh) keeps every face untouched.
+function simplifyMesh(vertices: Vec3[], faces: [number, number, number][], targetFaces: number): LoadedMesh {
   if (targetFaces <= 0 || faces.length <= targetFaces) {
-    return [...faces];
+    return {vertices, faces};
   }
-  const step = Math.ceil(faces.length / targetFaces);
-  return faces.filter((_, index) => index % step === 0);
+  const {mn, extent} = bounds3(vertices);
+  let coarsest = clusterMesh(vertices, faces, mn, extent, CLUSTER_GRIDS[0]);
+  for (const grid of CLUSTER_GRIDS) {
+    coarsest = clusterMesh(vertices, faces, mn, extent, grid);
+    if (coarsest.faces.length <= targetFaces) {
+      return coarsest;
+    }
+  }
+  return coarsest;
+}
+
+// Weld every vertex to its grid cell (cell centroid is the new vertex), then
+// rebuild faces against those cells, dropping triangles that collapse to a line.
+function clusterMesh(
+  vertices: Vec3[],
+  faces: [number, number, number][],
+  mn: Vec3,
+  extent: Vec3,
+  grid: number
+): LoadedMesh {
+  const cellIndex = new Map<number, number>();
+  const sums: Vec3[] = [];
+  const counts: number[] = [];
+  const vertexCell = new Int32Array(vertices.length);
+
+  for (let i = 0; i < vertices.length; i++) {
+    const v = vertices[i];
+    const ix = cellAxis(v[0], mn[0], extent[0], grid);
+    const iy = cellAxis(v[1], mn[1], extent[1], grid);
+    const iz = cellAxis(v[2], mn[2], extent[2], grid);
+    const key = ix + iy * grid + iz * grid * grid;
+    let idx = cellIndex.get(key);
+    if (idx === undefined) {
+      idx = sums.length;
+      cellIndex.set(key, idx);
+      sums.push([0, 0, 0]);
+      counts.push(0);
+    }
+    vertexCell[i] = idx;
+    sums[idx][0] += v[0];
+    sums[idx][1] += v[1];
+    sums[idx][2] += v[2];
+    counts[idx] += 1;
+  }
+
+  const newVertices = sums.map((sum, i) => scale(sum, 1 / counts[i]));
+  const newFaces: [number, number, number][] = [];
+  const seen = new Set<string>();
+  for (const tri of faces) {
+    const a = vertexCell[tri[0]];
+    const b = vertexCell[tri[1]];
+    const c = vertexCell[tri[2]];
+    if (a === b || b === c || a === c) {
+      continue;
+    }
+    const sorted = [a, b, c].sort((p, q) => p - q);
+    const key = `${sorted[0]}_${sorted[1]}_${sorted[2]}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    newFaces.push([a, b, c]);
+  }
+  return {vertices: newVertices, faces: newFaces};
+}
+
+function cellAxis(value: number, min: number, extent: number, grid: number): number {
+  return Math.min(grid - 1, Math.max(0, Math.floor(((value - min) / extent) * grid)));
+}
+
+function bounds3(vertices: readonly Vec3[]): {mn: Vec3; extent: Vec3} {
+  const mn: Vec3 = [Infinity, Infinity, Infinity];
+  const mx: Vec3 = [-Infinity, -Infinity, -Infinity];
+  for (const v of vertices) {
+    for (let axis = 0; axis < 3; axis++) {
+      mn[axis] = Math.min(mn[axis], v[axis]);
+      mx[axis] = Math.max(mx[axis], v[axis]);
+    }
+  }
+  // Guard zero-thickness axes (flat meshes) so the division stays finite.
+  const extent: Vec3 = [mx[0] - mn[0] || 1, mx[1] - mn[1] || 1, mx[2] - mn[2] || 1];
+  return {mn, extent};
 }
 
 function remapMatrix(forward: AxisToken, up: AxisToken): Mat3 {

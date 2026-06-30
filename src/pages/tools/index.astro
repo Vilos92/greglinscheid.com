@@ -4,22 +4,22 @@ import Prose from '../../components/Prose.astro';
 import {formatTitle} from '../../site';
 
 const pageDescription =
-  'Free, self-contained browser tools by Greg Linscheid — including Silhouette Studio, which turns a 3D model into a clean, recolorable SVG icon.';
+  "A collection of web-based tools I've made. 3D to SVG turns a 3D model into an SVG icon.";
 ---
 
 <BaseLayout
   title={formatTitle('Tools')}
   description={pageDescription}
-  keywords="browser tools, web tools, SVG tools, Silhouette Studio, 3D to SVG"
+  keywords="browser tools, web tools, SVG tools, 3D to SVG, GLB to SVG"
 >
   <Prose>
     <h1>Tools</h1>
 
-    <p>Small self-contained, browser-side tools I've built.</p>
+    <p>A collection of web-based tools I've made.</p>
 
     <ul>
       <li>
-        <a href="/tools/silhouette-studio/">Silhouette Studio</a> — Drop in a 3D model, pose it live, and export a clean single-path SVG icon.
+        <a href="/tools/3d-to-svg/">3D to SVG</a> turns a 3D model into an SVG icon.
       </li>
     </ul>
   </Prose>
