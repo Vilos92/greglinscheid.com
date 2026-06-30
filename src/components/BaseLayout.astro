@@ -12,7 +12,7 @@ interface Props {
   keywords?: string;
   jsonLd?: Record<string, unknown>;
   hasBreadcrumbs?: boolean;
-  fullBleed?: boolean;
+  isFullBleed?: boolean;
 }
 
 const {
@@ -23,7 +23,7 @@ const {
   keywords,
   jsonLd,
   hasBreadcrumbs = true,
-  fullBleed = false
+  isFullBleed = false
 } = Astro.props;
 ---
 
@@ -41,7 +41,7 @@ const {
   </head>
   <body>
     <a class={skipLink} href={`#${MAIN_CONTENT_ID}`}>Skip to content</a>
-    <main class={fullBleed ? mainFullBleed : main} id={MAIN_CONTENT_ID} tabindex="-1">
+    <main class={isFullBleed ? mainFullBleed : main} id={MAIN_CONTENT_ID} tabindex="-1">
       {hasBreadcrumbs ? <Breadcrumbs /> : undefined}
       <slot />
     </main>

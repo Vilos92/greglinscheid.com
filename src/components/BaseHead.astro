@@ -14,16 +14,10 @@ interface Props {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const {
-  title,
-  description,
-  image = '/blog/hello-world.jpg',
-  imageAlt = siteTitle,
-  keywords,
-  jsonLd
-} = Astro.props;
+const {title, description, image, imageAlt = siteTitle, keywords, jsonLd} = Astro.props;
 
-const imageURL = new URL(image, Astro.site);
+// No fallback image: a page that wants a social card passes a real one.
+const imageURL = image === undefined ? undefined : new URL(image, Astro.site);
 ---
 
 <meta charset="utf-8" />
@@ -52,15 +46,15 @@ const imageURL = new URL(image, Astro.site);
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={imageURL} />
-<meta property="og:image:alt" content={imageAlt} />
+{imageURL ? <meta property="og:image" content={imageURL} /> : undefined}
+{imageURL ? <meta property="og:image:alt" content={imageAlt} /> : undefined}
 
-<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:card" content={imageURL ? 'summary_large_image' : 'summary'} />
 <meta name="twitter:url" content={Astro.url} />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
-<meta name="twitter:image" content={imageURL} />
-<meta name="twitter:image:alt" content={imageAlt} />
+{imageURL ? <meta name="twitter:image" content={imageURL} /> : undefined}
+{imageURL ? <meta name="twitter:image:alt" content={imageAlt} /> : undefined}
 
 {
   jsonLd ? (

@@ -29,22 +29,26 @@ type VisibleFace = {
  * Constants.
  */
 
-// Head-on scan camera, looking down the model's forward axis (+X canonical). Being
-// axis-aligned makes the world frame match the screen, so the X/Y/Z pose sliders
-// read relative to what the viewer sees. The viewport shares this exact position.
+/**
+ * Head-on scan camera, looking down the model's forward axis (+X canonical). Being
+ * axis-aligned makes the world frame match the screen, so the X/Y/Z pose sliders
+ * read relative to what the viewer sees. The viewport shares this exact position.
+ */
 export const CAMPOS: Vec3 = [8, 0, 0];
 const FIT_PX = 430;
 
-// Light for the cel-shaded output: high, to the left, toward the viewer.
+/** Light for the cel-shaded output: high, to the left, toward the viewer. */
 const LIGHT: Vec3 = normalize([-3, -5, 7]);
 
 export const CANVAS = 512;
 
-// Default forward/up axis remap for the bundled ship.
+/** Default forward/up axis remap for the bundled ship. */
 export const LOCKED_AXES: {forward: AxisToken; up: AxisToken} = {forward: '-X', up: '+Y'};
 
-// Default load pose: a gentle 3/4 view, reached from head-on by turning about the
-// screen-up axis (world Z) and tilting about the screen-right axis (world Y).
+/**
+ * Default load pose: a gentle 3/4 view, reached from head-on by turning about the
+ * screen-up axis (world Z) and tilting about the screen-right axis (world Y).
+ */
 export const LOCKED_ORIENTATION: Mat3 = multiplyMat(
   rotationAboutAxis([0, 0, 1], (-35 * Math.PI) / 180),
   rotationAboutAxis([0, 1, 0], (28 * Math.PI) / 180)
@@ -59,9 +63,11 @@ const AX: Record<AxisToken, Vec3> = {
   '-Z': [0, 0, -1]
 };
 
-// Grids tried fine→coarse: the finest that fits the budget wins. Dropping every
-// Nth face (the naive approach) scatters the surface and punches holes in the
-// silhouette union. Welding vertices onto a grid keeps the surface continuous.
+/**
+ * Grids tried fine→coarse: the finest that fits the budget wins. Dropping every
+ * Nth face (the naive approach) scatters the surface and punches holes in the
+ * silhouette union. Welding vertices onto a grid keeps the surface continuous.
+ */
 const CLUSTER_GRIDS = [128, 96, 64, 48, 32, 24, 16, 12, 8];
 
 /** Build a normalized, pose-independent mesh from raw primitives. */
@@ -128,7 +134,7 @@ export function projectShaded(mesh: LoadedMesh, orientation: Mat3): ShadedScene 
   return {centered, faces};
 }
 
-// Shared projection + canvas fit used by both the flat and shaded outputs.
+/** Shared projection + canvas fit used by both the flat and shaded outputs. */
 function project(
   mesh: LoadedMesh,
   orientation: Mat3
@@ -168,7 +174,7 @@ function project(
  * Helpers.
  */
 
-// Axis-aligned bounds of a point set; looped to stay safe on very large meshes.
+/** Axis-aligned bounds of a point set; looped to stay safe on very large meshes. */
 function boundsOf(points: readonly Vec2[]): {mn: Vec2; mx: Vec2} {
   let minX = Infinity;
   let minY = Infinity;
@@ -183,8 +189,10 @@ function boundsOf(points: readonly Vec2[]): {mn: Vec2; mx: Vec2} {
   return {mn: [minX, minY], mx: [maxX, maxY]};
 }
 
-// A primitive's faces index into its own vertices, so offset them by the running
-// vertex count when merging everything into the shared vertex and face lists.
+/**
+ * A primitive's faces index into its own vertices, so offset them by the running
+ * vertex count when merging everything into the shared vertex and face lists.
+ */
 function accumulatePrimitive(
   primitive: RawPrimitive,
   rawVertices: Vec3[],
@@ -217,7 +225,7 @@ function accumulatePrimitive(
   }
 }
 
-// A budget of 0 (or an already-small mesh) keeps every face untouched.
+/** A budget of 0 (or an already-small mesh) keeps every face untouched. */
 function simplifyMesh(vertices: Vec3[], faces: [number, number, number][], targetFaces: number): LoadedMesh {
   if (targetFaces <= 0 || faces.length <= targetFaces) {
     return {vertices, faces};
@@ -233,8 +241,10 @@ function simplifyMesh(vertices: Vec3[], faces: [number, number, number][], targe
   return coarsest;
 }
 
-// Weld every vertex to its grid cell (cell centroid is the new vertex), then
-// rebuild faces against those cells, dropping triangles that collapse to a line.
+/**
+ * Weld every vertex to its grid cell (cell centroid is the new vertex), then
+ * rebuild faces against those cells, dropping triangles that collapse to a line.
+ */
 function clusterMesh(
   vertices: Vec3[],
   faces: [number, number, number][],
@@ -313,7 +323,7 @@ function remapMatrix(forward: AxisToken, up: AxisToken): Mat3 {
   return [fwd, right, upVector];
 }
 
-// Rodrigues rotation matrix R for a CCW turn of `angle` about a unit `axis`.
+/** Rodrigues rotation matrix R for a CCW turn of `angle` about a unit `axis`. */
 function rotationAboutAxis(axis: Vec3, angle: number): Mat3 {
   const [x, y, z] = axis;
   const c = Math.cos(angle);
@@ -326,8 +336,10 @@ function rotationAboutAxis(axis: Vec3, angle: number): Mat3 {
   ];
 }
 
-// The silhouette is the union of all projected faces, so keep every face that has
-// real area — front and back both fill the outline.
+/**
+ * The silhouette is the union of all projected faces, so keep every face that has
+ * real area — front and back both fill the outline.
+ */
 function collectVisibleFaces(faces: [number, number, number][], posed: Vec3[]): VisibleFace[] {
   const visible: VisibleFace[] = [];
 

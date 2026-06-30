@@ -13,8 +13,10 @@ export type EmitMode = 'flat' | 'shaded';
  * Constants.
  */
 
-// The output is intentionally minimal: one fill, recolorable via currentColor.
-// Accessibility (aria/title/role) is the consumer's call, so we emit none.
+/**
+ * The output is intentionally minimal: one fill, recolorable via currentColor.
+ * Accessibility (aria/title/role) is the consumer's call, so we emit none.
+ */
 const FILL = 'currentColor';
 
 const CLIPPER_SCALE = 10;
@@ -55,8 +57,10 @@ export function emitShadedSvg(culled: CulledScene, shaded: ShadedScene): string 
  * Helpers.
  */
 
-// Sort faces into opacity bands, stretching each pose's shade range across the
-// full band spread so every angle reads with the same light→dark depth.
+/**
+ * Sort faces into opacity bands, stretching each pose's shade range across the
+ * full band spread so every angle reads with the same light→dark depth.
+ */
 function bucketFaces(scene: ShadedScene): Vec2[][][] {
   let minShade = Infinity;
   let maxShade = -Infinity;
@@ -75,8 +79,10 @@ function bucketFaces(scene: ShadedScene): Vec2[][][] {
   return buckets;
 }
 
-// The single largest flat-silhouette ring (no recentering), shared by the flat
-// and combined outputs and aligned with the shaded bands' coordinate space.
+/**
+ * The single largest flat-silhouette ring (no recentering), shared by the flat
+ * and combined outputs and aligned with the shaded bands' coordinate space.
+ */
 function flatRing(scene: CulledScene): Vec2[] {
   const unioned = unionTriangles(scene.visible.map(face => face.tri.map(i => scene.centered[i])));
   const cleaned = ClipperLib.Clipper.CleanPolygons(unioned, 1);
@@ -92,8 +98,10 @@ function flatRing(scene: CulledScene): Vec2[] {
   return simplifyRing(contracted, 0.8);
 }
 
-// One <path> per shade band, darkest first; bands at opacity 0 are skipped
-// (in combined mode the lightest band is already covered by the base).
+/**
+ * One <path> per shade band, darkest first; bands at opacity 0 are skipped
+ * (in combined mode the lightest band is already covered by the base).
+ */
 function bandLayers(scene: ShadedScene, opacities: readonly number[]): string[] {
   const buckets = bucketFaces(scene);
   const layers: string[] = [];
@@ -115,8 +123,10 @@ function wrapSvg(body: string): string {
   return `<svg viewBox="0 0 ${CANVAS} ${CANVAS}" xmlns="http://www.w3.org/2000/svg">${body}</svg>\n`;
 }
 
-// Merge overlapping triangles into one filled region. Non-zero fill so the
-// triangles' winding does not matter.
+/**
+ * Merge overlapping triangles into one filled region. Non-zero fill so the
+ * triangles' winding does not matter.
+ */
 function unionTriangles(triangles: readonly Vec2[][]): ClipperLib.Paths {
   const clipper = new ClipperLib.Clipper();
   for (const triangle of triangles) {
@@ -137,8 +147,10 @@ function unionTriangles(triangles: readonly Vec2[][]): ClipperLib.Paths {
   return unioned;
 }
 
-// Seal hairline gaps between a band's triangles by growing then shrinking the
-// union, then simplify and drop specks too small to read.
+/**
+ * Seal hairline gaps between a band's triangles by growing then shrinking the
+ * union, then simplify and drop specks too small to read.
+ */
 function unionBand(triangles: readonly Vec2[][]): Vec2[][] {
   const grown = offsetClipperPaths(unionTriangles(triangles), SHADE_CLOSE * CLIPPER_SCALE);
   const closed = offsetClipperPaths(grown, -SHADE_CLOSE * CLIPPER_SCALE);

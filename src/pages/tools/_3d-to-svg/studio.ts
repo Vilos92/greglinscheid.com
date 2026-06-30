@@ -32,8 +32,10 @@ const ANGLE_LIMIT = 180;
 
 const SNAP_STEP = 15;
 
-// Cap clipper work for dense meshes via vertex-welding decimation (not face
-// dropping, which would hole the silhouette). The sample ship (~11.5k) stays full.
+/**
+ * Cap clipper work for dense meshes via vertex-welding decimation (not face
+ * dropping, which would hole the silhouette). The sample ship (~11.5k) stays full.
+ */
 const FACE_BUDGET = 20000;
 
 // Idle showcase: drift through poses until the user takes over.
@@ -129,7 +131,7 @@ function initStudio(): void {
     return geometry;
   }
 
-  // Spawn the clipper worker lazily; its chunk carries clipper, not the page.
+  /** Spawn the clipper worker lazily; its chunk carries clipper, not the page. */
   function ensureWorker(): Worker {
     if (worker === undefined) {
       worker = new Worker(new URL('./svg.worker.ts', import.meta.url), {type: 'module'});
@@ -170,8 +172,10 @@ function initStudio(): void {
     }
   }
 
-  // Loading a model resets the output: clear the old SVG and spin the preview
-  // until the worker returns the first silhouette for the new model.
+  /**
+   * Loading a model resets the output: clear the old SVG and spin the preview
+   * until the worker returns the first silhouette for the new model.
+   */
   function showLoading(): void {
     loadingEl.dataset.hidden = 'false';
     currentSvg = '';
@@ -185,7 +189,7 @@ function initStudio(): void {
     loadingEl.dataset.hidden = 'true';
   }
 
-  // On failure, surface the message and reveal the drop prompt so the user can retry.
+  /** On failure, surface the message and reveal the drop prompt so the user can retry. */
   function onLoadError(error: unknown): void {
     setStatus(messageFrom(error), true);
     dropZoneEl.dataset.hidden = 'false';
@@ -293,8 +297,10 @@ function initStudio(): void {
     applyPoseToViewport();
   }
 
-  // The viewport shows the model under the same orientation as the silhouette, so
-  // the two panes always agree (the camera itself is fixed, set once at mount).
+  /**
+   * The viewport shows the model under the same orientation as the silhouette, so
+   * the two panes always agree (the camera itself is fixed, set once at mount).
+   */
   function applyPoseToViewport(): void {
     if (viewport === undefined || orientation === undefined) {
       return;
@@ -314,13 +320,13 @@ function initStudio(): void {
     return {three, orientation, worker};
   }
 
-  // The currently checked Style radio. Defaults to shaded if somehow none is.
+  /** The currently checked Style radio. Defaults to shaded if somehow none is. */
   function currentMode(): EmitMode {
     const checked = modeGroup.querySelector<HTMLInputElement>('input:checked');
     return (checked?.value ?? 'shaded') as EmitMode;
   }
 
-  // Ask the worker for a fresh silhouette, coalescing while one is in flight.
+  /** Ask the worker for a fresh silhouette, coalescing while one is in flight. */
   function requestEmit(): void {
     const ctx = emitContext();
     if (ctx === undefined) {
@@ -373,8 +379,10 @@ function initStudio(): void {
    * Idle showcase.
    */
 
-  // Re-arm the idle showcase for a freshly loaded model (unless reduced motion),
-  // cancelling any drift still running from a previous model.
+  /**
+   * Re-arm the idle showcase for a freshly loaded model (unless reduced motion),
+   * cancelling any drift still running from a previous model.
+   */
   function restartIdle(): void {
     if (idleRaf !== undefined) {
       cancelAnimationFrame(idleRaf);
@@ -384,7 +392,7 @@ function initStudio(): void {
     maybeStartIdle();
   }
 
-  // Start drifting through poses, but only if the user has not already taken over.
+  /** Start drifting through poses, but only if the user has not already taken over. */
   function maybeStartIdle(): void {
     if (!isIdle || three === undefined || orientation === undefined) {
       return;
@@ -435,7 +443,7 @@ function initStudio(): void {
     }
   }
 
-  // Ease the 3D model toward the target; paint the SVG only once it settles.
+  /** Ease the 3D model toward the target; paint the SVG only once it settles. */
   function stepIdleMove(now: number, current: THREE.Quaternion): void {
     const target = idleTargets[idleIndex];
     const dt = Math.min((now - idleLast) / 1000, 0.05);
@@ -451,13 +459,13 @@ function initStudio(): void {
     }
   }
 
-  // The emitted SVG fills with currentColor, so the host's color tints the preview.
+  /** The emitted SVG fills with currentColor, so the host's color tints the preview. */
   function recolorPreview(): void {
     previewEl.style.color = colorInput.value;
     recolorModel();
   }
 
-  // Keep the 3D model's material in sync with the picked color.
+  /** Keep the 3D model's material in sync with the picked color. */
   function recolorModel(): void {
     if (viewport === undefined || viewport.display === undefined) {
       return;
@@ -475,7 +483,7 @@ function initStudio(): void {
    * Pose controls.
    */
 
-  // Apply an orientation, sync the sliders, redraw, and re-emit.
+  /** Apply an orientation, sync the sliders, redraw, and re-emit. */
   function applyOrientation(next: THREE.Quaternion): void {
     orientation = next;
     syncControls();
@@ -483,7 +491,7 @@ function initStudio(): void {
     requestEmit();
   }
 
-  // Reflect the orientation back onto the Euler sliders and number fields.
+  /** Reflect the orientation back onto the Euler sliders and number fields. */
   function syncControls(): void {
     if (orientation === undefined || three === undefined) {
       return;
@@ -500,7 +508,7 @@ function initStudio(): void {
     setNumberValue(zNumber, zValue);
   }
 
-  // Don't overwrite a number field while the user is typing/stepping in it.
+  /** Don't overwrite a number field while the user is typing/stepping in it. */
   function setNumberValue(input: HTMLInputElement, value: string): void {
     if (document.activeElement !== input) {
       input.value = value;
