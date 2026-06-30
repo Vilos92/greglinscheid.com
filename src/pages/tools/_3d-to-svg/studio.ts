@@ -146,7 +146,7 @@ function initStudio(): void {
       if (!response.ok) {
         throw new Error(`Failed to fetch model (${response.status})`);
       }
-      await loadModel(await response.arrayBuffer());
+      await loadModel(await response.arrayBuffer(), 'glb');
     } catch (error) {
       onLoadError(error);
     } finally {
@@ -158,7 +158,11 @@ function initStudio(): void {
   async function loadFile(file: File): Promise<void> {
     showLoading();
     try {
-      await loadModel(await file.arrayBuffer());
+      const format = formatFromName(file.name);
+      if (format === undefined) {
+        throw new Error('Unsupported file. Use a .glb, .obj, or .stl model.');
+      }
+      await loadModel(await file.arrayBuffer(), format);
     } catch (error) {
       onLoadError(error);
     } finally {
@@ -187,19 +191,13 @@ function initStudio(): void {
     dropZoneEl.dataset.hidden = 'false';
   }
 
-  /** @sideEffect Parses the GLB, builds the mesh, and mounts the viewport. */
-  async function loadModel(buffer: ArrayBuffer): Promise<void> {
-    const [threeModule, gltfLoaderModule, geometryModule] = await Promise.all([
-      import('three'),
-      import('three/examples/jsm/loaders/GLTFLoader.js'),
-      ensureGeometry()
-    ]);
+  /** @sideEffect Parses the model, builds the mesh, and mounts the viewport. */
+  async function loadModel(buffer: ArrayBuffer, format: ModelFormat): Promise<void> {
+    const [threeModule, geometryModule] = await Promise.all([import('three'), ensureGeometry()]);
     three = threeModule;
     ensureWorker();
 
-    const loader = new gltfLoaderModule.GLTFLoader();
-    const gltf = await loader.parseAsync(buffer, '');
-    primitives = extractPrimitives(gltf.scene);
+    primitives = await parseModel(threeModule, buffer, format);
     rebuildMesh(geometryModule);
 
     mountViewport(threeModule);
@@ -483,15 +481,28 @@ function initStudio(): void {
     requestEmit();
   }
 
-  // Reflect the orientation back onto the Euler sliders (three keeps these in sync).
+  // Reflect the orientation back onto the Euler sliders and number fields.
   function syncControls(): void {
     if (orientation === undefined || three === undefined) {
       return;
     }
     const euler = new three.Euler().setFromQuaternion(orientation, 'XYZ');
-    bankRange.value = bankNumber.value = String(wrapAngle(radToDeg(euler.x)));
-    pitchRange.value = pitchNumber.value = String(wrapAngle(radToDeg(euler.y)));
-    spinRange.value = spinNumber.value = String(wrapAngle(radToDeg(euler.z)));
+    const bank = String(wrapAngle(radToDeg(euler.x)));
+    const pitch = String(wrapAngle(radToDeg(euler.y)));
+    const spin = String(wrapAngle(radToDeg(euler.z)));
+    bankRange.value = bank;
+    pitchRange.value = pitch;
+    spinRange.value = spin;
+    setNumberValue(bankNumber, bank);
+    setNumberValue(pitchNumber, pitch);
+    setNumberValue(spinNumber, spin);
+  }
+
+  // Don't overwrite a number field while the user is typing/stepping in it.
+  function setNumberValue(input: HTMLInputElement, value: string): void {
+    if (document.activeElement !== input) {
+      input.value = value;
+    }
   }
 
   function onSliderInput(): void {
@@ -505,6 +516,15 @@ function initStudio(): void {
       'XYZ'
     );
     applyOrientation(new three.Quaternion().setFromEuler(euler));
+  }
+
+  // A number field drives the same pose; mirror it into its slider, then apply.
+  function onNumberInput(slider: HTMLInputElement, numberInput: HTMLInputElement): void {
+    if (numberInput.value === '') {
+      return;
+    }
+    slider.value = numberInput.value;
+    onSliderInput();
   }
 
   function maybeSnap(degrees: number): number {
@@ -580,9 +600,15 @@ function initStudio(): void {
   bankRange.addEventListener('input', onSliderInput);
   pitchRange.addEventListener('input', onSliderInput);
   spinRange.addEventListener('input', onSliderInput);
-  bankNumber.addEventListener('change', onSliderInput);
-  pitchNumber.addEventListener('change', onSliderInput);
-  spinNumber.addEventListener('change', onSliderInput);
+  for (const [slider, numberInput] of [
+    [bankRange, bankNumber],
+    [pitchRange, pitchNumber],
+    [spinRange, spinNumber]
+  ] as const) {
+    const apply = (): void => onNumberInput(slider, numberInput);
+    numberInput.addEventListener('input', apply);
+    numberInput.addEventListener('change', apply);
+  }
 
   snapToggle.addEventListener('change', onSliderInput);
   // Reset returns to the model's default pose (the angle it loads at), not flat-zero.
@@ -612,6 +638,8 @@ function initStudio(): void {
   viewportEl.addEventListener('pointercancel', onPointerUp);
 
   dropZoneEl.addEventListener('click', () => fileInputEl.click());
+  // Sits over the viewport, so keep its click from also starting an arcball drag.
+  loadButtonEl.addEventListener('pointerdown', event => event.stopPropagation());
   loadButtonEl.addEventListener('click', () => fileInputEl.click());
   fileInputEl.addEventListener('change', () => {
     const file = fileInputEl.files?.[0];
@@ -677,6 +705,42 @@ function initStudio(): void {
 /*
  * Helpers.
  */
+
+type ModelFormat = 'glb' | 'obj' | 'stl';
+
+function formatFromName(name: string): ModelFormat | undefined {
+  const lower = name.toLowerCase();
+  if (lower.endsWith('.glb')) {
+    return 'glb';
+  }
+  if (lower.endsWith('.obj')) {
+    return 'obj';
+  }
+  if (lower.endsWith('.stl')) {
+    return 'stl';
+  }
+  return undefined;
+}
+
+// Parse a model buffer with the loader for its format, returning raw primitives.
+// Each loader is imported on demand so its code only ships when that format is used.
+async function parseModel(
+  three: ThreeModule,
+  buffer: ArrayBuffer,
+  format: ModelFormat
+): Promise<RawPrimitive[]> {
+  if (format === 'obj') {
+    const {OBJLoader} = await import('three/examples/jsm/loaders/OBJLoader.js');
+    return extractPrimitives(new OBJLoader().parse(new TextDecoder().decode(buffer)));
+  }
+  if (format === 'stl') {
+    const {STLLoader} = await import('three/examples/jsm/loaders/STLLoader.js');
+    return extractPrimitives(new three.Mesh(new STLLoader().parse(buffer)));
+  }
+  const {GLTFLoader} = await import('three/examples/jsm/loaders/GLTFLoader.js');
+  const gltf = await new GLTFLoader().parseAsync(buffer, '');
+  return extractPrimitives(gltf.scene);
+}
 
 function extractPrimitives(scene: THREE.Object3D): RawPrimitive[] {
   scene.updateMatrixWorld(true);

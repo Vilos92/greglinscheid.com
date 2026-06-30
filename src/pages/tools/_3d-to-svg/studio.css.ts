@@ -128,9 +128,12 @@ export const dropZone = style({
     }
   },
   selectors: {
+    // Dim the model behind a scrim and show the prompt in plain white, so it
+    // reads clearly over any model in either theme (it only appears on drag-over).
     '&[data-dragover="true"]': {
       borderColor: palette.accent,
-      color: palette.text
+      backgroundColor: 'rgba(0, 0, 0, 0.72)',
+      color: '#ffffff'
     },
     '&[data-hidden="true"]': {
       display: 'none'
@@ -177,16 +180,8 @@ export const spinner = style({
   }
 });
 
-// Row under the viewport: the load button plus any status/error text.
-export const loadRow = style({
-  marginTop: '0.75rem',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  flexWrap: 'wrap'
-});
-
 export const status = style({
+  marginTop: '0.75rem',
   minHeight: '1.4em',
   fontSize: '0.85rem',
   color: palette.textMuted,
@@ -472,15 +467,11 @@ export const copyButton = style({
   border: `1px solid ${palette.border}`,
   borderRadius: '6px',
   cursor: 'pointer',
-  transition: 'color 120ms ease, border-color 120ms ease',
   '@media': {
     [media.dark]: {
       color: palette.textMutedDark,
       backgroundColor: palette.surfaceDark,
       borderColor: palette.borderDark
-    },
-    [media.reducedMotion]: {
-      transition: 'none'
     },
     [media.coarsePointer]: {
       width: touchTargetMin,
@@ -498,6 +489,46 @@ export const copyButton = style({
     '&[data-copied="true"]': {
       color: palette.accent,
       borderColor: palette.accent
+    }
+  }
+});
+
+// Tucked into the pane's top-right corner (inside the pane, outside the dashed
+// scan frame). Borderless so it doesn't compete with the frame; the accent only
+// shows on hover/focus. Rounded close to the pane's 12px so the corner nests.
+export const loadButton = style({
+  position: 'absolute',
+  top: '0.3rem',
+  right: '0.3rem',
+  zIndex: 3,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '2rem',
+  height: '2rem',
+  padding: 0,
+  color: palette.textMuted,
+  background: 'transparent',
+  border: '1px solid transparent',
+  borderRadius: '10px',
+  cursor: 'pointer',
+  '@media': {
+    [media.dark]: {
+      color: palette.textMutedDark
+    },
+    [media.coarsePointer]: {
+      width: touchTargetMin,
+      height: touchTargetMin
+    }
+  },
+  selectors: {
+    '&:hover': {
+      color: palette.accent,
+      borderColor: palette.accent
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${palette.accent}`,
+      outlineOffset: '2px'
     }
   }
 });

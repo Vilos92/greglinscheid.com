@@ -21,7 +21,7 @@ import {
   intro,
   label,
   legend,
-  loadRow,
+  loadButton,
   loadingOverlay,
   modeField,
   modeGroup,
@@ -65,7 +65,7 @@ const jsonLd = {
   description={pageDescription}
   image="/og/3d-to-svg.png"
   imageAlt="A 3D model turned into an SVG icon"
-  keywords="SVG icon generator, 3D model to SVG, GLB to SVG, mesh to SVG, currentColor icon, cel-shaded SVG, free SVG tool"
+  keywords="SVG icon generator, 3D model to SVG, GLB to SVG, OBJ to SVG, STL to SVG, mesh to SVG, currentColor icon, cel-shaded SVG, free SVG tool"
   jsonLd={jsonLd}
   fullBleed
 >
@@ -73,10 +73,10 @@ const jsonLd = {
     <header>
       <h1>3D to SVG</h1>
       <p class={intro}>
-        Drop a <code>.glb</code> model below and pose it with the mouse or the sliders, then export
-        it as a flat or cel-shaded SVG icon. Everything runs in your browser. Nothing gets uploaded.
-        The preview is the exact path that gets exported, so a given model, pose, and style always
-        produce the same bytes.
+        Drop a <code>.glb</code>, <code>.obj</code>, or <code>.stl</code> model below and pose it with
+        the mouse or the sliders, then export it as a flat or cel-shaded SVG icon. Everything runs in
+        your browser. Nothing gets uploaded. The preview is the exact path that gets exported, so a
+        given model, pose, and style always produce the same bytes.
       </p>
     </header>
 
@@ -95,10 +95,19 @@ const jsonLd = {
             stroke-dasharray="6 8"
           />
         </svg>
+        <button id={ids.loadButton} class={loadButton} type="button" aria-label="Load a model" title="Load a model">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 10.5V2.5" />
+              <path d="M5 5.5 8 2.5l3 3" />
+              <path d="M2.75 9.5v2.25a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V9.5" />
+            </g>
+          </svg>
+        </button>
         <div id={ids.dropZone} class={dropZone} data-hidden="true">
-          <strong>Drop a .glb model</strong>
-          <span>or click to browse</span>
-          <input id={ids.fileInput} type="file" accept=".glb,model/gltf-binary" hidden />
+          <strong>Drop a 3D model</strong>
+          <span>.glb, .obj, or .stl</span>
+          <input id={ids.fileInput} type="file" accept=".glb,.obj,.stl,model/gltf-binary" hidden />
         </div>
         <div id={ids.loading} class={loadingOverlay} data-hidden="false">
           <div class={spinner}></div>
@@ -108,10 +117,7 @@ const jsonLd = {
       <div id={ids.preview} class={preview}></div>
     </div>
 
-    <div class={loadRow}>
-      <button id={ids.loadButton} class={button} type="button">Load model</button>
-      <p id={ids.status} class={status} role="status" aria-live="polite"></p>
-    </div>
+    <p id={ids.status} class={status} role="status" aria-live="polite"></p>
 
     <div class={controls}>
       <div class={controlsRow}>
@@ -156,12 +162,12 @@ const jsonLd = {
             <span class={label}>Style</span>
             <div id={ids.mode} class={modeGroup} role="radiogroup" aria-label="Style">
               <label class={modeOption}>
-                <input type="radio" name="studio-mode" value="flat" />
-                Flat color
-              </label>
-              <label class={modeOption}>
                 <input type="radio" name="studio-mode" value="shaded" checked />
                 Cel-shaded
+              </label>
+              <label class={modeOption}>
+                <input type="radio" name="studio-mode" value="flat" />
+                Flat color
               </label>
             </div>
           </div>
