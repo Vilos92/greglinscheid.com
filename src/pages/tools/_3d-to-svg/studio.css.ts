@@ -42,17 +42,26 @@ export const intro = style({
   marginBottom: '2em'
 });
 
-export const grid = style({
+// Viewport, preview, and the two control cards share one grid so their order can
+// change with width: each pane sits beside its controls when wide, and they
+// interleave (viewport, pose, preview, output) when stacked.
+export const poseGrid = style({
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+  gridTemplateAreas: '"viewport preview" "pose output"',
   gap: '1.5rem',
-  alignItems: 'start',
   '@media': {
     [media.content]: {
-      gridTemplateColumns: '1fr'
+      gridTemplateColumns: '1fr',
+      gridTemplateAreas: '"viewport" "pose" "preview" "output"'
     }
   }
 });
+
+export const areaViewport = style({gridArea: 'viewport', alignSelf: 'start'});
+export const areaPreview = style({gridArea: 'preview', alignSelf: 'start'});
+export const areaPose = style({gridArea: 'pose'});
+export const areaOutput = style({gridArea: 'output'});
 
 const pane = style({
   boxSizing: 'border-box',
@@ -213,14 +222,8 @@ export const preview = style([
   }
 ]);
 
-export const controls = style({
-  marginTop: '1.5rem',
-  display: 'grid',
-  gap: '1.25rem'
-});
-
 // Flex column so the trailing button row can be pinned to the card's bottom
-// (the cards are stretched to equal height by controlsRow).
+// (the cards are stretched to equal height by the pose grid's row).
 export const fieldset = style({
   display: 'flex',
   flexDirection: 'column',
@@ -374,18 +377,8 @@ export const colorInput = style({
 // The Pose and Output control cards sit side-by-side on wide screens and stack
 // when narrow. The default `stretch` alignment keeps both cards the same height
 // regardless of content. The exported-SVG block spans full width below them.
-export const controlsRow = style({
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-  gap: '1.25rem',
-  '@media': {
-    [media.content]: {
-      gridTemplateColumns: '1fr'
-    }
-  }
-});
-
 export const snippetBlock = style({
+  marginTop: '1.5rem',
   // Let the grid track shrink instead of stretching to the snippet's width.
   minWidth: 0
 });

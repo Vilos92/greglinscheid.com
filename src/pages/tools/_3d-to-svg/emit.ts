@@ -37,6 +37,10 @@ const SHADE_BAND_OPACITY = BAND_OPACITY.map(
   target => Math.round(((target - SHADE_FLOOR) / (1 - SHADE_FLOOR)) * 1000) / 1000
 );
 
+/*
+ * Helpers.
+ */
+
 /** Emit a single-<path> SVG string from a culled scene. */
 export function emitFlatSvg(scene: CulledScene): string {
   const recentered = recenterRingToCanvas(flatRing(scene));
@@ -52,10 +56,6 @@ export function emitShadedSvg(culled: CulledScene, shaded: ShadedScene): string 
   const layers = bandLayers(shaded, SHADE_BAND_OPACITY);
   return wrapSvg(base + layers.join(''));
 }
-
-/*
- * Helpers.
- */
 
 /**
  * Sort faces into opacity bands, stretching each pose's shade range across the

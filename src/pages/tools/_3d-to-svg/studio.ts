@@ -22,6 +22,8 @@ type Viewport = {
   display: THREE.Mesh | undefined;
 };
 
+type ModelFormat = 'glb' | 'obj' | 'stl';
+
 /*
  * Constants.
  */
@@ -528,7 +530,7 @@ function initStudio(): void {
     applyOrientation(new three.Quaternion().setFromEuler(euler));
   }
 
-  // A number field drives the same pose; mirror it into its slider, then apply.
+  /** A number field drives the same pose; mirror it into its slider, then apply. */
   function onNumberInput(slider: HTMLInputElement, numberInput: HTMLInputElement): void {
     if (numberInput.value === '') {
       return;
@@ -554,7 +556,7 @@ function initStudio(): void {
   };
   let drag: Drag | undefined;
 
-  // Project a pointer onto a virtual unit sphere over the viewport.
+  /** Project a pointer onto a virtual unit sphere over the viewport. */
   function sphereVector(threeMod: ThreeModule, event: PointerEvent): THREE.Vector3 {
     const rect = viewportEl.getBoundingClientRect();
     const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -579,7 +581,7 @@ function initStudio(): void {
     viewportEl.setPointerCapture(event.pointerId);
   }
 
-  // Rotate the model so the grabbed point tracks the cursor (Shoemake arcball).
+  /** Rotate the model so the grabbed point tracks the cursor (Shoemake arcball). */
   function onPointerMove(event: PointerEvent): void {
     if (drag === undefined || drag.pointerId !== event.pointerId) {
       return;
@@ -716,8 +718,6 @@ function initStudio(): void {
  * Helpers.
  */
 
-type ModelFormat = 'glb' | 'obj' | 'stl';
-
 function formatFromName(name: string): ModelFormat | undefined {
   const lower = name.toLowerCase();
   if (lower.endsWith('.glb')) {
@@ -732,8 +732,10 @@ function formatFromName(name: string): ModelFormat | undefined {
   return undefined;
 }
 
-// Parse a model buffer with the loader for its format, returning raw primitives.
-// Each loader is imported on demand so its code only ships when that format is used.
+/**
+ * Parse a model buffer with the loader for its format, returning raw primitives.
+ * Each loader is imported on demand so its code only ships when that format is used.
+ */
 async function parseModel(
   three: ThreeModule,
   buffer: ArrayBuffer,
@@ -786,7 +788,7 @@ function toPrimitive(object: THREE.Object3D): RawPrimitive | undefined {
   };
 }
 
-// Read x/y/z per vertex so interleaved/normalized attributes deinterleave correctly.
+/** Read x/y/z per vertex so interleaved/normalized attributes deinterleave correctly. */
 function packPositions(attribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute): Float32Array {
   const packed = new Float32Array(attribute.count * 3);
   for (let index = 0; index < attribute.count; index++) {
@@ -896,8 +898,10 @@ function orientationFromMat3(three: ThreeModule, m: Mat3): THREE.Quaternion {
   return new three.Quaternion().setFromRotationMatrix(mat3ToMatrix4(three, m));
 }
 
-// A loop of showcase orientations: orbit the base pose around vertical with a
-// gentle pitch wobble so each stop shows a distinct silhouette.
+/**
+ * A loop of showcase orientations: orbit the base pose around vertical with a
+ * gentle pitch wobble so each stop shows a distinct silhouette.
+ */
 function buildIdleTargets(three: ThreeModule, base: THREE.Quaternion): THREE.Quaternion[] {
   const up = new three.Vector3(0, 0, 1);
   const side = new three.Vector3(1, 0, 0);
@@ -927,8 +931,10 @@ function messageFrom(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong.';
 }
 
-// Lightweight highlighter for our own predictable SVG output: tags, attribute
-// names, and quoted values. `textContent` of the result is still the raw SVG.
+/**
+ * Lightweight highlighter for our own predictable SVG output: tags, attribute
+ * names, and quoted values. `textContent` of the result is still the raw SVG.
+ */
 function highlightSvg(svg: string): string {
   return svg
     .split(/(<[^>]*>)/)

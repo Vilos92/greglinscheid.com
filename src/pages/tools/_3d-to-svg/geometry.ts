@@ -70,6 +70,10 @@ const AX: Record<AxisToken, Vec3> = {
  */
 const CLUSTER_GRIDS = [128, 96, 64, 48, 32, 24, 16, 12, 8];
 
+/*
+ * Helpers.
+ */
+
 /** Build a normalized, pose-independent mesh from raw primitives. */
 export function buildMesh(
   primitives: readonly RawPrimitive[],
@@ -169,10 +173,6 @@ function project(
 
   return {posed, visible, centered};
 }
-
-/*
- * Helpers.
- */
 
 /** Axis-aligned bounds of a point set; looped to stay safe on very large meshes. */
 function boundsOf(points: readonly Vec2[]): {mn: Vec2; mx: Vec2} {

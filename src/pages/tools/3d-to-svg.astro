@@ -2,21 +2,22 @@
 import BaseLayout from '../../components/BaseLayout.astro';
 import {siteTitle, siteUrl} from '../../site';
 import {
+  areaOutput,
+  areaPose,
+  areaPreview,
+  areaViewport,
   attribution,
   button,
   buttonRow,
   canvas,
   checkboxRow,
   colorInput,
-  controls,
-  controlsRow,
   copyButton,
   copyIconCopied,
   copyIconDefault,
   dropZone,
   fieldRow,
   fieldset,
-  grid,
   ids,
   intro,
   label,
@@ -27,6 +28,7 @@ import {
   modeGroup,
   modeOption,
   number,
+  poseGrid,
   preview,
   spinner,
   scanFrame,
@@ -80,8 +82,8 @@ const jsonLd = {
       </p>
     </header>
 
-    <div class={grid}>
-      <div id={ids.viewport} class={viewport}>
+    <div class={poseGrid}>
+      <div id={ids.viewport} class:list={[viewport, areaViewport]}>
         <canvas id={ids.canvas} class={canvas}></canvas>
         <svg class={scanFrame} viewBox="0 0 512 512" aria-hidden="true">
           <rect
@@ -114,15 +116,10 @@ const jsonLd = {
         </div>
       </div>
 
-      <div id={ids.preview} class={preview}></div>
-    </div>
+      <div id={ids.preview} class:list={[preview, areaPreview]}></div>
 
-    <p id={ids.status} class={status} role="status" aria-live="polite"></p>
-
-    <div class={controls}>
-      <div class={controlsRow}>
-        <fieldset class={fieldset}>
-          <legend class={legend}>Pose</legend>
+      <fieldset class:list={[fieldset, areaPose]}>
+        <legend class={legend}>Pose</legend>
 
           <div class={sliderRow}>
             <label class={label} for={ids.x}>X</label>
@@ -150,7 +147,7 @@ const jsonLd = {
           </div>
         </fieldset>
 
-        <fieldset class={fieldset}>
+        <fieldset class:list={[fieldset, areaOutput]}>
           <legend class={legend}>Output</legend>
 
           <div class={fieldRow}>
@@ -176,9 +173,11 @@ const jsonLd = {
             <button id={ids.download} class={button} type="button">Download SVG</button>
           </div>
         </fieldset>
-      </div>
+    </div>
 
-      <div class={snippetBlock}>
+    <p id={ids.status} class={status} role="status" aria-live="polite"></p>
+
+    <div class={snippetBlock}>
         <div class={snippetHead}>
           <h2 class={snippetHeading}>Exported SVG</h2>
           <button id={ids.copyInline} class={copyButton} type="button" aria-label="Copy" title="Copy">
@@ -195,7 +194,6 @@ const jsonLd = {
         </div>
         <pre id={ids.snippet} class={snippetPre} data-loading="true"><code id={ids.snippetInline}></code></pre>
       </div>
-    </div>
 
     <p class={attribution}>
       Sample model: <a href="https://sketchfab.com/3d-models/spaceship-fighter-version-2-meshy-6-ff69bc6de8584bb4b2d6fac0b5a1d2ed">Spaceship Fighter</a>
