@@ -650,8 +650,6 @@ function initStudio(): void {
   viewportEl.addEventListener('pointercancel', onPointerUp);
 
   dropZoneEl.addEventListener('click', () => fileInputEl.click());
-  // Sits over the viewport, so keep its click from also starting an arcball drag.
-  loadButtonEl.addEventListener('pointerdown', event => event.stopPropagation());
   loadButtonEl.addEventListener('click', () => fileInputEl.click());
   fileInputEl.addEventListener('change', () => {
     const file = fileInputEl.files?.[0];

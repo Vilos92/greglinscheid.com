@@ -58,10 +58,14 @@ export const poseGrid = style({
   }
 });
 
-export const areaViewport = style({gridArea: 'viewport', alignSelf: 'start'});
-export const areaPreview = style({gridArea: 'preview', alignSelf: 'start'});
+export const areaViewport = style({gridArea: 'viewport', alignSelf: 'start', minWidth: 0});
+export const areaPreview = style({gridArea: 'preview', alignSelf: 'start', minWidth: 0});
 export const areaPose = style({gridArea: 'pose'});
 export const areaOutput = style({gridArea: 'output'});
+
+// Wraps a pane's header row plus the pane itself so the header sits above the box
+// (outside the canvas) instead of floating inside it.
+export const paneBlock = style({minWidth: 0});
 
 const pane = style({
   boxSizing: 'border-box',
@@ -190,8 +194,6 @@ export const spinner = style({
 });
 
 export const status = style({
-  marginTop: '0.75rem',
-  minHeight: '1.4em',
   fontSize: '0.85rem',
   color: palette.textMuted,
   '@media': {
@@ -200,6 +202,13 @@ export const status = style({
     }
   },
   selectors: {
+    // Only take up space (and reserve a line) once it actually holds a message,
+    // so an empty status doesn't leave an uneven gap above the exported SVG.
+    // Stays in flow rather than display:none so the live region still announces.
+    '&:not(:empty)': {
+      marginTop: '0.75rem',
+      minHeight: '1.4em'
+    },
     '&[data-error="true"]': {
       color: palette.linkHover
     }
@@ -222,8 +231,7 @@ export const preview = style([
   }
 ]);
 
-// Flex column so the trailing button row can be pinned to the card's bottom
-// (the cards are stretched to equal height by the pose grid's row).
+// Flex column; the pose grid stretches both cards to equal height.
 export const fieldset = style({
   display: 'flex',
   flexDirection: 'column',
@@ -311,13 +319,12 @@ export const modeOption = style({
   cursor: 'pointer'
 });
 
-// `marginTop: auto` drops the row to the bottom of its flex-column card so Reset
-// and Download sit at the cards' lower edge regardless of content height.
-export const buttonRow = style({
+// Trailing Pose row: the snap toggle on the left, Reset pushed to the right edge.
+export const snapRow = style({
   display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.6rem',
-  marginTop: 'auto'
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '0.75rem'
 });
 
 export const button = style({
@@ -382,7 +389,9 @@ export const snippetBlock = style({
   minWidth: 0
 });
 
-export const snippetHead = style({
+// Header row shared by the Model/SVG panes and the exported-SVG block: a heading
+// on the left and an icon button pushed to the right.
+export const sectionHead = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -390,7 +399,7 @@ export const snippetHead = style({
   marginBottom: '0.5rem'
 });
 
-export const snippetHeading = style({
+export const sectionHeading = style({
   margin: 0,
   fontSize: '0.95rem',
   fontWeight: 600
@@ -485,32 +494,30 @@ export const copyButton = style({
   }
 });
 
-// Tucked into the pane's top-right corner (inside the pane, outside the dashed
-// scan frame). Borderless so it doesn't compete with the frame; the accent only
-// shows on hover/focus. Rounded close to the pane's 12px so the corner nests.
-export const loadButton = style({
-  position: 'absolute',
-  top: '0.3rem',
-  right: '0.3rem',
-  zIndex: 3,
+// Icon + text button that lives in a pane header (Upload on Model, Download on
+// SVG). The icon is vertically centred with a gap to the label.
+export const headButton = style({
   display: 'inline-flex',
   alignItems: 'center',
-  justifyContent: 'center',
-  width: '2rem',
-  height: '2rem',
-  padding: 0,
+  gap: '0.4rem',
+  flexShrink: 0,
+  padding: '0.35rem 0.65rem',
+  fontFamily: fonts.sans,
+  fontSize: '0.85rem',
+  fontWeight: 600,
   color: palette.textMuted,
-  background: 'transparent',
-  border: '1px solid transparent',
-  borderRadius: '10px',
+  backgroundColor: palette.surface,
+  border: `1px solid ${palette.border}`,
+  borderRadius: '8px',
   cursor: 'pointer',
   '@media': {
     [media.dark]: {
-      color: palette.textMutedDark
+      color: palette.textMutedDark,
+      backgroundColor: palette.surfaceDark,
+      borderColor: palette.borderDark
     },
     [media.coarsePointer]: {
-      width: touchTargetMin,
-      height: touchTargetMin
+      minHeight: touchTargetMin
     }
   },
   selectors: {
