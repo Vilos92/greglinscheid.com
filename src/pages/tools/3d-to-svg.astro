@@ -39,9 +39,11 @@ import {
   sliderRow,
   snapRow,
   snippetBlock,
+  snippetCode,
+  snippetFrame,
   snippetPre,
-  viewport,
-  visuallyHidden
+  snippetSpinnerHost,
+  viewport
 } from './_3d-to-svg/studio.css';
 
 const pageTitle = '3D to SVG: turn a 3D model into an SVG icon | Greg Linscheid';
@@ -123,7 +125,7 @@ const jsonLd = {
             <div class={spinner}></div>
           </div>
         </div>
-        <p id={ids.live} class={visuallyHidden} aria-live="polite"></p>
+        <p id={ids.live} class="sr-only" aria-live="polite"></p>
       </div>
 
       <div class:list={[paneBlock, areaPreview]}>
@@ -210,7 +212,12 @@ const jsonLd = {
             </svg>
           </button>
         </div>
-        <pre id={ids.snippet} class={snippetPre} data-loading="true"><code id={ids.snippetInline}></code></pre>
+        <div id={ids.snippetFrame} class={snippetFrame} data-loading="true">
+          <pre id={ids.snippet} class={snippetPre}><code id={ids.snippetInline} class={snippetCode}></code></pre>
+          <div id={ids.snippetSpinner} class={snippetSpinnerHost}>
+            <div class={spinner}></div>
+          </div>
+        </div>
       </div>
 
     <p class={attribution}>

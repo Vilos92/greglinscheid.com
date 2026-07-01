@@ -27,8 +27,10 @@ export const ids = {
   color: 'studio-color',
   mode: 'studio-mode',
   download: 'studio-download',
+  snippetFrame: 'studio-snippet-frame',
   snippet: 'studio-snippet',
   snippetInline: 'studio-snippet-inline',
+  snippetSpinner: 'studio-snippet-spinner',
   copyInline: 'studio-copy-inline',
   loading: 'studio-loading',
   loadButton: 'studio-load',
@@ -210,20 +212,6 @@ export const dropError = style({
       display: 'none'
     }
   }
-});
-
-// Screen-reader-only live region for transient announcements (e.g. loading), so
-// they're conveyed without the visible layout shift a real status line causes.
-export const visuallyHidden = style({
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  padding: 0,
-  margin: '-1px',
-  overflow: 'hidden',
-  clip: 'rect(0, 0, 0, 0)',
-  whiteSpace: 'nowrap',
-  border: 0
 });
 
 // Inline preview host. `color` drives the SVG's currentColor fill at runtime.
@@ -416,12 +404,32 @@ export const sectionHeading = style({
   fontWeight: 600
 });
 
+// Hosts the exported SVG snippet; the spinner overlays this box while loading.
+export const snippetFrame = style({
+  position: 'relative'
+});
+
+export const snippetSpinnerHost = style({
+  position: 'absolute',
+  inset: 0,
+  zIndex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  pointerEvents: 'none',
+  selectors: {
+    '&[hidden]': {
+      display: 'none'
+    }
+  }
+});
+
 // Mirrors shiki's github-light/github-dark themes so this matches the <Code> block.
 export const snippetPre = style({
   margin: 0,
   padding: '1.1em 1.25em',
   maxWidth: '100%',
-  maxHeight: '15rem',
+  height: '15rem',
   overflowY: 'auto',
   // The exported SVG is one long line. We wrap it instead of blowing out the width.
   whiteSpace: 'pre-wrap',
@@ -439,23 +447,13 @@ export const snippetPre = style({
       backgroundColor: '#24292e',
       borderColor: palette.borderDark
     }
-  },
+  }
+});
+
+export const snippetCode = style({
   selectors: {
-    // While a model loads, centre a spinner where the SVG markup will land.
-    '&[data-loading="true"]': {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '6rem'
-    },
-    '&[data-loading="true"]::after': {
-      content: '""',
-      width: '2.25rem',
-      height: '2.25rem',
-      borderRadius: '50%',
-      border: `3px solid ${palette.border}`,
-      borderTopColor: palette.accent,
-      animation: `${spin} 0.8s linear infinite`
+    [`${snippetFrame}[data-loading="true"] &`]: {
+      visibility: 'hidden'
     }
   }
 });

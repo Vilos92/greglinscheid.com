@@ -87,7 +87,8 @@ function initStudio(): void {
   const modeGroup = requireElement<HTMLElement>(ids.mode);
   const downloadButton = requireElement<HTMLButtonElement>(ids.download);
 
-  const snippetPre = requireElement<HTMLPreElement>(ids.snippet);
+  const snippetFrameEl = requireElement<HTMLDivElement>(ids.snippetFrame);
+  const snippetSpinnerEl = requireElement<HTMLDivElement>(ids.snippetSpinner);
   const snippetInline = requireElement<HTMLElement>(ids.snippetInline);
   const copyInlineButton = requireElement<HTMLButtonElement>(ids.copyInline);
 
@@ -183,8 +184,8 @@ function initStudio(): void {
     loadingEl.dataset.hidden = 'false';
     currentSvg = '';
     previewEl.innerHTML = `<div class="${spinner}"></div>`;
-    snippetInline.textContent = '';
-    snippetPre.dataset.loading = 'true';
+    snippetFrameEl.dataset.loading = 'true';
+    snippetSpinnerEl.hidden = false;
     // Fresh load: drop any prior error, and announce loading to screen readers
     // only (sighted users have the spinner) via the visually-hidden live region.
     dropErrorEl.textContent = '';
@@ -198,7 +199,7 @@ function initStudio(): void {
   /**
    * On failure, show the reason inside the drop prompt (revealed for retry) and
    * announce it through the live region. The loading announcement is replaced, so
-   * hideLoading leaves it intact.
+   * `hideLoading` leaves it intact.
    */
   function onLoadError(error: unknown): void {
     const message = messageFrom(error);
@@ -368,10 +369,11 @@ function initStudio(): void {
     const reply = event.data;
     if (reply.type === 'error') {
       // SVG generation failed with a model still loaded, so show the reason where
-      // the icon would render (preview is aria-hidden; the live region carries it
+      // the icon would render (preview is aria-hidden. The live region carries it
       // to screen readers) and stop the snippet spinner.
       previewEl.textContent = reply.message;
-      snippetPre.dataset.loading = 'false';
+      snippetFrameEl.dataset.loading = 'false';
+      snippetSpinnerEl.hidden = true;
       liveEl.textContent = reply.message;
     } else if (reply.id === latestRequestId) {
       applySvg(reply.svg);
@@ -493,8 +495,9 @@ function initStudio(): void {
   }
 
   function updateSnippets(): void {
-    snippetPre.dataset.loading = 'false';
     snippetInline.innerHTML = highlightSvg(currentSvg.trim());
+    snippetFrameEl.dataset.loading = 'false';
+    snippetSpinnerEl.hidden = true;
   }
 
   /*
