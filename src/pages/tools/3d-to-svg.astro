@@ -14,6 +14,7 @@ import {
   copyButton,
   copyIconCopied,
   copyIconDefault,
+  dropError,
   dropZone,
   fieldRow,
   fieldset,
@@ -39,8 +40,8 @@ import {
   snapRow,
   snippetBlock,
   snippetPre,
-  status,
-  viewport
+  viewport,
+  visuallyHidden
 } from './_3d-to-svg/studio.css';
 
 const pageTitle = '3D to SVG: turn a 3D model into an SVG icon | Greg Linscheid';
@@ -99,7 +100,7 @@ const jsonLd = {
           </button>
         </div>
         <div id={ids.viewport} class={viewport}>
-          <canvas id={ids.canvas} class={canvas}></canvas>
+          <canvas id={ids.canvas} class={canvas} role="img" aria-label="3D model preview"></canvas>
           <svg class={scanFrame} viewBox="0 0 512 512" aria-hidden="true">
             <rect
               x="41"
@@ -115,12 +116,14 @@ const jsonLd = {
           <div id={ids.dropZone} class={dropZone} data-hidden="true">
             <strong>Drop a 3D model</strong>
             <span>.glb, .obj, or .stl</span>
+            <p id={ids.dropError} class={dropError}></p>
             <input id={ids.fileInput} type="file" accept=".glb,.obj,.stl,model/gltf-binary" hidden />
           </div>
           <div id={ids.loading} class={loadingOverlay} data-hidden="false">
             <div class={spinner}></div>
           </div>
         </div>
+        <p id={ids.live} class={visuallyHidden} aria-live="polite"></p>
       </div>
 
       <div class:list={[paneBlock, areaPreview]}>
@@ -137,7 +140,7 @@ const jsonLd = {
             <span>Download</span>
           </button>
         </div>
-        <div id={ids.preview} class={preview}></div>
+        <div id={ids.preview} class={preview} aria-hidden="true"></div>
       </div>
 
       <fieldset class:list={[fieldset, areaPose]}>
@@ -146,17 +149,17 @@ const jsonLd = {
           <div class={sliderRow}>
             <label class={label} for={ids.x}>X</label>
             <input id={ids.x} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.xNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <input id={ids.xNumber} class={number} type="number" min="-180" max="180" value="0" aria-label="X" />
           </div>
           <div class={sliderRow}>
             <label class={label} for={ids.y}>Y</label>
             <input id={ids.y} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.yNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <input id={ids.yNumber} class={number} type="number" min="-180" max="180" value="0" aria-label="Y" />
           </div>
           <div class={sliderRow}>
             <label class={label} for={ids.z}>Z</label>
             <input id={ids.z} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.zNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <input id={ids.zNumber} class={number} type="number" min="-180" max="180" value="0" aria-label="Z" />
           </div>
 
           <div class={snapRow}>
@@ -191,8 +194,6 @@ const jsonLd = {
           </div>
         </fieldset>
     </div>
-
-    <p id={ids.status} class={status} role="status" aria-live="polite"></p>
 
     <div class={snippetBlock}>
         <div class={sectionHead}>

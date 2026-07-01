@@ -13,8 +13,8 @@ export const ids = {
   viewport: 'studio-viewport',
   canvas: 'studio-canvas',
   dropZone: 'studio-drop-zone',
+  dropError: 'studio-drop-error',
   fileInput: 'studio-file-input',
-  status: 'studio-status',
   preview: 'studio-preview',
   x: 'studio-x',
   y: 'studio-y',
@@ -31,7 +31,8 @@ export const ids = {
   snippetInline: 'studio-snippet-inline',
   copyInline: 'studio-copy-inline',
   loading: 'studio-loading',
-  loadButton: 'studio-load'
+  loadButton: 'studio-load',
+  live: 'studio-live'
 } as const;
 
 /*
@@ -193,26 +194,36 @@ export const spinner = style({
   }
 });
 
-export const status = style({
+// Error line shown inside the drop zone when a model fails to load, so the reason
+// appears in context beside the prompt. Empty by default, so it costs no layout.
+export const dropError = style({
+  margin: 0,
   fontSize: '0.85rem',
-  color: palette.textMuted,
+  color: palette.linkHover,
   '@media': {
     [media.dark]: {
-      color: palette.textMutedDark
+      color: palette.linkHoverDark
     }
   },
   selectors: {
-    // Only take up space (and reserve a line) once it actually holds a message,
-    // so an empty status doesn't leave an uneven gap above the exported SVG.
-    // Stays in flow rather than display:none so the live region still announces.
-    '&:not(:empty)': {
-      marginTop: '0.75rem',
-      minHeight: '1.4em'
-    },
-    '&[data-error="true"]': {
-      color: palette.linkHover
+    '&:empty': {
+      display: 'none'
     }
   }
+});
+
+// Screen-reader-only live region for transient announcements (e.g. loading), so
+// they're conveyed without the visible layout shift a real status line causes.
+export const visuallyHidden = style({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0
 });
 
 // Inline preview host. `color` drives the SVG's currentColor fill at runtime.
