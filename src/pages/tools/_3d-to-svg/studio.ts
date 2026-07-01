@@ -69,7 +69,8 @@ function initStudio(): void {
   const fileInputEl = requireElement<HTMLInputElement>(ids.fileInput);
   const loadingEl = requireElement<HTMLDivElement>(ids.loading);
   const loadButtonEl = requireElement<HTMLButtonElement>(ids.loadButton);
-  const statusEl = requireElement<HTMLParagraphElement>(ids.status);
+  const dropErrorEl = requireElement<HTMLParagraphElement>(ids.dropError);
+  const liveEl = requireElement<HTMLParagraphElement>(ids.live);
   const previewEl = requireElement<HTMLDivElement>(ids.preview);
 
   const xRange = requireElement<HTMLInputElement>(ids.x);
@@ -86,7 +87,8 @@ function initStudio(): void {
   const modeGroup = requireElement<HTMLElement>(ids.mode);
   const downloadButton = requireElement<HTMLButtonElement>(ids.download);
 
-  const snippetPre = requireElement<HTMLPreElement>(ids.snippet);
+  const snippetFrameEl = requireElement<HTMLDivElement>(ids.snippetFrame);
+  const snippetSpinnerEl = requireElement<HTMLDivElement>(ids.snippetSpinner);
   const snippetInline = requireElement<HTMLElement>(ids.snippetInline);
   const copyInlineButton = requireElement<HTMLButtonElement>(ids.copyInline);
 
@@ -182,18 +184,27 @@ function initStudio(): void {
     loadingEl.dataset.hidden = 'false';
     currentSvg = '';
     previewEl.innerHTML = `<div class="${spinner}"></div>`;
-    snippetInline.textContent = '';
-    snippetPre.dataset.loading = 'true';
-    setStatus('', false);
+    snippetFrameEl.dataset.loading = 'true';
+    snippetSpinnerEl.hidden = false;
+    // Fresh load: drop any prior error, and announce loading to screen readers
+    // only (sighted users have the spinner) via the visually-hidden live region.
+    dropErrorEl.textContent = '';
+    liveEl.textContent = 'Loading model…';
   }
 
   function hideLoading(): void {
     loadingEl.dataset.hidden = 'true';
   }
 
-  /** On failure, surface the message and reveal the drop prompt so the user can retry. */
+  /**
+   * On failure, show the reason inside the drop prompt (revealed for retry) and
+   * announce it through the live region. The loading announcement is replaced, so
+   * `hideLoading` leaves it intact.
+   */
   function onLoadError(error: unknown): void {
-    setStatus(messageFrom(error), true);
+    const message = messageFrom(error);
+    dropErrorEl.textContent = message;
+    liveEl.textContent = message;
     dropZoneEl.dataset.hidden = 'false';
   }
 
@@ -209,7 +220,8 @@ function initStudio(): void {
     mountViewport(threeModule, geometryModule.CAMPOS);
     rebuildDisplay(threeModule);
     dropZoneEl.dataset.hidden = 'true';
-    setStatus('', false);
+    // Clear the loading announcement now that the model is mounted.
+    liveEl.textContent = '';
     // Every freshly loaded model starts at the default pose, then drifts.
     orientation = orientationFromMat3(threeModule, geometryModule.LOCKED_ORIENTATION);
     syncControls();
@@ -356,7 +368,13 @@ function initStudio(): void {
     isWorkerBusy = false;
     const reply = event.data;
     if (reply.type === 'error') {
-      setStatus(reply.message, true);
+      // SVG generation failed with a model still loaded, so show the reason where
+      // the icon would render (preview is aria-hidden. The live region carries it
+      // to screen readers) and stop the snippet spinner.
+      previewEl.textContent = reply.message;
+      snippetFrameEl.dataset.loading = 'false';
+      snippetSpinnerEl.hidden = true;
+      liveEl.textContent = reply.message;
     } else if (reply.id === latestRequestId) {
       applySvg(reply.svg);
     }
@@ -477,8 +495,9 @@ function initStudio(): void {
   }
 
   function updateSnippets(): void {
-    snippetPre.dataset.loading = 'false';
     snippetInline.innerHTML = highlightSvg(currentSvg.trim());
+    snippetFrameEl.dataset.loading = 'false';
+    snippetSpinnerEl.hidden = true;
   }
 
   /*
@@ -650,8 +669,6 @@ function initStudio(): void {
   viewportEl.addEventListener('pointercancel', onPointerUp);
 
   dropZoneEl.addEventListener('click', () => fileInputEl.click());
-  // Sits over the viewport, so keep its click from also starting an arcball drag.
-  loadButtonEl.addEventListener('pointerdown', event => event.stopPropagation());
   loadButtonEl.addEventListener('click', () => fileInputEl.click());
   fileInputEl.addEventListener('change', () => {
     const file = fileInputEl.files?.[0];
@@ -706,11 +723,6 @@ function initStudio(): void {
     anchor.download = 'icon.svg';
     anchor.click();
     URL.revokeObjectURL(url);
-  }
-
-  function setStatus(message: string, isError: boolean): void {
-    statusEl.textContent = message;
-    statusEl.dataset.error = String(isError);
   }
 }
 

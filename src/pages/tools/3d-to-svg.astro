@@ -8,37 +8,41 @@ import {
   areaViewport,
   attribution,
   button,
-  buttonRow,
   canvas,
   checkboxRow,
   colorInput,
   copyButton,
   copyIconCopied,
   copyIconDefault,
+  dropError,
   dropZone,
   fieldRow,
   fieldset,
+  headButton,
   ids,
   intro,
   label,
   legend,
-  loadButton,
   loadingOverlay,
   modeField,
   modeGroup,
   modeOption,
   number,
+  paneBlock,
   poseGrid,
   preview,
   spinner,
   scanFrame,
+  sectionHead,
+  sectionHeading,
   slider,
   sliderRow,
+  snapRow,
   snippetBlock,
-  snippetHead,
-  snippetHeading,
+  snippetCode,
+  snippetFrame,
   snippetPre,
-  status,
+  snippetSpinnerHost,
   viewport
 } from './_3d-to-svg/studio.css';
 
@@ -83,40 +87,63 @@ const jsonLd = {
     </header>
 
     <div class={poseGrid}>
-      <div id={ids.viewport} class:list={[viewport, areaViewport]}>
-        <canvas id={ids.canvas} class={canvas}></canvas>
-        <svg class={scanFrame} viewBox="0 0 512 512" aria-hidden="true">
-          <rect
-            x="41"
-            y="41"
-            width="430"
-            height="430"
-            fill="none"
-            stroke="currentColor"
-            stroke-opacity="0.35"
-            stroke-dasharray="6 8"
-          />
-        </svg>
-        <button id={ids.loadButton} class={loadButton} type="button" aria-label="Load a model" title="Load a model">
-          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-            <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 10.5V2.5" />
-              <path d="M5 5.5 8 2.5l3 3" />
-              <path d="M2.75 9.5v2.25a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V9.5" />
-            </g>
+      <div class:list={[paneBlock, areaViewport]}>
+        <div class={sectionHead}>
+          <h2 class={sectionHeading}>Model</h2>
+          <button id={ids.loadButton} class={headButton} type="button" aria-label="Upload a model" title="Upload a model">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 10.5V2.5" />
+                <path d="M5 5.5 8 2.5l3 3" />
+                <path d="M2.75 9.5v2.25a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V9.5" />
+              </g>
+            </svg>
+            <span>Upload</span>
+          </button>
+        </div>
+        <div id={ids.viewport} class={viewport}>
+          <canvas id={ids.canvas} class={canvas} role="img" aria-label="3D model preview"></canvas>
+          <svg class={scanFrame} viewBox="0 0 512 512" aria-hidden="true">
+            <rect
+              x="41"
+              y="41"
+              width="430"
+              height="430"
+              fill="none"
+              stroke="currentColor"
+              stroke-opacity="0.35"
+              stroke-dasharray="6 8"
+            />
           </svg>
-        </button>
-        <div id={ids.dropZone} class={dropZone} data-hidden="true">
-          <strong>Drop a 3D model</strong>
-          <span>.glb, .obj, or .stl</span>
-          <input id={ids.fileInput} type="file" accept=".glb,.obj,.stl,model/gltf-binary" hidden />
+          <div id={ids.dropZone} class={dropZone} data-hidden="true">
+            <strong>Drop a 3D model</strong>
+            <span>.glb, .obj, or .stl</span>
+            <p id={ids.dropError} class={dropError}></p>
+            <input id={ids.fileInput} type="file" accept=".glb,.obj,.stl,model/gltf-binary" hidden />
+          </div>
+          <div id={ids.loading} class={loadingOverlay} data-hidden="false">
+            <div class={spinner}></div>
+          </div>
         </div>
-        <div id={ids.loading} class={loadingOverlay} data-hidden="false">
-          <div class={spinner}></div>
-        </div>
+        <p id={ids.live} class="sr-only" aria-live="polite"></p>
       </div>
 
-      <div id={ids.preview} class:list={[preview, areaPreview]}></div>
+      <div class:list={[paneBlock, areaPreview]}>
+        <div class={sectionHead}>
+          <h2 class={sectionHeading}>SVG</h2>
+          <button id={ids.download} class={headButton} type="button" aria-label="Download SVG" title="Download SVG">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2.5v8" />
+                <path d="M5 7.5 8 10.5l3-3" />
+                <path d="M2.75 9.5v2.25a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V9.5" />
+              </g>
+            </svg>
+            <span>Download</span>
+          </button>
+        </div>
+        <div id={ids.preview} class={preview} aria-hidden="true"></div>
+      </div>
 
       <fieldset class:list={[fieldset, areaPose]}>
         <legend class={legend}>Pose</legend>
@@ -124,25 +151,24 @@ const jsonLd = {
           <div class={sliderRow}>
             <label class={label} for={ids.x}>X</label>
             <input id={ids.x} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.xNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <input id={ids.xNumber} class={number} type="number" min="-180" max="180" value="0" aria-label="X" />
           </div>
           <div class={sliderRow}>
             <label class={label} for={ids.y}>Y</label>
             <input id={ids.y} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.yNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <input id={ids.yNumber} class={number} type="number" min="-180" max="180" value="0" aria-label="Y" />
           </div>
           <div class={sliderRow}>
             <label class={label} for={ids.z}>Z</label>
             <input id={ids.z} class={slider} type="range" min="-180" max="180" step="1" value="0" />
-            <input id={ids.zNumber} class={number} type="number" min="-180" max="180" value="0" />
+            <input id={ids.zNumber} class={number} type="number" min="-180" max="180" value="0" aria-label="Z" />
           </div>
 
-          <label class={checkboxRow}>
-            <input id={ids.snap} type="checkbox" />
-            Snap to 15°
-          </label>
-
-          <div class={buttonRow}>
+          <div class={snapRow}>
+            <label class={checkboxRow}>
+              <input id={ids.snap} type="checkbox" />
+              Snap to 15°
+            </label>
             <button id={ids.reset} class={button} type="button">Reset</button>
           </div>
         </fieldset>
@@ -168,18 +194,12 @@ const jsonLd = {
               </label>
             </div>
           </div>
-
-          <div class={buttonRow}>
-            <button id={ids.download} class={button} type="button">Download SVG</button>
-          </div>
         </fieldset>
     </div>
 
-    <p id={ids.status} class={status} role="status" aria-live="polite"></p>
-
     <div class={snippetBlock}>
-        <div class={snippetHead}>
-          <h2 class={snippetHeading}>Exported SVG</h2>
+        <div class={sectionHead}>
+          <h2 class={sectionHeading}>Exported SVG</h2>
           <button id={ids.copyInline} class={copyButton} type="button" aria-label="Copy" title="Copy">
             <svg class={copyIconDefault} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -192,7 +212,12 @@ const jsonLd = {
             </svg>
           </button>
         </div>
-        <pre id={ids.snippet} class={snippetPre} data-loading="true"><code id={ids.snippetInline}></code></pre>
+        <div id={ids.snippetFrame} class={snippetFrame} data-loading="true">
+          <pre id={ids.snippet} class={snippetPre}><code id={ids.snippetInline} class={snippetCode}></code></pre>
+          <div id={ids.snippetSpinner} class={snippetSpinnerHost}>
+            <div class={spinner}></div>
+          </div>
+        </div>
       </div>
 
     <p class={attribution}>

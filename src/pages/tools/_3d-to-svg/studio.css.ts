@@ -13,8 +13,8 @@ export const ids = {
   viewport: 'studio-viewport',
   canvas: 'studio-canvas',
   dropZone: 'studio-drop-zone',
+  dropError: 'studio-drop-error',
   fileInput: 'studio-file-input',
-  status: 'studio-status',
   preview: 'studio-preview',
   x: 'studio-x',
   y: 'studio-y',
@@ -27,11 +27,14 @@ export const ids = {
   color: 'studio-color',
   mode: 'studio-mode',
   download: 'studio-download',
+  snippetFrame: 'studio-snippet-frame',
   snippet: 'studio-snippet',
   snippetInline: 'studio-snippet-inline',
+  snippetSpinner: 'studio-snippet-spinner',
   copyInline: 'studio-copy-inline',
   loading: 'studio-loading',
-  loadButton: 'studio-load'
+  loadButton: 'studio-load',
+  live: 'studio-live'
 } as const;
 
 /*
@@ -58,10 +61,14 @@ export const poseGrid = style({
   }
 });
 
-export const areaViewport = style({gridArea: 'viewport', alignSelf: 'start'});
-export const areaPreview = style({gridArea: 'preview', alignSelf: 'start'});
+export const areaViewport = style({gridArea: 'viewport', alignSelf: 'start', minWidth: 0});
+export const areaPreview = style({gridArea: 'preview', alignSelf: 'start', minWidth: 0});
 export const areaPose = style({gridArea: 'pose'});
 export const areaOutput = style({gridArea: 'output'});
+
+// Wraps a pane's header row plus the pane itself so the header sits above the box
+// (outside the canvas) instead of floating inside it.
+export const paneBlock = style({minWidth: 0});
 
 const pane = style({
   boxSizing: 'border-box',
@@ -189,19 +196,20 @@ export const spinner = style({
   }
 });
 
-export const status = style({
-  marginTop: '0.75rem',
-  minHeight: '1.4em',
+// Error line shown inside the drop zone when a model fails to load, so the reason
+// appears in context beside the prompt. Empty by default, so it costs no layout.
+export const dropError = style({
+  margin: 0,
   fontSize: '0.85rem',
-  color: palette.textMuted,
+  color: palette.linkHover,
   '@media': {
     [media.dark]: {
-      color: palette.textMutedDark
+      color: palette.linkHoverDark
     }
   },
   selectors: {
-    '&[data-error="true"]': {
-      color: palette.linkHover
+    '&:empty': {
+      display: 'none'
     }
   }
 });
@@ -222,8 +230,7 @@ export const preview = style([
   }
 ]);
 
-// Flex column so the trailing button row can be pinned to the card's bottom
-// (the cards are stretched to equal height by the pose grid's row).
+// Flex column; the pose grid stretches both cards to equal height.
 export const fieldset = style({
   display: 'flex',
   flexDirection: 'column',
@@ -311,13 +318,12 @@ export const modeOption = style({
   cursor: 'pointer'
 });
 
-// `marginTop: auto` drops the row to the bottom of its flex-column card so Reset
-// and Download sit at the cards' lower edge regardless of content height.
-export const buttonRow = style({
+// Trailing Pose row: the snap toggle on the left, Reset pushed to the right edge.
+export const snapRow = style({
   display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.6rem',
-  marginTop: 'auto'
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '0.75rem'
 });
 
 export const button = style({
@@ -382,7 +388,9 @@ export const snippetBlock = style({
   minWidth: 0
 });
 
-export const snippetHead = style({
+// Header row shared by the Model/SVG panes and the exported-SVG block: a heading
+// on the left and an icon button pushed to the right.
+export const sectionHead = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -390,10 +398,30 @@ export const snippetHead = style({
   marginBottom: '0.5rem'
 });
 
-export const snippetHeading = style({
+export const sectionHeading = style({
   margin: 0,
   fontSize: '0.95rem',
   fontWeight: 600
+});
+
+// Hosts the exported SVG snippet; the spinner overlays this box while loading.
+export const snippetFrame = style({
+  position: 'relative'
+});
+
+export const snippetSpinnerHost = style({
+  position: 'absolute',
+  inset: 0,
+  zIndex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  pointerEvents: 'none',
+  selectors: {
+    '&[hidden]': {
+      display: 'none'
+    }
+  }
 });
 
 // Mirrors shiki's github-light/github-dark themes so this matches the <Code> block.
@@ -401,7 +429,7 @@ export const snippetPre = style({
   margin: 0,
   padding: '1.1em 1.25em',
   maxWidth: '100%',
-  maxHeight: '15rem',
+  height: '15rem',
   overflowY: 'auto',
   // The exported SVG is one long line. We wrap it instead of blowing out the width.
   whiteSpace: 'pre-wrap',
@@ -419,23 +447,13 @@ export const snippetPre = style({
       backgroundColor: '#24292e',
       borderColor: palette.borderDark
     }
-  },
+  }
+});
+
+export const snippetCode = style({
   selectors: {
-    // While a model loads, centre a spinner where the SVG markup will land.
-    '&[data-loading="true"]': {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '6rem'
-    },
-    '&[data-loading="true"]::after': {
-      content: '""',
-      width: '2.25rem',
-      height: '2.25rem',
-      borderRadius: '50%',
-      border: `3px solid ${palette.border}`,
-      borderTopColor: palette.accent,
-      animation: `${spin} 0.8s linear infinite`
+    [`${snippetFrame}[data-loading="true"] &`]: {
+      visibility: 'hidden'
     }
   }
 });
@@ -485,32 +503,30 @@ export const copyButton = style({
   }
 });
 
-// Tucked into the pane's top-right corner (inside the pane, outside the dashed
-// scan frame). Borderless so it doesn't compete with the frame; the accent only
-// shows on hover/focus. Rounded close to the pane's 12px so the corner nests.
-export const loadButton = style({
-  position: 'absolute',
-  top: '0.3rem',
-  right: '0.3rem',
-  zIndex: 3,
+// Icon + text button that lives in a pane header (Upload on Model, Download on
+// SVG). The icon is vertically centred with a gap to the label.
+export const headButton = style({
   display: 'inline-flex',
   alignItems: 'center',
-  justifyContent: 'center',
-  width: '2rem',
-  height: '2rem',
-  padding: 0,
+  gap: '0.4rem',
+  flexShrink: 0,
+  padding: '0.35rem 0.65rem',
+  fontFamily: fonts.sans,
+  fontSize: '0.85rem',
+  fontWeight: 600,
   color: palette.textMuted,
-  background: 'transparent',
-  border: '1px solid transparent',
-  borderRadius: '10px',
+  backgroundColor: palette.surface,
+  border: `1px solid ${palette.border}`,
+  borderRadius: '8px',
   cursor: 'pointer',
   '@media': {
     [media.dark]: {
-      color: palette.textMutedDark
+      color: palette.textMutedDark,
+      backgroundColor: palette.surfaceDark,
+      borderColor: palette.borderDark
     },
     [media.coarsePointer]: {
-      width: touchTargetMin,
-      height: touchTargetMin
+      minHeight: touchTargetMin
     }
   },
   selectors: {
