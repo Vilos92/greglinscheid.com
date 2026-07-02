@@ -90,7 +90,7 @@ const jsonLd = {
       <div class:list={[paneBlock, areaViewport]}>
         <div class={sectionHead}>
           <h2 class={sectionHeading}>Model</h2>
-          <button id={ids.loadButton} class={headButton} type="button" aria-label="Upload a model" title="Upload a model">
+          <button id={ids.loadButton} class={headButton} type="button" aria-label="Import a model" title="Import a model">
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 10.5V2.5" />
@@ -98,7 +98,7 @@ const jsonLd = {
                 <path d="M2.75 9.5v2.25a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V9.5" />
               </g>
             </svg>
-            <span>Upload</span>
+            <span>Import</span>
           </button>
         </div>
         <div id={ids.viewport} class={viewport}>
@@ -131,7 +131,7 @@ const jsonLd = {
       <div class:list={[paneBlock, areaPreview]}>
         <div class={sectionHead}>
           <h2 class={sectionHeading}>SVG</h2>
-          <button id={ids.download} class={headButton} type="button" aria-label="Download SVG" title="Download SVG">
+          <button id={ids.download} class={headButton} type="button" aria-label="Export SVG" title="Export SVG">
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 2.5v8" />
@@ -139,7 +139,7 @@ const jsonLd = {
                 <path d="M2.75 9.5v2.25a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V9.5" />
               </g>
             </svg>
-            <span>Download</span>
+            <span>Export</span>
           </button>
         </div>
         <div id={ids.preview} class={preview} aria-hidden="true"></div>
