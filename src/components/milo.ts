@@ -91,7 +91,8 @@ const MAX_FRAME_DELTA_SECONDS = 1 / 30;
  * seconds, and high-contrast edges shimmer while they crawl. Once the error and velocity both
  * fall below these thresholds the axis snaps exactly onto the target and freezes — measured in
  * simulation to land with zero overshoot at every frame rate. Position is normalized units
- * (0.002 ≈ 0.06px at the eyes); velocity is normalized units per second.
+ * (0.002 stays sub-pixel at the eyes for any reasonable render size); velocity is normalized
+ * units per second.
  */
 const REST_POSITION_EPSILON = 0.002;
 const REST_VELOCITY_EPSILON = 0.02;

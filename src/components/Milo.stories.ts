@@ -7,6 +7,15 @@ import Milo from './Milo.astro';
 export default {
   title: 'Components/Milo',
   component: Milo,
+  args: {
+    size: 400
+  },
+  argTypes: {
+    size: {
+      control: {type: 'range', min: 100, max: 800, step: 20},
+      description: 'Rendered width and height in CSS pixels.'
+    }
+  },
   parameters: {
     // Center the face so there is room on every side to play with the cursor tracking.
     layout: 'centered',
