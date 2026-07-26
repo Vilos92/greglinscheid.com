@@ -278,10 +278,6 @@ function trackCursor(svg: SVGSVGElement) {
   const target = {x: 0, y: 0};
   let bounds: {centerX: number; centerY: number; halfSize: number} | undefined;
 
-  // The finger Milo follows: the first one down, handed off to the eldest
-  // remaining finger when it lifts.
-  let followedTouchId: number | undefined;
-
   const forgetBounds = () => {
     bounds = undefined;
   };
@@ -313,41 +309,17 @@ function trackCursor(svg: SVGSVGElement) {
     }
   };
 
-  // Taps (and clicks) redirect the gaze even when they never move.
-  const onPointerDown = onPointerMove;
-
   /*
-   * Touch events back up the pointer stream: the browser fires pointercancel the
-   * moment a drag turns into a scroll, while passive touchmove keeps firing, so
-   * these keep Milo on the finger through a scroll.
+   * Taps (and clicks) redirect the gaze even when they never move. Fingers are
+   * followed only for as long as the pointer stream lives: the browser fires
+   * pointercancel once a drag turns into a scroll, and Milo simply holds his
+   * last glance. (Touch events do keep firing through a scroll, but browsers
+   * disagree enough about when that following a scrolling finger reads as
+   * broken more often than charming. A non-scrolling host like the /milo stage
+   * opts out via `touch-action: none`, which keeps the pointer stream alive
+   * for the whole drag.)
    */
-  const onTouchStart = (event: TouchEvent) => {
-    if (followedTouchId === undefined) {
-      const touch = event.changedTouches[0];
-      followedTouchId = touch.identifier;
-      updateTarget(touch.clientX, touch.clientY);
-    }
-  };
-
-  const onTouchMove = (event: TouchEvent) => {
-    const touch = findTouch(event.touches, followedTouchId);
-    if (touch) {
-      updateTarget(touch.clientX, touch.clientY);
-    }
-  };
-
-  const onTouchEnd = (event: TouchEvent) => {
-    // The followed finger is still down; some other finger lifted.
-    if (findTouch(event.touches, followedTouchId)) {
-      return;
-    }
-
-    const next = event.touches.item(0) ?? undefined;
-    followedTouchId = next?.identifier;
-    if (next) {
-      updateTarget(next.clientX, next.clientY);
-    }
-  };
+  const onPointerDown = onPointerMove;
 
   const resizeObserver = new ResizeObserver(forgetBounds);
   resizeObserver.observe(svg);
@@ -355,10 +327,6 @@ function trackCursor(svg: SVGSVGElement) {
   window.addEventListener('scroll', forgetBounds, {passive: true, capture: true});
   window.addEventListener('pointermove', onPointerMove, {passive: true});
   window.addEventListener('pointerdown', onPointerDown, {passive: true});
-  window.addEventListener('touchstart', onTouchStart, {passive: true});
-  window.addEventListener('touchmove', onTouchMove, {passive: true});
-  window.addEventListener('touchend', onTouchEnd, {passive: true});
-  window.addEventListener('touchcancel', onTouchEnd, {passive: true});
 
   return {
     target,
@@ -368,28 +336,8 @@ function trackCursor(svg: SVGSVGElement) {
       window.removeEventListener('scroll', forgetBounds, {capture: true});
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('touchcancel', onTouchEnd);
     }
   };
-}
-
-/** Finds the touch with the given identifier in a live TouchList, if it is still down. */
-function findTouch(touches: TouchList, id: number | undefined): Touch | undefined {
-  if (id === undefined) {
-    return undefined;
-  }
-
-  for (let index = 0; index < touches.length; index++) {
-    const touch = touches.item(index);
-    if (touch?.identifier === id) {
-      return touch;
-    }
-  }
-
-  return undefined;
 }
 
 /**
