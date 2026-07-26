@@ -9,7 +9,6 @@
     "preview": "astro preview",
     "astro": "astro",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
     "prepare": "vp config",
     "fmt:check": "vp fmt --check",
     "lint": "vp lint",
