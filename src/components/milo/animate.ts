@@ -1,5 +1,5 @@
-import type {PID} from '../lib/pid';
-import {createPID, stepPID} from '../lib/pid';
+import type {PID} from '../../lib/pid';
+import {createPID, stepPID} from '../../lib/pid';
 
 /*
  * Types.
