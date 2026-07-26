@@ -122,7 +122,7 @@ const BLINK_PHASE_AFTER: Record<BlinkPhase, BlinkPhase> = {
 };
 
 /*
- * Script.
+ * Entry.
  */
 
 /** Brings every not-yet-started Milo on the page to life. Safe to call more than once. */
