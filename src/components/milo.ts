@@ -58,7 +58,7 @@ type MiloParts = {
  */
 const CHASE_GAINS = {kp: 60, ki: 0, kd: 17};
 
-// The head's ear tips and whisker ends leave this much travel inside the 110px half-extent.
+// The head's ear tips and whisker ends leave this much travel inside the 110-unit half-extent.
 const HEAD_MAX_TRAVEL = 16;
 
 /*

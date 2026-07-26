@@ -18,6 +18,8 @@ type Props = {
 
 const {size = 400} = Astro.props;
 
+type WhiskerPoint = readonly number[];
+
 const palette = {
   furBase: '#908a84',
   furShadow: '#837d77',
@@ -65,8 +67,6 @@ const browWhiskersLeft = [
   [[-23, -16], [-29, -27], [-35, -35], [-39, -47]],
   [[-18, -17], [-21, -28], [-25, -37], [-28, -49]]
 ];
-
-type WhiskerPoint = readonly number[];
 
 function mirrorWhiskers(whiskers: WhiskerPoint[][]): WhiskerPoint[][] {
   return whiskers.map((whisker) => whisker.map(([x, y]) => [-x, y]));
@@ -212,11 +212,12 @@ is a perfect square with no chrome of its own — the head floats in place. -->
       d="M 33 -4 C 32.5 -8 29 -10.5 25.5 -10.5 C 22 -13 15.5 -13.5 11 -7 C 8.5 -1.5 9.5 6 13 9.5 C 16.5 12.5 22 13 26 11.5 C 30 12.5 33 9.5 32.5 6 C 34 3 34 -1 33 -4 Z"
       fill={palette.cream}></path>
 
-    <!-- Eyes, proportioned by measuring the reference: wide almonds (about 19x15 against a
-    118-unit head), centers 40 apart, inner corners dipping toward the blaze with an ~19-degree
-    corner slant baked into the paths, and the eye row sitting close above the nose. The pupil
-    group slides further than the eye for a "looking at you" read; highlights sit on the pupil
-    edge, asymmetric per eye. -->
+    <!-- Eyes: wide almonds with an ~19-degree corner slant baked into the paths, inner
+    corners dipping toward the blaze. Proportions started from measuring the reference
+    (19x15 against a 118-unit head, centers 40 apart), then the whole construction was scaled
+    up ~30% for presence with the measured inner-corner gap preserved. The pupil group slides
+    further than the eye for a "looking at you" read; highlights sit on the pupil edge,
+    asymmetric per eye. -->
     <g transform="translate(-23 2)">
       <g data-milo-eye>
         <path d="M -11.3 -2.1 C -9.4 -7.5 -3.3 -10 2.6 -9 C 7.3 -8.1 10.8 -1.6 11.3 5.5 C 7.3 8.6 0.7 9 -4.7 6.9 C -8.6 5.3 -11.3 1.6 -11.3 -2.1 Z" fill={palette.irisGold}></path>
