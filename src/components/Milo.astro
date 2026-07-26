@@ -1,0 +1,51 @@
+---
+/*
+ * Milo, the site mascot: a round face that watches the cursor anywhere on the page. The head
+ * drifts toward the cursor and the features slide a little further for depth; physics live in
+ * the sibling `milo.ts` module. The face is fixed art, not a themable surface, so colors and
+ * geometry are literal.
+ */
+
+const headFill = '#f2a65a';
+const featureFill = '#2b2118';
+---
+
+<!-- The viewBox centers the origin so travel offsets in the script translate directly. The svg
+is a perfect square with no chrome of its own — the head floats in place. -->
+<svg
+  data-milo
+  width="200"
+  height="200"
+  viewBox="-100 -100 200 200"
+  role="img"
+  aria-label="Milo, a round face that follows your cursor"
+>
+  <g data-milo-head>
+    <circle r="64" fill={headFill}></circle>
+  </g>
+  <g data-milo-features>
+    <g transform="translate(-26 -14)">
+      <circle data-milo-eye r="8" fill={featureFill}></circle>
+    </g>
+    <g transform="translate(26 -14)">
+      <circle data-milo-eye r="8" fill={featureFill}></circle>
+    </g>
+    <path
+      d="M -8 4 L 8 4 L 0 18 Z"
+      fill={featureFill}
+      stroke={featureFill}
+      stroke-width="6"
+      stroke-linejoin="round"></path>
+    <path d="M -16 30 Q 0 41 16 30" fill="none" stroke={featureFill} stroke-width="5" stroke-linecap="round"
+    ></path>
+  </g>
+</svg>
+
+<!-- Plain JS only in this block: Storybook's Astro renderer re-injects it with a cache-busting
+query param, which defeats Vite's TypeScript transform for hoisted scripts. The typed logic
+lives in `milo.ts`, which Vite transforms normally. -->
+<script>
+  import {startMilos} from './milo';
+
+  startMilos();
+</script>
