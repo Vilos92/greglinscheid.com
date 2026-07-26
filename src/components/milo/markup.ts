@@ -134,8 +134,13 @@ const browWhiskersRightPath = computeWhiskerPath(mirrorWhiskers(browWhiskersLeft
  * Markup.
  */
 
+// Each render gets its own id namespace so several Milos on one page keep working even if an
+// earlier instance is removed (a url(#...) reference resolves to the first matching id).
+let instanceCount = 0;
+
 /** Renders Milo's complete SVG markup at the given square pixel size. */
 export function renderMiloSvg(size: number): string {
+  const uid = `milo-${++instanceCount}`;
   return `<svg
   data-milo
   width="${size}"
@@ -145,16 +150,16 @@ export function renderMiloSvg(size: number): string {
   aria-label="Milo, a cat face that follows your cursor"
 >
   <defs>
-    <clipPath id="milo-face-clip">
+    <clipPath id="${uid}-face-clip">
       <path d="${silhouettePath}"></path>
     </clipPath>
     <!-- Almond clips keep the pupils inside the lids at full gaze deflection. -->
-    <clipPath id="milo-eye-clip-left">
+    <clipPath id="${uid}-eye-clip-left">
       <path
         d="M -11.3 -2.1 C -9.4 -7.5 -3.3 -10 2.6 -9 C 7.3 -8.1 10.8 -1.6 11.3 5.5 C 7.3 8.6 0.7 9 -4.7 6.9 C -8.6 5.3 -11.3 1.6 -11.3 -2.1 Z"
       ></path>
     </clipPath>
-    <clipPath id="milo-eye-clip-right">
+    <clipPath id="${uid}-eye-clip-right">
       <path
         d="M 11.3 -2.1 C 9.4 -7.5 3.3 -10 -2.6 -9 C -7.3 -8.1 -10.8 -1.6 -11.3 5.5 C -7.3 8.6 -0.7 9 4.7 6.9 C 8.6 5.3 11.3 1.6 11.3 -2.1 Z"
       ></path>
@@ -162,7 +167,7 @@ export function renderMiloSvg(size: number): string {
   </defs>
 
   <g data-milo-head>
-    <g clip-path="url(#milo-face-clip)">
+    <g clip-path="url(#${uid}-face-clip)">
       <!-- Base fur: the skull surface, static inside the silhouette. -->
       <rect x="-80" y="-100" width="160" height="180" fill="${palette.furShadow}"></rect>
 
@@ -258,7 +263,7 @@ export function renderMiloSvg(size: number): string {
     <g transform="translate(-23 2)">
       <g data-milo-eye>
         <path d="M -11.3 -2.1 C -9.4 -7.5 -3.3 -10 2.6 -9 C 7.3 -8.1 10.8 -1.6 11.3 5.5 C 7.3 8.6 0.7 9 -4.7 6.9 C -8.6 5.3 -11.3 1.6 -11.3 -2.1 Z" fill="${palette.irisGold}"></path>
-        <g clip-path="url(#milo-eye-clip-left)">
+        <g clip-path="url(#${uid}-eye-clip-left)">
           <ellipse cx="-3.2" cy="2.6" rx="5.9" ry="4.2" fill="${palette.irisBelly}"></ellipse>
           <path
             d="M -8.2 -3.2 C -4.6 -7 2.2 -7.4 6.4 -4.8 C 1.8 -6.2 -4 -5.6 -8.2 -3.2 Z"
@@ -270,7 +275,7 @@ export function renderMiloSvg(size: number): string {
           stroke="${palette.eyeOutline}"
           stroke-width="2.8"
           stroke-linejoin="round"></path>
-        <g data-milo-pupil clip-path="url(#milo-eye-clip-left)">
+        <g data-milo-pupil clip-path="url(#${uid}-eye-clip-left)">
           <path
             d="M 0 -5.7 C 2.7 -5.7 3.9 -3 3.6 -0.3 C 3.4 2.5 1.8 4.6 0 5.6 C -1.8 4.6 -3.4 2.5 -3.6 -0.3 C -3.9 -3 -2.7 -5.7 0 -5.7 Z"
             fill="${palette.pupil}"></path>
@@ -281,7 +286,7 @@ export function renderMiloSvg(size: number): string {
     <g transform="translate(23 2)">
       <g data-milo-eye>
         <path d="M 11.3 -2.1 C 9.4 -7.5 3.3 -10 -2.6 -9 C -7.3 -8.1 -10.8 -1.6 -11.3 5.5 C -7.3 8.6 -0.7 9 4.7 6.9 C 8.6 5.3 11.3 1.6 11.3 -2.1 Z" fill="${palette.irisGold}"></path>
-        <g clip-path="url(#milo-eye-clip-right)">
+        <g clip-path="url(#${uid}-eye-clip-right)">
           <ellipse cx="3.2" cy="2.6" rx="5.9" ry="4.2" fill="${palette.irisBelly}"></ellipse>
           <path
             d="M 8.2 -3.2 C 4.6 -7 -2.2 -7.4 -6.4 -4.8 C -1.8 -6.2 4 -5.6 8.2 -3.2 Z"
@@ -293,7 +298,7 @@ export function renderMiloSvg(size: number): string {
           stroke="${palette.eyeOutline}"
           stroke-width="2.8"
           stroke-linejoin="round"></path>
-        <g data-milo-pupil clip-path="url(#milo-eye-clip-right)">
+        <g data-milo-pupil clip-path="url(#${uid}-eye-clip-right)">
           <path
             d="M 0 -5.7 C 2.7 -5.7 3.9 -3 3.6 -0.3 C 3.4 2.5 1.8 4.6 0 5.6 C -1.8 4.6 -3.4 2.5 -3.6 -0.3 C -3.9 -3 -2.7 -5.7 0 -5.7 Z"
             fill="${palette.pupil}"></path>

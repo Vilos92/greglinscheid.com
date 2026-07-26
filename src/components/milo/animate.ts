@@ -159,7 +159,9 @@ function startMilo(svg: SVGSVGElement): void {
   let previousTime: number | undefined;
   const onFrame = (time: number) => {
     // The face may be swapped out from under us (e.g. a Storybook re-render), so let go fully.
+    // Clearing the started flag lets a reattached svg come back to life on the next sweep.
     if (!svg.isConnected) {
+      delete svg.dataset.miloStarted;
       tracker.dispose();
       return;
     }
@@ -233,6 +235,12 @@ function trackCursor(svg: SVGSVGElement) {
   const onPointerMove = (event: PointerEvent) => {
     if (!bounds) {
       const rect = svg.getBoundingClientRect();
+      // A hidden or collapsed svg has no usable geometry, and dividing by it would poison the
+      // target with NaN, so wait for a real layout.
+      if (rect.width === 0) {
+        return;
+      }
+
       bounds = {
         centerX: rect.left + rect.width / 2,
         centerY: rect.top + rect.height / 2,
