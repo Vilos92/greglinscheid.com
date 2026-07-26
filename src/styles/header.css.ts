@@ -31,6 +31,9 @@ export const header = style({
   alignItems: 'center',
   gap: '0.75rem',
   padding: '0.4rem 1rem',
+  // Reserves the Milo's box (40px, per Header.astro) while he sits absolutely
+  // centered out of the flow on roomy screens.
+  minHeight: 'calc(40px + 0.8rem)',
   backgroundColor: palette.pageBg,
   borderBottom: `1px solid ${palette.border}`,
   // Hidden by default. `visibility` flips after the transform's own duration
@@ -67,6 +70,18 @@ export const header = style({
 export const miloLink = style({
   display: 'flex',
   borderRadius: '8px',
+  // Centered over the bar on roomy screens. On narrow ones he rejoins the flex
+  // row on the left, where a centered cat would graze the wordmark's tail.
+  position: 'absolute',
+  left: '50%',
+  top: '50%',
+  transform: 'translate(-50%, -50%)',
+  '@media': {
+    [media.narrow]: {
+      position: 'static',
+      transform: 'none'
+    }
+  },
   selectors: {
     '&:focus-visible': {
       outline: `2px solid ${palette.accent}`,
