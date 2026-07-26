@@ -1,7 +1,7 @@
 /*
  * Milo's artwork as a framework-agnostic SVG string. Any host can render Milo with
- * `container.innerHTML = renderMiloSvg(size)` followed by `startMilos()` from `./animate` -- no
- * framework required. The Astro component in this folder is one such thin shell.
+ * `container.innerHTML = renderMiloSvg(size)` followed by `startMilos()` from `./animate`, with
+ * no framework required. The Astro component in this folder is one such thin shell.
  */
 
 /*
