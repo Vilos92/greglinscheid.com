@@ -15,8 +15,8 @@ export type PIDOptions = {
 
 /**
  * PID controller state. Output units are the caller's to interpret (velocity, acceleration, …).
- * Gains are fixed at creation. The `integral` and `previousError` fields mutate in place
- * each step.
+ * Gains are fixed at creation. The `integral` and `previousError` fields mutate in place each
+ * step.
  */
 export type PID = {
   readonly kp: number;
@@ -53,8 +53,8 @@ export function createPID(options: PIDOptions): PID {
  * state when `dt <= 0`.
  *
  * `errorDerivative`, when given, replaces the internally differenced error slope. Feeding a
- * measured signal (e.g. the negated velocity of the controlled value) gives
- * derivative-on-measurement, which keeps a jumping setpoint from spiking the output.
+ * measured signal (e.g. the negated velocity of the controlled value) gives derivative-on-
+ * measurement, which keeps a jumping setpoint from spiking the output.
  * @sideEffect Mutates `pid`.
  */
 export function stepPID(pid: PID, error: number, dt: number, errorDerivative?: number): number {

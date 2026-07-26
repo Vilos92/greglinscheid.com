@@ -49,12 +49,12 @@ type MiloParts = {
  */
 
 /*
- * The face chases the cursor by feeding a normalized cursor signal through a PID controller
- * and applying the output as an acceleration, which is where the motion's inertia comes from.
- * The derivative term acts on the measured velocity (derivative-on-measurement), so a cursor
- * leaping across the page cannot spike the acceleration. The gains fit a spring-damper at
- * ~1.2 Hz with a damping ratio of ~1.1: overdamped, settling with no overshoot. `ki` stays 0
- * until there is a steady disturbance to reject.
+ * The face chases the cursor by feeding a normalized cursor signal through a PID controller and
+ * applying the output as an acceleration, which is where the motion's inertia comes from. The
+ * derivative term acts on the measured velocity (derivative-on-measurement), so a cursor leaping
+ * across the page cannot spike the acceleration. The gains fit a spring-damper at ~1.2 Hz with a
+ * damping ratio of ~1.1: overdamped, settling with no overshoot. `ki` stays 0 until there is a
+ * steady disturbance to reject.
  */
 const CHASE_GAINS = {kp: 60, ki: 0, kd: 17};
 
@@ -73,14 +73,14 @@ const PUPIL_TRAVEL = 3;
 /*
  * How much of the features' travel the painted face plane (fur pattern, blaze) follows. The
  * standard 2.5D head-turn rig orders depth as skull < face markings < features < pupils: the
- * markings must ride with the features (clipped by the skull silhouette) or they read as a
- * static decal the features float over. Keeping them slightly behind the features adds the
- * curvature cue real rigs use.
+ * markings must ride with the features (clipped by the skull silhouette) or they read as a static
+ * decal the features float over. Keeping them slightly behind the features adds the curvature cue
+ * real rigs use.
  */
 const FACE_TRAVEL_RATIO = 0.75;
 
-// The ear interiors shift only gently inside the static silhouette ear cones, so they read as
-// the ears foreshortening without ever escaping the cone frame.
+// The ear interiors shift only gently inside the static silhouette ear cones, so they read as the
+// ears foreshortening without ever escaping the cone frame.
 const EAR_TRAVEL_RATIO = 0.25;
 
 // Clamp the frame delta so the physics stay stable across tab switches and long frames.
@@ -90,18 +90,18 @@ const MAX_FRAME_DELTA_SECONDS = 1 / 30;
  * The controller is overdamped (no overshoot), but its exponential tail creeps sub-pixel for
  * seconds, and high-contrast edges shimmer while they crawl. Once the error and velocity both
  * fall below these thresholds the axis snaps exactly onto the target and freezes. Simulation
- * showed the snap lands with zero overshoot at every frame rate. Position is in normalized
- * units, where 0.002 stays sub-pixel at the eyes for any reasonable render size. Velocity is
- * in normalized units per second.
+ * showed the snap lands with zero overshoot at every frame rate. Position is in normalized units,
+ * where 0.002 stays sub-pixel at the eyes for any reasonable render size. Velocity is in
+ * normalized units per second.
  */
 const REST_POSITION_EPSILON = 0.002;
 const REST_VELOCITY_EPSILON = 0.02;
 
 /*
- * Blinking: a vertical squash of each eye about its own center. Lids close fast, hold briefly
- * so the squint reads, and reopen slower. The cadence has memory: a quick blink biases the
- * next delay toward slow and vice versa, via `random() ** skew`, where skew < 1 favors slow
- * draws and skew > 1 favors quick ones.
+ * Blinking: a vertical squash of each eye about its own center. Lids close fast, hold briefly so
+ * the squint reads, and reopen slower. The cadence has memory: a quick blink biases the next
+ * delay toward slow and vice versa, via `random() ** skew`, where skew < 1 favors slow draws and
+ * skew > 1 favors quick ones.
  */
 const BLINK_DELAY_MIN_MS = 900;
 const BLINK_DELAY_MAX_MS = 4200;
@@ -217,10 +217,10 @@ function applyPose(parts: MiloParts, axisX: AxisMotion, axisY: AxisMotion, eyeSc
 }
 
 /**
- * Follows the page-wide cursor position as a normalized offset from the svg's center, each
- * axis saturating at ±1 once the cursor passes the svg's edge. Registers window-level
- * listeners that live until `dispose` is called. The center is cached so pointer events never
- * force layout, and forgotten whenever the svg may have moved.
+ * Follows the page-wide cursor position as a normalized offset from the svg's center, each axis
+ * saturating at ±1 once the cursor passes the svg's edge. Registers window-level listeners that
+ * live until `dispose` is called. The center is cached so pointer events never force layout, and
+ * forgotten whenever the svg may have moved.
  */
 function trackCursor(svg: SVGSVGElement) {
   const target = {x: 0, y: 0};
@@ -262,9 +262,9 @@ function trackCursor(svg: SVGSVGElement) {
 }
 
 /**
- * Advances one axis of the face physics, treating the controller output as an acceleration.
- * The normalized extremes at ±1 are hard walls. The position clamps there and any outward
- * velocity dies against them.
+ * Advances one axis of the face physics, treating the controller output as an acceleration. The
+ * normalized extremes at ±1 are hard walls. The position clamps there and any outward velocity
+ * dies against them.
  * @sideEffect Mutates `axis`.
  */
 function stepAxis(axis: AxisMotion, target: number, deltaSeconds: number): void {
@@ -286,8 +286,8 @@ function stepAxis(axis: AxisMotion, target: number, deltaSeconds: number): void 
 }
 
 /**
- * Freezes an axis exactly on its target once the motion is imperceptible, ending the
- * sub-pixel settle tail (see the rest epsilon constants).
+ * Freezes an axis exactly on its target once the motion is imperceptible, ending the sub-pixel
+ * settle tail (see the rest epsilon constants).
  * @sideEffect Mutates `axis`.
  */
 function snapAxisAtRest(axis: AxisMotion, target: number): void {
@@ -328,8 +328,8 @@ function rollBlinkDelay(previousNormalizedDelay: number): BlinkDelayRoll {
 }
 
 /**
- * Advances the blink cycle and returns the eyes' vertical scale for this frame:
- * waiting (open) → closing → shut hold → opening → waiting, then a fresh random delay.
+ * Advances the blink cycle and returns the eyes' vertical scale for this frame: waiting (open) →
+ * closing → shut hold → opening → waiting, then a fresh random delay.
  * @sideEffect Mutates `blink`.
  */
 function stepBlink(blink: Blink, deltaMs: number): number {
