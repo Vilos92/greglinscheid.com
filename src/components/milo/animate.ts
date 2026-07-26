@@ -86,6 +86,9 @@ const EAR_TRAVEL_RATIO = 0.25;
 // Clamp the frame delta so the physics stay stable across tab switches and long frames.
 const MAX_FRAME_DELTA_SECONDS = 1 / 30;
 
+// How often a hidden Milo rechecks whether he is back on screen (see onFrame).
+const HIDDEN_RECHECK_MS = 300;
+
 /*
  * The controller is overdamped (no overshoot), but its exponential tail creeps sub-
  * pixel for seconds, and high-contrast edges shimmer while they crawl. Once the error
@@ -189,12 +192,17 @@ function startMilo(svg: SVGSVGElement): void {
    */
   const writtenPose = {x: NaN, y: NaN, eyeScale: NaN};
 
+  // Releases the svg so a later startMilos sweep can adopt it again.
+  const letGo = () => {
+    delete svg.dataset.miloStarted;
+    tracker.dispose();
+  };
+
   const onFrame = (time: number) => {
     // The face may be swapped out from under us (e.g. a Storybook re-render), so let go fully.
     // Clearing the started flag lets a reattached svg come back to life on the next sweep.
     if (!svg.isConnected) {
-      delete svg.dataset.miloStarted;
-      tracker.dispose();
+      letGo();
       return;
     }
 
@@ -205,8 +213,17 @@ function startMilo(svg: SVGSVGElement): void {
       axisY.value = 0;
       axisY.velocity = 0;
       applyPose(parts, axisX, axisY, 1);
-      delete svg.dataset.miloStarted;
-      tracker.dispose();
+      letGo();
+      return;
+    }
+
+    // A hidden Milo (the header's, before it sticks) keeps real geometry but
+    // paints nothing, so recheck on a slow cadence instead of burning a rAF
+    // slot and blink writes every frame. Resetting the clock keeps the
+    // eventual resume from swallowing the whole hidden stretch as one delta.
+    if (svg.checkVisibility && !svg.checkVisibility({checkVisibilityCSS: true, checkOpacity: true})) {
+      previousTime = undefined;
+      window.setTimeout(() => requestAnimationFrame(onFrame), HIDDEN_RECHECK_MS);
       return;
     }
 

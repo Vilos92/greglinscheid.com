@@ -28,16 +28,32 @@ import '../styles/global.css';
 
     <script>
       // The anchor's href stays a real link for no-JS visitors; this just
-      // upgrades it to return to wherever the visitor came from.
+      // upgrades it to return to wherever the visitor came from. The trailing
+      // slash on the origin check keeps lookalike hosts (this-site.com.evil.example)
+      // from passing as ours.
       const close = document.querySelector('[data-milo-close]');
-      const cameFromSite = history.length > 1 && document.referrer.startsWith(location.origin);
+      const cameFromSite = history.length > 1 && document.referrer.startsWith(`${location.origin}/`);
+
+      // One shot per page view: Escape auto-repeat or a double press must not
+      // queue extra history traversals past the page the visitor came from.
+      // pageshow rearms it when a bfcache return brings this page back.
+      let leaving = false;
       const leave = () => {
+        if (leaving) {
+          return;
+        }
+
+        leaving = true;
         if (cameFromSite) {
           history.back();
         } else {
           location.assign('/');
         }
       };
+
+      window.addEventListener('pageshow', () => {
+        leaving = false;
+      });
 
       if (close) {
         close.addEventListener('click', (event) => {
@@ -47,7 +63,7 @@ import '../styles/global.css';
       }
 
       window.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
+        if (event.key === 'Escape' && !event.repeat) {
           leave();
         }
       });

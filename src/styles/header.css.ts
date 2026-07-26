@@ -112,7 +112,7 @@ export const wordmark = style([
     }
   },
   hover({textDecoration: 'underline'}),
-  tapExtension('0.5rem', '0.25rem')
+  tapExtension('0.8rem', '0.25rem')
 ]);
 
 /*
@@ -145,9 +145,10 @@ export const nav = style({
   gap: '1rem'
 });
 
-// Tap extension keeps a ~50px hit box without inflating the nav's line
-// height; the nav's 1rem gap is at least double the 0.25rem horizontal
-// extension, so adjacent links' hit boxes don't overlap.
+// The 0.8rem vertical extension clears the 44px touch-target minimum at every
+// base font size without inflating the nav's line height; the nav's 1rem gap
+// is at least double the 0.25rem horizontal extension, so adjacent links'
+// hit boxes don't overlap.
 export const navLink = style([
   {
     fontSize: '0.9rem',
@@ -164,7 +165,7 @@ export const navLink = style([
       }
     }
   },
-  tapExtension('0.5rem', '0.25rem')
+  tapExtension('0.8rem', '0.25rem')
 ]);
 
 globalStyle(`${navLink}:hover`, {
