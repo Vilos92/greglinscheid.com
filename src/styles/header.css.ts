@@ -70,18 +70,12 @@ export const header = style({
 export const miloLink = style({
   display: 'flex',
   borderRadius: '8px',
-  // Centered over the bar on roomy screens. On narrow ones he rejoins the flex
-  // row on the left, where a centered cat would graze the wordmark's tail.
+  // Centered over the bar at every width; the wordmark shrinks to "Home" on
+  // narrow screens so its tail never reaches the centered cat.
   position: 'absolute',
   left: '50%',
   top: '50%',
   transform: 'translate(-50%, -50%)',
-  '@media': {
-    [media.narrow]: {
-      position: 'static',
-      transform: 'none'
-    }
-  },
   selectors: {
     '&:focus-visible': {
       outline: `2px solid ${palette.accent}`,
@@ -120,6 +114,29 @@ export const wordmark = style([
   hover({textDecoration: 'underline'}),
   tapExtension('0.5rem', '0.25rem')
 ]);
+
+/*
+ * The wordmark's two texts swap via display, so screen readers only ever see
+ * the visible one: the full name where there is room, "Home" beside the
+ * centered Milo on narrow screens.
+ */
+
+export const wordmarkFull = style({
+  '@media': {
+    [media.narrow]: {
+      display: 'none'
+    }
+  }
+});
+
+export const wordmarkShort = style({
+  display: 'none',
+  '@media': {
+    [media.narrow]: {
+      display: 'inline'
+    }
+  }
+});
 
 export const nav = style({
   marginLeft: 'auto',

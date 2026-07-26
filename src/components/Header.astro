@@ -1,13 +1,16 @@
 ---
 import Milo from './milo/Milo.astro';
-import {header, miloLink, nav, navLink, wordmark} from '../styles/header.css';
+import {header, miloLink, nav, navLink, wordmark, wordmarkFull, wordmarkShort} from '../styles/header.css';
 ---
 
 <header class={header} data-site-header data-stuck="false">
   <a class={miloLink} href="/milo/" aria-label="Meet Milo">
     <Milo size={40} />
   </a>
-  <a class={wordmark} href="/">Greg Linscheid</a>
+  <a class={wordmark} href="/">
+    <span class={wordmarkFull}>Greg Linscheid</span>
+    <span class={wordmarkShort}>Home</span>
+  </a>
   <nav class={nav} aria-label="Site">
     <a class={navLink} href="/blog/">Blog</a>
     <a class={navLink} href="/tools/">Tools</a>
