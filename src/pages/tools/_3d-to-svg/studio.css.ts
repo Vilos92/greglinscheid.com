@@ -4,6 +4,8 @@ import {media, touchTargetMin} from '../../../styles/breakpoints';
 import {hover} from '../../../styles/interaction';
 import {fonts, palette} from '../../../styles/tokens';
 
+import {iconButton} from '../../../styles/icon-button.css';
+
 /*
  * Constants.
  */
@@ -466,42 +468,23 @@ export const codeString = style({color: '#0a3069', '@media': {[media.dark]: {col
 
 // Icon copy button (gdex-style): fixed size so it never resizes on click.
 export const copyButton = style([
+  iconButton,
   {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
     width: '2rem',
     height: '2rem',
-    padding: 0,
-    color: palette.textMuted,
-    backgroundColor: palette.surface,
-    border: `1px solid ${palette.border}`,
-    borderRadius: '6px',
-    cursor: 'pointer',
     '@media': {
-      [media.dark]: {
-        color: palette.textMutedDark,
-        backgroundColor: palette.surfaceDark,
-        borderColor: palette.borderDark
-      },
       [media.coarsePointer]: {
         width: touchTargetMin,
         height: touchTargetMin
       }
     },
     selectors: {
-      '&:focus-visible': {
-        outline: `2px solid ${palette.accent}`,
-        outlineOffset: '2px'
-      },
       '&[data-copied="true"]': {
         color: palette.accent,
         borderColor: palette.accent
       }
     }
-  },
-  hover({borderColor: palette.accent})
+  }
 ]);
 
 // Icon + text button that lives in a pane header (Upload on Model, Download on

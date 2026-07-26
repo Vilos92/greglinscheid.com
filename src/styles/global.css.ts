@@ -1,6 +1,7 @@
 import {globalStyle, style} from '@vanilla-extract/css';
 
 import {media, touchTargetMin} from './breakpoints';
+import {hoverRule} from './interaction';
 import {fonts, layout, palette} from './tokens';
 
 /*
@@ -64,16 +65,7 @@ globalStyle('a', {
   }
 });
 
-globalStyle('a:hover', {
-  '@media': {
-    [media.hover]: {
-      color: palette.linkHover
-    },
-    [`${media.hover} and ${media.dark}`]: {
-      color: palette.linkHoverDark
-    }
-  }
-});
+globalStyle('a:hover', hoverRule({color: palette.linkHover}, {color: palette.linkHoverDark}));
 
 globalStyle('a:focus-visible', {
   outline: `2px solid ${palette.accent}`,

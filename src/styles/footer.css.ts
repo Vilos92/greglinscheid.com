@@ -1,7 +1,7 @@
 import {globalStyle, style} from '@vanilla-extract/css';
 
 import {media} from './breakpoints';
-import {tapExtension} from './interaction';
+import {hoverRule, tapExtension} from './interaction';
 import {palette} from './tokens';
 
 /*
@@ -52,17 +52,10 @@ export const footerLink = style([
   tapExtension('0.8rem', '0.25rem')
 ]);
 
-globalStyle(`${footerLink}:hover`, {
-  '@media': {
-    [media.hover]: {
-      color: palette.link,
-      textDecoration: 'underline'
-    },
-    [`${media.hover} and ${media.dark}`]: {
-      color: palette.linkDark
-    }
-  }
-});
+globalStyle(
+  `${footerLink}:hover`,
+  hoverRule({color: palette.link, textDecoration: 'underline'}, {color: palette.linkDark})
+);
 
 export const footerSep = style({
   color: palette.textMuted,

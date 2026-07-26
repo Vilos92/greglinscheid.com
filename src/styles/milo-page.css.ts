@@ -1,8 +1,8 @@
 import {globalStyle, style} from '@vanilla-extract/css';
 
 import {media, touchTargetMin} from './breakpoints';
-import {hover} from './interaction';
-import {palette} from './tokens';
+
+import {iconButton} from './icon-button.css';
 
 /*
  * Styles.
@@ -33,43 +33,21 @@ globalStyle(`${stage} svg[data-milo]`, {
   viewTransitionName: 'milo'
 });
 
+// The safe-area insets keep the button reachable past notches and rounded
+// corners on phones.
 export const closeButton = style([
+  iconButton,
   {
     position: 'fixed',
     top: 'calc(1rem + env(safe-area-inset-top))',
     right: 'calc(1rem + env(safe-area-inset-right))',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     width: '2.25rem',
     height: '2.25rem',
-    padding: 0,
-    color: palette.textMuted,
-    backgroundColor: palette.surface,
-    border: `1px solid ${palette.border}`,
-    borderRadius: '8px',
-    cursor: 'pointer',
-    textDecoration: 'none',
     '@media': {
-      [media.dark]: {
-        color: palette.textMutedDark,
-        backgroundColor: palette.surfaceDark,
-        borderColor: palette.borderDark
-      },
       [media.coarsePointer]: {
         width: touchTargetMin,
         height: touchTargetMin
-      },
-      [media.highContrast]: {
-        borderWidth: '2px'
-      }
-    },
-    selectors: {
-      '&:focus-visible': {
-        outline: `2px solid ${palette.accent}`,
-        outlineOffset: '2px'
       }
     }
-  },
-  hover({color: palette.accent, borderColor: palette.accent})
+  }
 ]);

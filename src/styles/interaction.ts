@@ -1,4 +1,4 @@
-import type {StyleRule} from '@vanilla-extract/css';
+import type {GlobalStyleRule, StyleRule} from '@vanilla-extract/css';
 
 import {media} from './breakpoints';
 
@@ -24,6 +24,20 @@ export function hover(body: SelectorRule): StyleRule {
       [media.hover]: {
         selectors: {'&:hover': body}
       }
+    }
+  };
+}
+
+/**
+ * The rule body for a `globalStyle('x:hover', ...)` call — the counterpart of
+ * `hover` for hover styles that vanilla-extract only allows as global rules.
+ * Applies only on hover-capable devices, with an optional dark-scheme override.
+ */
+export function hoverRule(body: GlobalStyleRule, darkBody?: GlobalStyleRule): GlobalStyleRule {
+  return {
+    '@media': {
+      [media.hover]: body,
+      ...(darkBody === undefined ? {} : {[`${media.hover} and ${media.dark}`]: darkBody})
     }
   };
 }

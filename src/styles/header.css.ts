@@ -1,7 +1,7 @@
 import {globalStyle, style} from '@vanilla-extract/css';
 
 import {media} from './breakpoints';
-import {hover, tapExtension} from './interaction';
+import {hover, hoverRule, tapExtension} from './interaction';
 import {fonts, palette} from './tokens';
 
 /*
@@ -168,14 +168,7 @@ export const navLink = style([
   tapExtension('0.8rem', '0.25rem')
 ]);
 
-globalStyle(`${navLink}:hover`, {
-  '@media': {
-    [media.hover]: {
-      color: palette.link,
-      textDecoration: 'underline'
-    },
-    [`${media.hover} and ${media.dark}`]: {
-      color: palette.linkDark
-    }
-  }
-});
+globalStyle(
+  `${navLink}:hover`,
+  hoverRule({color: palette.link, textDecoration: 'underline'}, {color: palette.linkDark})
+);
