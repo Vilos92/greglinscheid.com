@@ -157,6 +157,15 @@ function startMilo(svg: SVGSVGElement): void {
   const blink = createBlink();
 
   let previousTime: number | undefined;
+
+  /*
+   * The last pose written to the DOM. Re-writing identical attribute values still
+   * dirties the SVG subtree and costs style/paint work every frame, so a Milo at
+   * rest between blinks (values frozen by the rest snap, eyes fully open) skips
+   * the DOM entirely. NaN never equals itself, so the first frame always writes.
+   */
+  const writtenPose = {x: NaN, y: NaN, eyeScale: NaN};
+
   const onFrame = (time: number) => {
     // The face may be swapped out from under us (e.g. a Storybook re-render), so let go fully.
     // Clearing the started flag lets a reattached svg come back to life on the next sweep.
@@ -173,7 +182,13 @@ function startMilo(svg: SVGSVGElement): void {
     stepAxis(axisX, tracker.target.x, deltaSeconds);
     stepAxis(axisY, tracker.target.y, deltaSeconds);
     const eyeScale = stepBlink(blink, deltaSeconds * 1000);
-    applyPose(parts, axisX, axisY, eyeScale);
+
+    if (axisX.value !== writtenPose.x || axisY.value !== writtenPose.y || eyeScale !== writtenPose.eyeScale) {
+      applyPose(parts, axisX, axisY, eyeScale);
+      writtenPose.x = axisX.value;
+      writtenPose.y = axisY.value;
+      writtenPose.eyeScale = eyeScale;
+    }
 
     requestAnimationFrame(onFrame);
   };
