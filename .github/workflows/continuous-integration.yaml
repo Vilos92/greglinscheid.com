@@ -2,14 +2,19 @@ name: Continuous Integration
 
 on:
   push:
+    branches: [main]
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   fmt:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ARM64, greg-zone]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -20,7 +25,7 @@ jobs:
         run: bun run fmt:check
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ARM64, greg-zone]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -31,7 +36,7 @@ jobs:
         run: bun run lint
 
   typecheck:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ARM64, greg-zone]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -42,7 +47,7 @@ jobs:
         run: bun run typecheck
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ARM64, greg-zone]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -53,7 +58,7 @@ jobs:
         run: bun run test
 
   fallow:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ARM64, greg-zone]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
