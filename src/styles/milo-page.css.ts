@@ -28,7 +28,9 @@ export const stage = style({
 // can't cause clipping).
 globalStyle(`${stage} svg[data-milo]`, {
   width: 'min(92vw, 82dvh)',
-  height: 'min(92vw, 82dvh)'
+  height: 'min(92vw, 82dvh)',
+  // Pairs with the header Milo's name so the two morph across the navigation.
+  viewTransitionName: 'milo'
 });
 
 export const closeButton = style([

@@ -79,6 +79,15 @@ globalStyle(`${miloLink} svg`, {
   display: 'block'
 });
 
+// The header Milo morphs into the /milo page's giant Milo via the shared
+// view-transition-name (opted in by BaseHead's @view-transition block). Named
+// only while the header is on screen, so a navigation that lands on a hidden
+// header gets the plain crossfade instead of Milo shrinking into an invisible
+// corner.
+globalStyle(`${header}[data-stuck="true"] svg[data-milo]`, {
+  viewTransitionName: 'milo'
+});
+
 export const wordmark = style([
   {
     fontFamily: fonts.sans,

@@ -23,6 +23,25 @@ const imageURL = image === undefined ? undefined : new URL(image, Astro.site);
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
+
+<!-- Cross-document view transitions: same-origin navigations crossfade, and the
+elements sharing a view-transition-name (the header Milo and the /milo Milo) morph
+between pages. An at-rule plus pseudo-elements, so it lives here as a global style
+block rather than in vanilla-extract, which cannot emit @view-transition. Browsers
+without cross-document support (Firefox, mid-2026) simply navigate instantly. -->
+<style is:global>
+  @view-transition {
+    navigation: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+</style>
 <link rel="icon" href="/favicon.ico" />
 <meta name="generator" content={Astro.generator} />
 
