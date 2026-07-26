@@ -121,12 +121,35 @@ const BLINK_PHASE_AFTER: Record<BlinkPhase, BlinkPhase> = {
   opening: 'waiting'
 };
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+/*
+ * State.
+ */
+
+// Lazily created on the first startMilos call so importing this module has no side effects.
+let motionPreference: MediaQueryList | undefined;
+
 /*
  * Entry.
  */
 
-/** Brings every not-yet-started Milo on the page to life. Safe to call more than once. */
+/**
+ * Brings every not-yet-started Milo on the page to life. Safe to call more than once.
+ * Under `prefers-reduced-motion` Milo stays a static portrait: nothing starts while
+ * the preference is on, running loops shut themselves down when it flips on, and a
+ * flip back off sweeps the page again.
+ */
 export function startMilos(): void {
+  if (!motionPreference) {
+    motionPreference = window.matchMedia(REDUCED_MOTION_QUERY);
+    motionPreference.addEventListener('change', () => startMilos());
+  }
+
+  if (motionPreference.matches) {
+    return;
+  }
+
   for (const svg of document.querySelectorAll<SVGSVGElement>('svg[data-milo]')) {
     if (svg.dataset.miloStarted !== 'true') {
       svg.dataset.miloStarted = 'true';
@@ -170,6 +193,18 @@ function startMilo(svg: SVGSVGElement): void {
     // The face may be swapped out from under us (e.g. a Storybook re-render), so let go fully.
     // Clearing the started flag lets a reattached svg come back to life on the next sweep.
     if (!svg.isConnected) {
+      delete svg.dataset.miloStarted;
+      tracker.dispose();
+      return;
+    }
+
+    // Reduced motion flipped on mid-flight: settle into the neutral portrait and let go.
+    if (motionPreference?.matches) {
+      axisX.value = 0;
+      axisX.velocity = 0;
+      axisY.value = 0;
+      axisY.velocity = 0;
+      applyPose(parts, axisX, axisY, 1);
       delete svg.dataset.miloStarted;
       tracker.dispose();
       return;
@@ -234,20 +269,24 @@ function applyPose(parts: MiloParts, axisX: AxisMotion, axisY: AxisMotion, eyeSc
 }
 
 /**
- * Follows the page-wide cursor position as a normalized offset from the svg's center,
- * each axis saturating at ±1 once the cursor passes the svg's edge. Registers window-
- * level listeners that live until `dispose` is called. The center is cached so
- * pointer events never force layout, and forgotten whenever the svg may have moved.
+ * Follows the page-wide cursor or finger position as a normalized offset from the
+ * svg's center, each axis saturating at ±1 once it passes the svg's edge. Registers
+ * window-level listeners that live until `dispose` is called. The center is cached
+ * so input events never force layout, and forgotten whenever the svg may have moved.
  */
 function trackCursor(svg: SVGSVGElement) {
   const target = {x: 0, y: 0};
   let bounds: {centerX: number; centerY: number; halfSize: number} | undefined;
 
+  // The finger Milo follows: the first one down, handed off to the eldest
+  // remaining finger when it lifts.
+  let followedTouchId: number | undefined;
+
   const forgetBounds = () => {
     bounds = undefined;
   };
 
-  const onPointerMove = (event: PointerEvent) => {
+  const updateTarget = (clientX: number, clientY: number) => {
     if (!bounds) {
       const rect = svg.getBoundingClientRect();
       // A hidden or collapsed svg has no usable geometry, and dividing by
@@ -263,8 +302,51 @@ function trackCursor(svg: SVGSVGElement) {
       };
     }
 
-    target.x = clampUnit((event.clientX - bounds.centerX) / bounds.halfSize);
-    target.y = clampUnit((event.clientY - bounds.centerY) / bounds.halfSize);
+    target.x = clampUnit((clientX - bounds.centerX) / bounds.halfSize);
+    target.y = clampUnit((clientY - bounds.centerY) / bounds.halfSize);
+  };
+
+  // `isPrimary` keeps a second finger from wrestling the gaze away mid-drag.
+  const onPointerMove = (event: PointerEvent) => {
+    if (event.isPrimary) {
+      updateTarget(event.clientX, event.clientY);
+    }
+  };
+
+  // Taps (and clicks) redirect the gaze even when they never move.
+  const onPointerDown = onPointerMove;
+
+  /*
+   * Touch events back up the pointer stream: the browser fires pointercancel the
+   * moment a drag turns into a scroll, while passive touchmove keeps firing, so
+   * these keep Milo on the finger through a scroll.
+   */
+  const onTouchStart = (event: TouchEvent) => {
+    if (followedTouchId === undefined) {
+      const touch = event.changedTouches[0];
+      followedTouchId = touch.identifier;
+      updateTarget(touch.clientX, touch.clientY);
+    }
+  };
+
+  const onTouchMove = (event: TouchEvent) => {
+    const touch = findTouch(event.touches, followedTouchId);
+    if (touch) {
+      updateTarget(touch.clientX, touch.clientY);
+    }
+  };
+
+  const onTouchEnd = (event: TouchEvent) => {
+    // The followed finger is still down; some other finger lifted.
+    if (findTouch(event.touches, followedTouchId)) {
+      return;
+    }
+
+    const next = event.touches.item(0) ?? undefined;
+    followedTouchId = next?.identifier;
+    if (next) {
+      updateTarget(next.clientX, next.clientY);
+    }
   };
 
   const resizeObserver = new ResizeObserver(forgetBounds);
@@ -272,6 +354,11 @@ function trackCursor(svg: SVGSVGElement) {
   window.addEventListener('resize', forgetBounds, {passive: true});
   window.addEventListener('scroll', forgetBounds, {passive: true, capture: true});
   window.addEventListener('pointermove', onPointerMove, {passive: true});
+  window.addEventListener('pointerdown', onPointerDown, {passive: true});
+  window.addEventListener('touchstart', onTouchStart, {passive: true});
+  window.addEventListener('touchmove', onTouchMove, {passive: true});
+  window.addEventListener('touchend', onTouchEnd, {passive: true});
+  window.addEventListener('touchcancel', onTouchEnd, {passive: true});
 
   return {
     target,
@@ -280,8 +367,29 @@ function trackCursor(svg: SVGSVGElement) {
       window.removeEventListener('resize', forgetBounds);
       window.removeEventListener('scroll', forgetBounds, {capture: true});
       window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
     }
   };
+}
+
+/** Finds the touch with the given identifier in a live TouchList, if it is still down. */
+function findTouch(touches: TouchList, id: number | undefined): Touch | undefined {
+  if (id === undefined) {
+    return undefined;
+  }
+
+  for (let index = 0; index < touches.length; index++) {
+    const touch = touches.item(index);
+    if (touch?.identifier === id) {
+      return touch;
+    }
+  }
+
+  return undefined;
 }
 
 /**
