@@ -1,6 +1,7 @@
 import {globalStyle, style} from '@vanilla-extract/css';
 
-import {media, touchTargetMin} from './breakpoints';
+import {media} from './breakpoints';
+import {tapExtension} from './interaction';
 import {palette} from './tokens';
 
 /*
@@ -34,28 +35,29 @@ export const footerNav = style({
   gap: '0.5rem'
 });
 
-export const footerLink = style({
-  textDecoration: 'none',
-  color: 'inherit',
-  '@media': {
-    [media.coarsePointer]: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      minHeight: touchTargetMin,
-      padding: '0.25rem 0.35rem'
-    },
-    [media.highContrast]: {
-      textDecoration: 'underline',
-      textDecorationThickness: '2px'
+// The tap extension keeps the ~50px hit box without inflating the text layout
+// on touch devices; the 0.25rem sides stay within the nav's 0.5rem gaps.
+export const footerLink = style([
+  {
+    textDecoration: 'none',
+    color: 'inherit',
+    '@media': {
+      [media.highContrast]: {
+        textDecoration: 'underline',
+        textDecorationThickness: '2px'
+      }
     }
-  }
-});
+  },
+  tapExtension('0.5rem', '0.25rem')
+]);
 
 globalStyle(`${footerLink}:hover`, {
-  color: palette.link,
-  textDecoration: 'underline',
   '@media': {
-    [media.dark]: {
+    [media.hover]: {
+      color: palette.link,
+      textDecoration: 'underline'
+    },
+    [`${media.hover} and ${media.dark}`]: {
       color: palette.linkDark
     }
   }

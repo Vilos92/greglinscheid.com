@@ -1,6 +1,7 @@
 import {keyframes, style} from '@vanilla-extract/css';
 
 import {media, touchTargetMin} from '../../../styles/breakpoints';
+import {hover} from '../../../styles/interaction';
 import {fonts, palette} from '../../../styles/tokens';
 
 /*
@@ -326,36 +327,36 @@ export const snapRow = style({
   gap: '0.75rem'
 });
 
-export const button = style({
-  fontFamily: fonts.sans,
-  fontSize: '0.9rem',
-  fontWeight: 600,
-  padding: '0.5rem 0.9rem',
-  color: palette.text,
-  backgroundColor: palette.surface,
-  border: `1px solid ${palette.border}`,
-  borderRadius: '8px',
-  cursor: 'pointer',
-  '@media': {
-    [media.dark]: {
-      color: palette.textDark,
-      backgroundColor: palette.surfaceDark,
-      borderColor: palette.borderDark
+export const button = style([
+  {
+    fontFamily: fonts.sans,
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    padding: '0.5rem 0.9rem',
+    color: palette.text,
+    backgroundColor: palette.surface,
+    border: `1px solid ${palette.border}`,
+    borderRadius: '8px',
+    cursor: 'pointer',
+    '@media': {
+      [media.dark]: {
+        color: palette.textDark,
+        backgroundColor: palette.surfaceDark,
+        borderColor: palette.borderDark
+      },
+      [media.coarsePointer]: {
+        minHeight: touchTargetMin
+      }
     },
-    [media.coarsePointer]: {
-      minHeight: touchTargetMin
+    selectors: {
+      '&:focus-visible': {
+        outline: `2px solid ${palette.accent}`,
+        outlineOffset: '2px'
+      }
     }
   },
-  selectors: {
-    '&:hover': {
-      borderColor: palette.accent
-    },
-    '&:focus-visible': {
-      outline: `2px solid ${palette.accent}`,
-      outlineOffset: '2px'
-    }
-  }
-});
+  hover({borderColor: palette.accent})
+]);
 
 export const checkboxRow = style({
   display: 'flex',
@@ -464,82 +465,81 @@ export const codeAttr = style({color: '#0550ae', '@media': {[media.dark]: {color
 export const codeString = style({color: '#0a3069', '@media': {[media.dark]: {color: '#a5d6ff'}}});
 
 // Icon copy button (gdex-style): fixed size so it never resizes on click.
-export const copyButton = style({
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-  width: '2rem',
-  height: '2rem',
-  padding: 0,
-  color: palette.textMuted,
-  backgroundColor: palette.surface,
-  border: `1px solid ${palette.border}`,
-  borderRadius: '6px',
-  cursor: 'pointer',
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark,
-      backgroundColor: palette.surfaceDark,
-      borderColor: palette.borderDark
+export const copyButton = style([
+  {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    width: '2rem',
+    height: '2rem',
+    padding: 0,
+    color: palette.textMuted,
+    backgroundColor: palette.surface,
+    border: `1px solid ${palette.border}`,
+    borderRadius: '6px',
+    cursor: 'pointer',
+    '@media': {
+      [media.dark]: {
+        color: palette.textMutedDark,
+        backgroundColor: palette.surfaceDark,
+        borderColor: palette.borderDark
+      },
+      [media.coarsePointer]: {
+        width: touchTargetMin,
+        height: touchTargetMin
+      }
     },
-    [media.coarsePointer]: {
-      width: touchTargetMin,
-      height: touchTargetMin
+    selectors: {
+      '&:focus-visible': {
+        outline: `2px solid ${palette.accent}`,
+        outlineOffset: '2px'
+      },
+      '&[data-copied="true"]': {
+        color: palette.accent,
+        borderColor: palette.accent
+      }
     }
   },
-  selectors: {
-    '&:hover': {
-      borderColor: palette.accent
-    },
-    '&:focus-visible': {
-      outline: `2px solid ${palette.accent}`,
-      outlineOffset: '2px'
-    },
-    '&[data-copied="true"]': {
-      color: palette.accent,
-      borderColor: palette.accent
-    }
-  }
-});
+  hover({borderColor: palette.accent})
+]);
 
 // Icon + text button that lives in a pane header (Upload on Model, Download on
 // SVG). The icon is vertically centred with a gap to the label.
-export const headButton = style({
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.4rem',
-  flexShrink: 0,
-  padding: '0.35rem 0.65rem',
-  fontFamily: fonts.sans,
-  fontSize: '0.85rem',
-  fontWeight: 600,
-  color: palette.textMuted,
-  backgroundColor: palette.surface,
-  border: `1px solid ${palette.border}`,
-  borderRadius: '8px',
-  cursor: 'pointer',
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark,
-      backgroundColor: palette.surfaceDark,
-      borderColor: palette.borderDark
+export const headButton = style([
+  {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    flexShrink: 0,
+    padding: '0.35rem 0.65rem',
+    fontFamily: fonts.sans,
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    color: palette.textMuted,
+    backgroundColor: palette.surface,
+    border: `1px solid ${palette.border}`,
+    borderRadius: '8px',
+    cursor: 'pointer',
+    '@media': {
+      [media.dark]: {
+        color: palette.textMutedDark,
+        backgroundColor: palette.surfaceDark,
+        borderColor: palette.borderDark
+      },
+      [media.coarsePointer]: {
+        minHeight: touchTargetMin
+      }
     },
-    [media.coarsePointer]: {
-      minHeight: touchTargetMin
+    selectors: {
+      '&:focus-visible': {
+        outline: `2px solid ${palette.accent}`,
+        outlineOffset: '2px'
+      }
     }
   },
-  selectors: {
-    '&:hover': {
-      color: palette.accent,
-      borderColor: palette.accent
-    },
-    '&:focus-visible': {
-      outline: `2px solid ${palette.accent}`,
-      outlineOffset: '2px'
-    }
-  }
-});
+  hover({color: palette.accent, borderColor: palette.accent})
+]);
 
 export const copyIconDefault = style({
   width: '16px',

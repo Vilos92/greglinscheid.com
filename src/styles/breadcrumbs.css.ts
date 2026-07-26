@@ -77,10 +77,12 @@ export const breadcrumbLink = style({
 });
 
 globalStyle(`${breadcrumbLink}:hover`, {
-  textDecoration: 'underline',
-  color: palette.linkHover,
   '@media': {
-    [media.dark]: {
+    [media.hover]: {
+      textDecoration: 'underline',
+      color: palette.linkHover
+    },
+    [`${media.hover} and ${media.dark}`]: {
       color: palette.linkHoverDark
     }
   }

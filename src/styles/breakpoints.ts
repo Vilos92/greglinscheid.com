@@ -23,6 +23,8 @@ export const media = {
   dark: '(prefers-color-scheme: dark)',
   coarsePointer: '(pointer: coarse)',
   finePointer: '(pointer: fine)',
+  /** Hover states belong behind this gate — a tap leaves bare `:hover` stuck on. */
+  hover: '(hover: hover)',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   highContrast: '(prefers-contrast: more)'
 } as const;

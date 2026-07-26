@@ -65,9 +65,11 @@ globalStyle('a', {
 });
 
 globalStyle('a:hover', {
-  color: palette.linkHover,
   '@media': {
-    [media.dark]: {
+    [media.hover]: {
+      color: palette.linkHover
+    },
+    [`${media.hover} and ${media.dark}`]: {
       color: palette.linkHoverDark
     }
   }
