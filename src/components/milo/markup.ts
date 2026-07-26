@@ -47,6 +47,14 @@ const silhouettePath =
   'C 34 56 57 36 60 6 C 60 -2 57 -8 55 -16 C 55 -21 55.5 -25 56 -30 ' +
   'C 56 -50 54 -72 48 -84 C 40 -74 30 -58 22 -45 C 16 -47 8 -48 0 -46 Z';
 
+// The skull outline alone: the same head but with smooth shoulders across the ear bases. The
+// coat clips against this so splotches end at the top of the head instead of spilling into
+// the gray of the ear cones.
+const skullPath =
+  'M 0 -46 C -8 -48 -16 -47 -22 -45 C -34 -44 -47 -38 -56 -30 C -55.5 -25 -55 -21 -55 -16 ' +
+  'C -57 -8 -60 -2 -60 6 C -57 36 -34 56 0 56 C 34 56 57 36 60 6 C 60 -2 57 -8 55 -16 ' +
+  'C 55 -21 55.5 -25 56 -30 C 47 -38 34 -44 22 -45 C 16 -47 8 -48 0 -46 Z';
+
 // Whisker curves as [root, control1, control2, tip], rendered as filled slivers that taper from
 // the root width to a point at the tip, like real hairs.
 const cheekWhiskersLeft = [
@@ -153,6 +161,9 @@ export function renderMiloSvg(size: number): string {
     <clipPath id="${uid}-face-clip">
       <path d="${silhouettePath}"></path>
     </clipPath>
+    <clipPath id="${uid}-skull-clip">
+      <path d="${skullPath}"></path>
+    </clipPath>
     <!-- Almond clips keep the pupils inside the lids at full gaze deflection. -->
     <clipPath id="${uid}-eye-clip-left">
       <path
@@ -176,6 +187,7 @@ export function renderMiloSvg(size: number): string {
       staying glued to the skull. Shapes bleed past the silhouette so sliding never exposes a
       seam, and the patches near the skull dome sit low enough that a full deflection never shears
       them against it. -->
+      <g clip-path="url(#${uid}-skull-clip)">
       <g data-milo-face>
         <!-- The coat, traced directly from the reference sticker: each subpath is a patch contour
         extracted from the image (lighter gray, cream, then dark gray over the mid-gray base), so
@@ -194,6 +206,7 @@ export function renderMiloSvg(size: number): string {
           d="M -8 37.5 C -5 36 5 36.1 8 37.9 C 9.6 40 8.8 43 6 44.7 C 2 46.3 -3 46.2 -6.4 44.3 C -9 42.4 -9.4 39.5 -8 37.5 Z"
           fill="${palette.muzzleShade}"></path>
 
+      </g>
       </g>
 
       <!-- Ear interiors: pink pockets inset inside the silhouette ear cones, on their own gently-
