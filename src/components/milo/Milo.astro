@@ -1,0 +1,30 @@
+---
+/*
+ * Milo, the site mascot: a portrait of Greg's cat, who watches the cursor anywhere
+ * on the page. This component is a thin Astro shell around the framework-agnostic
+ * core: `markup.ts` renders the SVG string and `animate.ts` brings it to life.
+ */
+import {renderMiloSvg} from './markup';
+
+type Props = {
+  /**
+   * Rendered width and height in CSS pixels (Milo is a perfect
+   * square). The art and its motion scale together. The cursor tracker
+   * measures the rendered box at runtime, so any size stays correct.
+   */
+  size?: number;
+};
+
+const {size = 400} = Astro.props;
+---
+
+<Fragment set:html={renderMiloSvg(size)} />
+
+<!-- Plain JS only in this block: Storybook's Astro renderer re-injects it with a
+cache-busting query param, which defeats Vite's TypeScript transform for hoisted
+scripts. The typed logic lives in `animate.ts`, which Vite transforms normally. -->
+<script>
+  import {startMilos} from './animate';
+
+  startMilos();
+</script>

@@ -2,12 +2,19 @@
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "entry": [
     "src/site.{ts,tsx,js,jsx}",
+    // Storybook loads these config modules via its own CLI, not a traced import.
+    ".storybook/main.ts",
+    ".storybook/preview.ts",
     // Tool client modules load via an Astro <script>, dynamic imports, and a Web
     // Worker URL — boundaries Fallow can't trace.
     "src/pages/tools/_3d-to-svg/geometry.ts",
     "src/pages/tools/_3d-to-svg/emit.ts",
     "src/pages/tools/_3d-to-svg/svg.worker.ts"
   ],
+  // Storybook's Astro framework references this builder by name in its preset
+  // but does not declare it as a dependency, so it must be a direct install
+  // that Fallow can't trace to an import.
+  "ignoreDependencies": ["@storybook/builder-vite"],
   "audit": {
     "healthBaseline": ".fallow/health-baseline.json",
     "dupesBaseline": ".fallow/dupes-baseline.json"
