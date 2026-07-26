@@ -1,0 +1,56 @@
+---
+// This page is its own shell rather than BaseLayout: Milo gets the whole
+// viewport with no header, footer, or breadcrumbs. The bare global.css
+// import still carries the base palette/typography (html/body rules, link
+// colors, focus outlines) without pulling in any site chrome.
+import BaseHead from '../components/BaseHead.astro';
+import Milo from '../components/milo/Milo.astro';
+import {closeButton, stage} from '../styles/milo-page.css';
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title="Milo" description="Milo, the cat who watches your cursor." />
+  </head>
+  <body>
+    <main class={stage}>
+      <h1 class="sr-only">Milo</h1>
+      <Milo size={400} />
+      <a class={closeButton} href="/" aria-label="Close" data-milo-close>
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
+          <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          ></path>
+        </svg>
+      </a>
+    </main>
+
+    <script>
+      // The anchor's href stays a real link for no-JS visitors; this just
+      // upgrades it to return to wherever the visitor came from.
+      const close = document.querySelector('[data-milo-close]');
+      const cameFromSite = history.length > 1 && document.referrer.startsWith(location.origin);
+      const leave = () => {
+        if (cameFromSite) {
+          history.back();
+        } else {
+          location.assign('/');
+        }
+      };
+
+      if (close) {
+        close.addEventListener('click', (event) => {
+          event.preventDefault();
+          leave();
+        });
+      }
+
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          leave();
+        }
+      });
+    </script>
+  </body>
+</html>
