@@ -12,11 +12,20 @@ type AxisMotion = {
   velocity: number;
 };
 
-type BlinkPhase = 'waiting' | 'closing' | 'shut' | 'opening';
+type BlinkActivePhase = 'closing' | 'shut' | 'opening';
+
+type BlinkPhase = 'waiting' | BlinkActivePhase;
+
+type BlinkProfile = {
+  durationsMs: Record<BlinkActivePhase, number>;
+  /** How far the lids squash the eye at full close, as a vertical scale. */
+  shutScale: number;
+};
 
 type Blink = {
   phase: BlinkPhase;
   msLeft: number;
+  profile: BlinkProfile;
   /** How slow the previous inter-blink delay was, from 0 (quickest) to 1 (slowest). */
   normalizedDelay: number;
 };
@@ -24,6 +33,15 @@ type Blink = {
 type BlinkDelayRoll = {
   delayMs: number;
   normalizedDelay: number;
+};
+
+type MiloParts = {
+  head: SVGGElement;
+  face: SVGGElement;
+  ears: SVGGElement;
+  features: SVGGElement;
+  eyes: SVGGElement[];
+  pupils: SVGGElement[];
 };
 
 /*
@@ -40,17 +58,43 @@ type BlinkDelayRoll = {
  */
 const CHASE_GAINS = {kp: 60, ki: 0, kd: 17};
 
-// Head radius (64) plus an 8px resting margin inside the 100px half-extent.
-const HEAD_MAX_TRAVEL = 28;
+// The head's ear tips and whisker ends leave this much travel inside the 110px half-extent.
+const HEAD_MAX_TRAVEL = 16;
 
 /*
  * How much further than the head the features slide at full deflection. The eyes ride high and
- * the smile hangs low, so there is more spare face below the features than above.
+ * the mouth hangs low, so there is more spare face below the features than above.
  */
-const FEATURE_TRAVEL = {left: 12, right: 12, up: 10, down: 18};
+const FEATURE_TRAVEL = {left: 8, right: 8, up: 6, down: 10};
+
+// The pupils slide a touch further than the eyes, so Milo looks at the cursor, not just toward it.
+const PUPIL_TRAVEL = 3;
+
+/*
+ * How much of the features' travel the painted face plane (fur pattern, blaze) follows. The
+ * standard 2.5D head-turn rig orders depth as skull < face markings < features < pupils: the
+ * markings must ride with the features — clipped by the skull silhouette — or they read as a
+ * static decal the features float over. Keeping them slightly behind the features adds the
+ * curvature cue real rigs use.
+ */
+const FACE_TRAVEL_RATIO = 0.75;
+
+// The ear interiors shift only gently inside the static silhouette ear cones, so they read as
+// the ears foreshortening without ever escaping the cone frame.
+const EAR_TRAVEL_RATIO = 0.25;
 
 // Clamp the frame delta so the physics stay stable across tab switches and long frames.
 const MAX_FRAME_DELTA_SECONDS = 1 / 30;
+
+/*
+ * The controller is overdamped (no overshoot), but its exponential tail creeps sub-pixel for
+ * seconds, and high-contrast edges shimmer while they crawl. Once the error and velocity both
+ * fall below these thresholds the axis snaps exactly onto the target and freezes — measured in
+ * simulation to land with zero overshoot at every frame rate. Position is normalized units
+ * (0.002 ≈ 0.06px at the eyes); velocity is normalized units per second.
+ */
+const REST_POSITION_EPSILON = 0.002;
+const REST_VELOCITY_EPSILON = 0.02;
 
 /*
  * Blinking: a vertical squash of each eye about its own center. Lids close fast, hold briefly
@@ -58,27 +102,22 @@ const MAX_FRAME_DELTA_SECONDS = 1 / 30;
  * next delay toward slow and vice versa — via `random() ** skew`, where skew < 1 favors slow
  * draws and skew > 1 favors quick ones.
  */
-const EYE_SHUT_SCALE = 0.3;
-const BLINK_CLOSE_MS = 70;
-const BLINK_HOLD_MS = 60;
-const BLINK_OPEN_MS = 130;
 const BLINK_DELAY_MIN_MS = 900;
 const BLINK_DELAY_MAX_MS = 4200;
 const BLINK_SKEW_AFTER_QUICK = 0.45;
 const BLINK_SKEW_AFTER_SLOW = 1.6;
+
+const QUICK_BLINK: BlinkProfile = {durationsMs: {closing: 70, shut: 60, opening: 130}, shutScale: 0.15};
+
+// The occasional languid half-close — the contented-cat "slow blink" — instead of a quick one.
+const SLOW_BLINK: BlinkProfile = {durationsMs: {closing: 300, shut: 320, opening: 480}, shutScale: 0.3};
+const SLOW_BLINK_CHANCE = 0.15;
 
 const BLINK_PHASE_AFTER: Record<BlinkPhase, BlinkPhase> = {
   waiting: 'closing',
   closing: 'shut',
   shut: 'opening',
   opening: 'waiting'
-};
-
-// The `waiting` duration is rolled per blink, so it has no fixed entry here.
-const BLINK_PHASE_DURATION_MS: Record<Exclude<BlinkPhase, 'waiting'>, number> = {
-  closing: BLINK_CLOSE_MS,
-  shut: BLINK_HOLD_MS,
-  opening: BLINK_OPEN_MS
 };
 
 /*
@@ -100,12 +139,16 @@ export function startMilos(): void {
  */
 
 function startMilo(svg: SVGSVGElement): void {
-  const head = svg.querySelector<SVGGElement>('[data-milo-head]');
-  const features = svg.querySelector<SVGGElement>('[data-milo-features]');
-  const eyes = [...svg.querySelectorAll<SVGCircleElement>('[data-milo-eye]')];
-  if (!head || !features || eyes.length === 0) {
-    throw new Error('Milo markup is missing its head, features, or eyes.');
-  }
+  const parts: MiloParts = {
+    head: requireElement(svg.querySelector<SVGGElement>('[data-milo-head]'), 'head'),
+    face: requireElement(svg.querySelector<SVGGElement>('[data-milo-face]'), 'face'),
+    ears: requireElement(svg.querySelector<SVGGElement>('[data-milo-ears]'), 'ears'),
+    features: requireElement(svg.querySelector<SVGGElement>('[data-milo-features]'), 'features'),
+    eyes: [...svg.querySelectorAll<SVGGElement>('[data-milo-eye]')],
+    pupils: [...svg.querySelectorAll<SVGGElement>('[data-milo-pupil]')]
+  };
+  requireElement(parts.eyes[0], 'eyes');
+  requireElement(parts.pupils[0], 'pupils');
 
   const tracker = trackCursor(svg);
   const axisX: AxisMotion = {pid: createPID(CHASE_GAINS), value: 0, velocity: 0};
@@ -126,26 +169,50 @@ function startMilo(svg: SVGSVGElement): void {
 
     stepAxis(axisX, tracker.target.x, deltaSeconds);
     stepAxis(axisY, tracker.target.y, deltaSeconds);
-
-    const headX = axisX.value * HEAD_MAX_TRAVEL;
-    const headY = axisY.value * HEAD_MAX_TRAVEL;
-    head.setAttribute('transform', `translate(${headX} ${headY})`);
-    features.setAttribute(
-      'transform',
-      `translate(${headX + scaleTravel(axisX.value, FEATURE_TRAVEL.left, FEATURE_TRAVEL.right)} ${
-        headY + scaleTravel(axisY.value, FEATURE_TRAVEL.up, FEATURE_TRAVEL.down)
-      })`
-    );
-
     const eyeScale = stepBlink(blink, deltaSeconds * 1000);
-    for (const eye of eyes) {
-      eye.setAttribute('transform', `scale(1 ${eyeScale})`);
-    }
+    applyPose(parts, axisX, axisY, eyeScale);
 
     requestAnimationFrame(onFrame);
   };
 
   requestAnimationFrame(onFrame);
+}
+
+/** Fails fast when a marker element is missing from the Milo markup. */
+function requireElement<T extends Element>(element: T | null | undefined, marker: string): T {
+  if (!element) {
+    throw new Error(`Milo markup is missing its ${marker}.`);
+  }
+
+  return element;
+}
+
+/** Writes this frame's parallax transforms and blink scale onto the face's layer groups. */
+function applyPose(parts: MiloParts, axisX: AxisMotion, axisY: AxisMotion, eyeScale: number): void {
+  const headX = axisX.value * HEAD_MAX_TRAVEL;
+  const headY = axisY.value * HEAD_MAX_TRAVEL;
+  const shiftX = scaleTravel(axisX.value, FEATURE_TRAVEL.left, FEATURE_TRAVEL.right);
+  const shiftY = scaleTravel(axisY.value, FEATURE_TRAVEL.up, FEATURE_TRAVEL.down);
+
+  parts.head.setAttribute('transform', `translate(${headX} ${headY})`);
+  // The face plane lives inside the head group, so its shift is relative to the skull.
+  parts.face.setAttribute(
+    'transform',
+    `translate(${shiftX * FACE_TRAVEL_RATIO} ${shiftY * FACE_TRAVEL_RATIO})`
+  );
+  parts.ears.setAttribute(
+    'transform',
+    `translate(${shiftX * EAR_TRAVEL_RATIO} ${shiftY * EAR_TRAVEL_RATIO})`
+  );
+  parts.features.setAttribute('transform', `translate(${headX + shiftX} ${headY + shiftY})`);
+
+  for (const pupil of parts.pupils) {
+    pupil.setAttribute('transform', `translate(${axisX.value * PUPIL_TRAVEL} ${axisY.value * PUPIL_TRAVEL})`);
+  }
+
+  for (const eye of parts.eyes) {
+    eye.setAttribute('transform', `scale(1 ${eyeScale})`);
+  }
 }
 
 /**
@@ -212,6 +279,23 @@ function stepAxis(axis: AxisMotion, target: number, deltaSeconds: number): void 
     axis.value = -1;
     axis.velocity = Math.max(axis.velocity, 0);
   }
+
+  snapAxisAtRest(axis, target);
+}
+
+/**
+ * Freezes an axis exactly on its target once the motion is imperceptible, ending the
+ * sub-pixel settle tail (see the rest epsilon constants).
+ * @sideEffect Mutates `axis`.
+ */
+function snapAxisAtRest(axis: AxisMotion, target: number): void {
+  if (
+    Math.abs(target - axis.value) < REST_POSITION_EPSILON &&
+    Math.abs(axis.velocity) < REST_VELOCITY_EPSILON
+  ) {
+    axis.value = target;
+    axis.velocity = 0;
+  }
 }
 
 /** Scales a normalized offset by a direction-dependent travel distance. */
@@ -222,7 +306,12 @@ function scaleTravel(normalized: number, negativeTravel: number, positiveTravel:
 function createBlink(): Blink {
   // A neutral history keeps the very first delay unbiased.
   const roll = rollBlinkDelay(0.5);
-  return {phase: 'waiting', msLeft: roll.delayMs, normalizedDelay: roll.normalizedDelay};
+  return {
+    phase: 'waiting',
+    msLeft: roll.delayMs,
+    profile: QUICK_BLINK,
+    normalizedDelay: roll.normalizedDelay
+  };
 }
 
 /** Rolls the next inter-blink delay, biased away from the pace of the previous one. */
@@ -262,7 +351,12 @@ function advanceBlinkPhase(blink: Blink): void {
     return;
   }
 
-  blink.msLeft = BLINK_PHASE_DURATION_MS[phase];
+  // A blink commits to one profile as the lids start to close.
+  if (phase === 'closing') {
+    blink.profile = Math.random() < SLOW_BLINK_CHANCE ? SLOW_BLINK : QUICK_BLINK;
+  }
+
+  blink.msLeft = blink.profile.durationsMs[phase];
 }
 
 /** Computes the eyes' vertical scale for the current blink phase. */
@@ -272,17 +366,18 @@ function computeEyeScale(blink: Blink): number {
   }
 
   if (blink.phase === 'shut') {
-    return blendEyeScale(1);
+    return blendEyeScale(1, blink.profile);
   }
 
+  const {durationsMs} = blink.profile;
   const closedAmount =
-    blink.phase === 'closing' ? 1 - blink.msLeft / BLINK_CLOSE_MS : blink.msLeft / BLINK_OPEN_MS;
-  return blendEyeScale(smoothstep(closedAmount));
+    blink.phase === 'closing' ? 1 - blink.msLeft / durationsMs.closing : blink.msLeft / durationsMs.opening;
+  return blendEyeScale(smoothstep(closedAmount), blink.profile);
 }
 
 /** Maps a closed amount in [0, 1] onto the eye's vertical scale. */
-function blendEyeScale(closedAmount: number): number {
-  return 1 - closedAmount * (1 - EYE_SHUT_SCALE);
+function blendEyeScale(closedAmount: number, profile: BlinkProfile): number {
+  return 1 - closedAmount * (1 - profile.shutScale);
 }
 
 /** Smoothstep easing for a natural accelerate/decelerate feel on lid motion. */
