@@ -32,6 +32,10 @@ export type PID = {
  */
 
 export function createPID(options: PIDOptions): PID {
+  if (options.maxIntegral !== undefined && !(options.maxIntegral >= 0)) {
+    throw new Error('PID maxIntegral must be a non-negative number.');
+  }
+
   return {
     kp: options.kp,
     ki: options.ki,

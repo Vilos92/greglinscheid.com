@@ -19,6 +19,14 @@ describe('stepPID', () => {
     expect(stepPID(pid, 1, 0.1)).toBeCloseTo(0.3);
   });
 
+  it('rejects a negative maxIntegral', () => {
+    expect(() => createPID({kp: 1, ki: 1, kd: 0, maxIntegral: -1})).toThrow(/non-negative/);
+  });
+
+  it('rejects a NaN maxIntegral', () => {
+    expect(() => createPID({kp: 1, ki: 1, kd: 0, maxIntegral: Number.NaN})).toThrow(/non-negative/);
+  });
+
   it('caps the integral at maxIntegral', () => {
     const pid = createPID({kp: 0, ki: 1, kd: 0, maxIntegral: 0.25});
     stepPID(pid, 1, 1);

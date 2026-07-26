@@ -218,8 +218,9 @@ function applyPose(parts: MiloParts, axisX: AxisMotion, axisY: AxisMotion, eyeSc
 
 /**
  * Follows the page-wide cursor position as a normalized offset from the svg's center, each
- * axis saturating at ±1 once the cursor passes the svg's edge. The center is cached so pointer
- * events never force layout, and forgotten whenever the svg may have moved.
+ * axis saturating at ±1 once the cursor passes the svg's edge. Registers window-level
+ * listeners that live until `dispose` is called. The center is cached so pointer events never
+ * force layout, and forgotten whenever the svg may have moved.
  */
 function trackCursor(svg: SVGSVGElement) {
   const target = {x: 0, y: 0};
