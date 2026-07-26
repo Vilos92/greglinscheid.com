@@ -33,7 +33,7 @@ export default {
 };
 
 /**
- * Milo the cat watches the cursor anywhere on the page — including outside his square — with
+ * Milo the cat watches the cursor anywhere on the page, including outside his square, with
  * the head easing after it, the features sliding a little further, and the pupils further
  * still. He blinks on his own schedule, with the occasional languid contented-cat slow blink.
  * Sweep the cursor past the edges of the viewport to see the tracking saturate.

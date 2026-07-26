@@ -50,7 +50,7 @@ type MiloParts = {
 
 /*
  * The face chases the cursor by feeding a normalized cursor signal through a PID controller
- * and applying the output as an acceleration — that is where the motion's inertia comes from.
+ * and applying the output as an acceleration, which is where the motion's inertia comes from.
  * The derivative term acts on the measured velocity (derivative-on-measurement), so a cursor
  * leaping across the page cannot spike the acceleration. The gains fit a spring-damper at
  * ~1.2 Hz with a damping ratio of ~1.1: overdamped, settling with no overshoot. `ki` stays 0
@@ -73,7 +73,7 @@ const PUPIL_TRAVEL = 3;
 /*
  * How much of the features' travel the painted face plane (fur pattern, blaze) follows. The
  * standard 2.5D head-turn rig orders depth as skull < face markings < features < pupils: the
- * markings must ride with the features — clipped by the skull silhouette — or they read as a
+ * markings must ride with the features (clipped by the skull silhouette) or they read as a
  * static decal the features float over. Keeping them slightly behind the features adds the
  * curvature cue real rigs use.
  */
@@ -89,18 +89,18 @@ const MAX_FRAME_DELTA_SECONDS = 1 / 30;
 /*
  * The controller is overdamped (no overshoot), but its exponential tail creeps sub-pixel for
  * seconds, and high-contrast edges shimmer while they crawl. Once the error and velocity both
- * fall below these thresholds the axis snaps exactly onto the target and freezes — measured in
- * simulation to land with zero overshoot at every frame rate. Position is normalized units
- * (0.002 stays sub-pixel at the eyes for any reasonable render size); velocity is normalized
- * units per second.
+ * fall below these thresholds the axis snaps exactly onto the target and freezes. Simulation
+ * showed the snap lands with zero overshoot at every frame rate. Position is in normalized
+ * units, where 0.002 stays sub-pixel at the eyes for any reasonable render size. Velocity is
+ * in normalized units per second.
  */
 const REST_POSITION_EPSILON = 0.002;
 const REST_VELOCITY_EPSILON = 0.02;
 
 /*
  * Blinking: a vertical squash of each eye about its own center. Lids close fast, hold briefly
- * so the squint reads, and reopen slower. The cadence has memory — a quick blink biases the
- * next delay toward slow and vice versa — via `random() ** skew`, where skew < 1 favors slow
+ * so the squint reads, and reopen slower. The cadence has memory: a quick blink biases the
+ * next delay toward slow and vice versa, via `random() ** skew`, where skew < 1 favors slow
  * draws and skew > 1 favors quick ones.
  */
 const BLINK_DELAY_MIN_MS = 900;
@@ -110,7 +110,7 @@ const BLINK_SKEW_AFTER_SLOW = 1.6;
 
 const QUICK_BLINK: BlinkProfile = {durationsMs: {closing: 70, shut: 60, opening: 130}, shutScale: 0.15};
 
-// The occasional languid half-close — the contented-cat "slow blink" — instead of a quick one.
+// The occasional languid half-close that contented cats do, instead of a quick blink.
 const SLOW_BLINK: BlinkProfile = {durationsMs: {closing: 300, shut: 320, opening: 480}, shutScale: 0.3};
 const SLOW_BLINK_CHANCE = 0.15;
 
@@ -158,7 +158,7 @@ function startMilo(svg: SVGSVGElement): void {
 
   let previousTime: number | undefined;
   const onFrame = (time: number) => {
-    // The face may be swapped out from under us (e.g. a Storybook re-render); let go fully.
+    // The face may be swapped out from under us (e.g. a Storybook re-render), so let go fully.
     if (!svg.isConnected) {
       tracker.dispose();
       return;
@@ -263,7 +263,7 @@ function trackCursor(svg: SVGSVGElement) {
 
 /**
  * Advances one axis of the face physics, treating the controller output as an acceleration.
- * The normalized extremes at ±1 are hard walls — the position clamps there and any outward
+ * The normalized extremes at ±1 are hard walls. The position clamps there and any outward
  * velocity dies against them.
  * @sideEffect Mutates `axis`.
  */

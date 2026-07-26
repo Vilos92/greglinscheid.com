@@ -15,7 +15,8 @@ export type PIDOptions = {
 
 /**
  * PID controller state. Output units are the caller's to interpret (velocity, acceleration, …).
- * Gains are fixed at creation; `integral` / `previousError` mutate in place each step.
+ * Gains are fixed at creation. The `integral` and `previousError` fields mutate in place
+ * each step.
  */
 export type PID = {
   readonly kp: number;

@@ -2,15 +2,15 @@
 /*
  * Milo, the site mascot: a flat illustrated portrait of a real dilute-calico cat that watches
  * the cursor anywhere on the page. The head drifts toward the cursor, the features slide a
- * little further, and the pupils further still; physics live in the sibling `milo.ts` module.
- * The face is fixed art, not a themable surface — the palette is sampled from a reference
- * sticker of the actual cat, so colors and geometry stay literal.
+ * little further, and the pupils further still. Physics live in the sibling `milo.ts` module.
+ * The face is fixed art rather than a themable surface. The palette is sampled from a
+ * reference sticker of the actual cat, so colors and geometry stay literal.
  */
 
 type Props = {
   /**
    * Rendered width and height in CSS pixels (Milo is a perfect square). The art and its
-   * motion scale together — the cursor tracker measures the rendered box at runtime, so any
+   * motion scale together. The cursor tracker measures the rendered box at runtime, so any
    * size stays correct.
    */
   size?: number;
@@ -44,7 +44,8 @@ const palette = {
   highlight: '#ffffff'
 };
 
-// One continuous outline around head and ears; the clip every fur layer renders inside. The
+// One continuous outline around head and ears, used as the clip every fur layer renders
+// inside. The
 // sides read like the reference: round cheeks, a slight temple waist, then a flare to the ears.
 const silhouettePath =
   'M 0 -46 C -8 -48 -16 -47 -22 -45 C -30 -58 -40 -74 -48 -84 C -54 -72 -56 -50 -56 -30 ' +
@@ -52,7 +53,7 @@ const silhouettePath =
   'C 34 56 57 36 60 6 C 60 -2 57 -8 55 -16 C 55 -21 55.5 -25 56 -30 ' +
   'C 56 -50 54 -72 48 -84 C 40 -74 30 -58 22 -45 C 16 -47 8 -48 0 -46 Z';
 
-// Whisker curves as [root, control1, control2, tip]; rendered as filled slivers that taper
+// Whisker curves as [root, control1, control2, tip], rendered as filled slivers that taper
 // from the root width to a point at the tip, like real hairs.
 const cheekWhiskersLeft = [
   [[-16, 22], [-34, 16], [-54, 14], [-72, 16]],
@@ -97,7 +98,7 @@ const browWhiskersRightPath = computeWhiskerPath(mirrorWhiskers(browWhiskersLeft
 ---
 
 <!-- The viewBox centers the origin so travel offsets in the script translate directly. The svg
-is a perfect square with no chrome of its own — the head floats in place. -->
+is a perfect square with no chrome of its own, so the head floats in place. -->
 <svg
   data-milo
   width={size}
@@ -156,7 +157,7 @@ is a perfect square with no chrome of its own — the head floats in place. -->
       <!-- Ear interiors: pink pockets inset inside the silhouette ear cones, on their own
       gently-moving plane. Beneath them lies only the uniform crown gray (the splotch zone ends
       below their bottoms), so their slower slide can never shear a marking, and their small
-      travel stays inside the cone frame — the shift reads as the ears foreshortening. -->
+      travel stays inside the cone frame, so the shift reads as the ears foreshortening. -->
       <g data-milo-ears>
         <path
           d="M -52 -38 C -52.5 -55 -51 -71 -47 -82 C -43 -75 -39.5 -68 -36.5 -61"
@@ -203,7 +204,7 @@ is a perfect square with no chrome of its own — the head floats in place. -->
     <path d={browWhiskersLeftPath} fill={palette.whisker}></path>
     <path d={browWhiskersRightPath} fill={palette.whisker}></path>
 
-    <!-- Tan surrounds hugging each eye like the reference's goggle markings; they ride the
+    <!-- Tan surrounds hugging each eye like the reference's goggle markings. They ride the
     features group so they stay glued to the eyes at any deflection. -->
     <path
       d="M -33 -4 C -32.5 -8 -29 -10.5 -25.5 -10.5 C -22 -13 -15.5 -13.5 -11 -7 C -8.5 -1.5 -9.5 6 -13 9.5 C -16.5 12.5 -22 13 -26 11.5 C -30 12.5 -33 9.5 -32.5 6 C -34 3 -34 -1 -33 -4 Z"
@@ -216,7 +217,7 @@ is a perfect square with no chrome of its own — the head floats in place. -->
     corners dipping toward the blaze. Proportions started from measuring the reference
     (19x15 against a 118-unit head, centers 40 apart), then the whole construction was scaled
     up ~30% for presence with the measured inner-corner gap preserved. The pupil group slides
-    further than the eye for a "looking at you" read; highlights sit on the pupil edge,
+    further than the eye for a "looking at you" read. Highlights sit on the pupil edge,
     asymmetric per eye. -->
     <g transform="translate(-23 2)">
       <g data-milo-eye>
@@ -266,8 +267,8 @@ is a perfect square with no chrome of its own — the head floats in place. -->
     </g>
 
     <!-- Nose: a subtle off-white bridge above it, then the pink pad (sheen, thin nostril slits,
-    dark tip), the mouth notch beneath, and soft muzzle mounds — a neutral cat mouth like the
-    reference, not a smile. -->
+    dark tip), the mouth notch beneath, and soft muzzle mounds, giving a neutral cat mouth
+    like the reference rather than a smile. -->
     <path
       d="M 0.3 5.8 C 1.6 7.8 3 10 4.6 12 C 5.8 13.4 6.6 14.6 7 15.4 C 4.4 15 1.6 14.8 -0.4 15 C -2.8 14.8 -5 15.2 -6.8 15.6 C -5.8 13.6 -4.4 11.6 -2.9 9.6 C -1.8 8.2 -0.8 6.8 0.3 5.8 Z"
       fill={palette.muzzleShade}></path>

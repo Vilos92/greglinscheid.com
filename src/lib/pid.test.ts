@@ -47,7 +47,7 @@ describe('stepPID', () => {
   it('prefers a caller-supplied error derivative over differencing', () => {
     const pid = createPID({kp: 0, ki: 0, kd: 1});
     stepPID(pid, 0, 1);
-    // The differenced slope would be (10 - 0) / 1 = 10; the measured signal wins.
+    // The differenced slope would be (10 - 0) / 1 = 10, but the measured signal wins.
     expect(stepPID(pid, 10, 1, -3)).toBeCloseTo(-3);
   });
 
