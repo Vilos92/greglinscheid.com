@@ -44,6 +44,11 @@ type MiloParts = {
   pupils: SVGGElement[];
 };
 
+/** What a frame should do with a Milo: keep flying, doze while hidden, or bow out. */
+type FramePlan = 'step' | 'sleep' | 'rest';
+
+type WrittenPose = {x: number; y: number; eyeScale: number};
+
 /*
  * Constants.
  */
@@ -126,10 +131,6 @@ const BLINK_PHASE_AFTER: Record<BlinkPhase, BlinkPhase> = {
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
-/*
- * State.
- */
-
 // Lazily created on the first startMilos call so importing this module has no side effects.
 let motionPreference: MediaQueryList | undefined;
 
@@ -142,6 +143,7 @@ let motionPreference: MediaQueryList | undefined;
  * Under `prefers-reduced-motion` Milo stays a static portrait: nothing starts while
  * the preference is on, running loops shut themselves down when it flips on, and a
  * flip back off sweeps the page again.
+ * @sideEffect Installs the reduced-motion listener and marks each adopted svg started.
  */
 export function startMilos(): void {
   if (!motionPreference) {
@@ -149,10 +151,20 @@ export function startMilos(): void {
     motionPreference.addEventListener('change', () => startMilos());
   }
 
-  if (motionPreference.matches) {
-    return;
+  if (!motionPreference.matches) {
+    adoptMilos();
   }
+}
 
+/*
+ * Helpers.
+ */
+
+/**
+ * Starts every Milo svg on the page that is not already flying.
+ * @sideEffect Marks each adopted svg started.
+ */
+function adoptMilos(): void {
   for (const svg of document.querySelectorAll<SVGSVGElement>('svg[data-milo]')) {
     if (svg.dataset.miloStarted !== 'true') {
       svg.dataset.miloStarted = 'true';
@@ -160,10 +172,6 @@ export function startMilos(): void {
     }
   }
 }
-
-/*
- * Helpers.
- */
 
 function startMilo(svg: SVGSVGElement): void {
   const parts: MiloParts = {
@@ -184,68 +192,111 @@ function startMilo(svg: SVGSVGElement): void {
 
   let previousTime: number | undefined;
 
-  /*
-   * The last pose written to the DOM. Re-writing identical attribute values still
-   * dirties the SVG subtree and costs style/paint work every frame, so a Milo at
-   * rest between blinks (values frozen by the rest snap, eyes fully open) skips
-   * the DOM entirely. NaN never equals itself, so the first frame always writes.
-   */
-  const writtenPose = {x: NaN, y: NaN, eyeScale: NaN};
+  // NaN never equals itself, so the first frame always writes (see applyPoseIfChanged).
+  const writtenPose: WrittenPose = {x: NaN, y: NaN, eyeScale: NaN};
 
-  // Releases the svg so a later startMilos sweep can adopt it again.
-  const letGo = () => {
+  // Settles into the neutral portrait and releases the svg, so a later
+  // startMilos sweep can adopt it again. Posing a detached svg is a harmless
+  // no-op, which lets the removed and reduced-motion endings share this path.
+  const rest = () => {
+    centerAxis(axisX);
+    centerAxis(axisY);
+    applyPose(parts, axisX, axisY, 1);
     delete svg.dataset.miloStarted;
     tracker.dispose();
   };
 
-  const onFrame = (time: number) => {
-    // The face may be swapped out from under us (e.g. a Storybook re-render), so let go fully.
-    // Clearing the started flag lets a reattached svg come back to life on the next sweep.
-    if (!svg.isConnected) {
-      letGo();
-      return;
-    }
-
-    // Reduced motion flipped on mid-flight: settle into the neutral portrait and let go.
-    if (motionPreference?.matches) {
-      axisX.value = 0;
-      axisX.velocity = 0;
-      axisY.value = 0;
-      axisY.velocity = 0;
-      applyPose(parts, axisX, axisY, 1);
-      letGo();
-      return;
-    }
-
-    // A hidden Milo (the header's, before it sticks) keeps real geometry but
-    // paints nothing, so recheck on a slow cadence instead of burning a rAF
-    // slot and blink writes every frame. Resetting the clock keeps the
-    // eventual resume from swallowing the whole hidden stretch as one delta.
-    if (svg.checkVisibility && !svg.checkVisibility({checkVisibilityCSS: true, checkOpacity: true})) {
-      previousTime = undefined;
-      window.setTimeout(() => requestAnimationFrame(onFrame), HIDDEN_RECHECK_MS);
-      return;
-    }
-
+  const advance = (time: number) => {
     const deltaSeconds =
       previousTime === undefined ? 0 : Math.min((time - previousTime) / 1000, MAX_FRAME_DELTA_SECONDS);
     previousTime = time;
 
     stepAxis(axisX, tracker.target.x, deltaSeconds);
     stepAxis(axisY, tracker.target.y, deltaSeconds);
-    const eyeScale = stepBlink(blink, deltaSeconds * 1000);
+    applyPoseIfChanged(parts, axisX, axisY, stepBlink(blink, deltaSeconds * 1000), writtenPose);
+  };
 
-    if (axisX.value !== writtenPose.x || axisY.value !== writtenPose.y || eyeScale !== writtenPose.eyeScale) {
-      applyPose(parts, axisX, axisY, eyeScale);
-      writtenPose.x = axisX.value;
-      writtenPose.y = axisY.value;
-      writtenPose.eyeScale = eyeScale;
+  const onFrame = (time: number) => {
+    const plan = planFrame(svg);
+
+    if (plan === 'rest') {
+      rest();
+      return;
     }
 
+    // Dozing resets the clock so the resume never swallows the hidden stretch as one delta.
+    if (plan === 'sleep') {
+      previousTime = undefined;
+      window.setTimeout(() => requestAnimationFrame(onFrame), HIDDEN_RECHECK_MS);
+      return;
+    }
+
+    advance(time);
     requestAnimationFrame(onFrame);
   };
 
   requestAnimationFrame(onFrame);
+}
+
+/**
+ * Decides what this frame should do with a Milo. The face may be swapped out
+ * from under us (a Storybook re-render) or reduced motion may flip on, both of
+ * which end the ride. A hidden Milo (the header's, before it sticks) keeps
+ * real geometry but paints nothing, so it dozes on a slow recheck cadence
+ * instead of burning a rAF slot and blink writes every frame.
+ */
+function planFrame(svg: SVGSVGElement): FramePlan {
+  if (!svg.isConnected || prefersReducedMotion()) {
+    return 'rest';
+  }
+
+  return isHiddenFromPaint(svg) ? 'sleep' : 'step';
+}
+
+function prefersReducedMotion(): boolean {
+  return motionPreference?.matches === true;
+}
+
+/** True when the svg has a box but paints nothing, treating unsupported engines as visible. */
+function isHiddenFromPaint(svg: SVGSVGElement): boolean {
+  if (typeof svg.checkVisibility !== 'function') {
+    return false;
+  }
+
+  return !svg.checkVisibility({checkVisibilityCSS: true, checkOpacity: true});
+}
+
+/**
+ * Rests an axis exactly at center.
+ * @sideEffect Mutates `axis`.
+ */
+function centerAxis(axis: AxisMotion): void {
+  axis.value = 0;
+  axis.velocity = 0;
+}
+
+/**
+ * Writes the pose only when it differs from the last one written. Re-writing
+ * identical attribute values still dirties the SVG subtree and costs style and
+ * paint work every frame, so a Milo at rest between blinks (values frozen by
+ * the rest snap, eyes fully open) skips the DOM entirely.
+ * @sideEffect Mutates `writtenPose`.
+ */
+function applyPoseIfChanged(
+  parts: MiloParts,
+  axisX: AxisMotion,
+  axisY: AxisMotion,
+  eyeScale: number,
+  writtenPose: WrittenPose
+): void {
+  if (axisX.value === writtenPose.x && axisY.value === writtenPose.y && eyeScale === writtenPose.eyeScale) {
+    return;
+  }
+
+  applyPose(parts, axisX, axisY, eyeScale);
+  writtenPose.x = axisX.value;
+  writtenPose.y = axisY.value;
+  writtenPose.eyeScale = eyeScale;
 }
 
 /** Fails fast when a marker element is missing from the Milo markup. */

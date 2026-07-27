@@ -36,9 +36,9 @@ export const header = style({
   minHeight: 'calc(40px + 0.8rem)',
   backgroundColor: palette.pageBg,
   borderBottom: `1px solid ${palette.border}`,
-  // Hidden by default. `visibility` flips after the transform's own duration
-  // so the off-screen header drops out of the tab order without `display:
-  // none`, which would kill the slide transition outright.
+  // Hidden by default. `visibility` flips only after the transform's own
+  // duration, dropping the off-screen header from the tab order without
+  // the `display: none` that would kill the slide transition outright.
   transform: 'translateY(-100%)',
   visibility: 'hidden',
   transition: 'transform 200ms ease, visibility 0s 200ms',
@@ -70,7 +70,7 @@ export const header = style({
 export const miloLink = style({
   display: 'flex',
   borderRadius: '8px',
-  // Centered over the bar at every width; the wordmark shrinks to "Home" on
+  // Centered over the bar at every width. The wordmark shrinks to "Home" on
   // narrow screens so its tail never reaches the centered cat.
   position: 'absolute',
   left: '50%',
@@ -146,9 +146,8 @@ export const nav = style({
 });
 
 // The 0.8rem vertical extension clears the 44px touch-target minimum at every
-// base font size without inflating the nav's line height; the nav's 1rem gap
-// is at least double the 0.25rem horizontal extension, so adjacent links'
-// hit boxes don't overlap.
+// base font size without inflating the nav's line height, and the 1rem gap is
+// at least double the 0.25rem sides, so adjacent hit boxes never overlap.
 export const navLink = style([
   {
     fontSize: '0.9rem',

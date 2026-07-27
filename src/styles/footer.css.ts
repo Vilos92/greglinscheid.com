@@ -36,8 +36,8 @@ export const footerNav = style({
 });
 
 // The 0.8rem vertical extension clears the 44px touch-target minimum at every
-// base font size (the inline content box is only ~one line tall) without
-// inflating the text layout; the 0.25rem sides stay within the nav's 0.5rem gaps.
+// base font size (the inline content box is only one line tall) without
+// inflating the text layout, and the 0.25rem sides stay within the 0.5rem gaps.
 export const footerLink = style([
   {
     textDecoration: 'none',

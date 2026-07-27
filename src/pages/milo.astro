@@ -27,10 +27,10 @@ import '../styles/global.css';
     </main>
 
     <script>
-      // The anchor's href stays a real link for no-JS visitors; this just
-      // upgrades it to return to wherever the visitor came from. The trailing
-      // slash on the origin check keeps lookalike hosts (this-site.com.evil.example)
-      // from passing as ours.
+      // The anchor's href stays a real link for no-JS visitors. The script
+      // only upgrades it to return to wherever the visitor came from, and
+      // the trailing slash on the origin check keeps lookalike hosts (say
+      // this-site.com.evil.example) from ever passing as ours.
       const close = document.querySelector('[data-milo-close]');
       const cameFromSite = history.length > 1 && document.referrer.startsWith(`${location.origin}/`);
 

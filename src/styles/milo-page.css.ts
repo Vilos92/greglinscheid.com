@@ -23,9 +23,9 @@ export const stage = style({
   overscrollBehavior: 'none'
 });
 
-// The svg's width/height attributes are just defaults; this caps him to the
-// viewport's short side so nothing clips on mobile (dvh so the iOS URL bar
-// can't cause clipping).
+// The svg's width/height attributes are just defaults. This caps him to the
+// viewport's short side so nothing clips on mobile, in dvh units so the
+// iOS URL bar can never shrink him out from under his own box.
 globalStyle(`${stage} svg[data-milo]`, {
   width: 'min(92vw, 82dvh)',
   height: 'min(92vw, 82dvh)',

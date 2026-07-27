@@ -12,7 +12,7 @@ import {palette} from './tokens';
  * The shared square icon-button look (the studio's copy button, the /milo
  * close button): quiet surface chrome that warms to the accent on hover.
  * Consumers compose via `style([iconButton, {...}])` and keep their own
- * sizing — including the coarse-pointer 44px square — so their size rules
+ * sizing, including the coarse-pointer 44px square, so their size rules
  * always win the cascade over this base.
  */
 export const iconButton = style([

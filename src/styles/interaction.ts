@@ -6,7 +6,7 @@ import {media} from './breakpoints';
  * Types.
  */
 
-type SelectorRule = NonNullable<StyleRule['selectors']>[string];
+export type SelectorRule = NonNullable<StyleRule['selectors']>[string];
 
 /*
  * Helpers.
@@ -29,7 +29,7 @@ export function hover(body: SelectorRule): StyleRule {
 }
 
 /**
- * The rule body for a `globalStyle('x:hover', ...)` call — the counterpart of
+ * The rule body for a `globalStyle('x:hover', ...)` call, the counterpart of
  * `hover` for hover styles that vanilla-extract only allows as global rules.
  * Applies only on hover-capable devices, with an optional dark-scheme override.
  */
@@ -45,8 +45,8 @@ export function hoverRule(body: GlobalStyleRule, darkBody?: GlobalStyleRule): Gl
 /**
  * Grows a control's coarse-pointer hit box with padding and cancels the growth
  * with an equal negative margin, so the layout is identical on every device.
- * Adjacent targets closer than the extension overlap; the later element in DOM
- * order wins the overlap, so keep gaps at least as wide as `horizontal`.
+ * Adjacent targets closer than the extension overlap, and the later element in
+ * DOM order wins the overlap, so keep gaps at least as wide as `horizontal`.
  */
 export function tapExtension(vertical: string, horizontal: string = vertical): StyleRule {
   return {
