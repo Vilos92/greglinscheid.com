@@ -23,6 +23,58 @@ const imageURL = image === undefined ? undefined : new URL(image, Astro.site);
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
+
+<!-- Cross-document view transitions: same-origin navigations crossfade, and the
+elements sharing a `view-transition-name` (the header Milo and the /milo Milo) morph
+between pages. An at-rule plus pseudo-elements, so it lives here as a global style
+block rather than in vanilla-extract, which cannot emit `@view-transition`. Browsers
+without cross-document support (Firefox, mid-2026) simply navigate instantly. -->
+<style is:global>
+  @view-transition {
+    navigation: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+</style>
+
+<!-- The at-rule above opts the whole site in (both pages of a navigation must),
+but the crossfade is only wanted around the Milo morph, so every other navigation
+skips its transition. The outgoing page is the primary gate because it always
+knows both URLs. The incoming page adds the same check where the Navigation API
+exists, since its referrer is useless on back navigations. Inline so it registers
+before the first render opportunity, which is when `pagereveal` fires. -->
+<script is:inline>
+  const MILO_PATH = '/milo/';
+  const checkInvolvesMilo = (a, b) => a === MILO_PATH || b === MILO_PATH;
+
+  addEventListener('pageswap', event => {
+    if (!event.viewTransition) {
+      return;
+    }
+
+    const to = event.activation ? new URL(event.activation.entry.url).pathname : null;
+    if (to === null || !checkInvolvesMilo(location.pathname, to)) {
+      event.viewTransition.skipTransition();
+    }
+  });
+
+  addEventListener('pagereveal', event => {
+    const from = window.navigation?.activation?.from?.url;
+    if (!event.viewTransition || from === undefined) {
+      return;
+    }
+
+    if (!checkInvolvesMilo(new URL(from).pathname, location.pathname)) {
+      event.viewTransition.skipTransition();
+    }
+  });
+</script>
 <link rel="icon" href="/favicon.ico" />
 <meta name="generator" content={Astro.generator} />
 

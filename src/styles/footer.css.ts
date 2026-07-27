@@ -1,6 +1,7 @@
 import {globalStyle, style} from '@vanilla-extract/css';
 
-import {media, touchTargetMin} from './breakpoints';
+import {media} from './breakpoints';
+import {hoverRule, tapExtension} from './interaction';
 import {palette} from './tokens';
 
 /*
@@ -34,32 +35,29 @@ export const footerNav = style({
   gap: '0.5rem'
 });
 
-export const footerLink = style({
-  textDecoration: 'none',
-  color: 'inherit',
-  '@media': {
-    [media.coarsePointer]: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      minHeight: touchTargetMin,
-      padding: '0.25rem 0.35rem'
-    },
-    [media.highContrast]: {
-      textDecoration: 'underline',
-      textDecorationThickness: '2px'
+/**
+ * The 0.8rem vertical extension clears the 44px touch-target minimum at every
+ * base font size (the inline content box is only one line tall) without
+ * inflating the text layout, and the 0.25rem sides stay within the 0.5rem gaps.
+ */
+export const footerLink = style([
+  {
+    textDecoration: 'none',
+    color: 'inherit',
+    '@media': {
+      [media.highContrast]: {
+        textDecoration: 'underline',
+        textDecorationThickness: '2px'
+      }
     }
-  }
-});
+  },
+  tapExtension('0.8rem', '0.25rem')
+]);
 
-globalStyle(`${footerLink}:hover`, {
-  color: palette.link,
-  textDecoration: 'underline',
-  '@media': {
-    [media.dark]: {
-      color: palette.linkDark
-    }
-  }
-});
+globalStyle(
+  `${footerLink}:hover`,
+  hoverRule({color: palette.link, textDecoration: 'underline'}, {color: palette.linkDark})
+);
 
 export const footerSep = style({
   color: palette.textMuted,

@@ -44,6 +44,11 @@ type MiloParts = {
   pupils: SVGGElement[];
 };
 
+/** What a frame should do with a Milo: keep flying, doze while hidden, or bow out. */
+type FramePlan = 'step' | 'sleep' | 'rest';
+
+type WrittenPose = {x: number; y: number; eyeScale: number};
+
 /*
  * Constants.
  */
@@ -86,6 +91,9 @@ const EAR_TRAVEL_RATIO = 0.25;
 // Clamp the frame delta so the physics stay stable across tab switches and long frames.
 const MAX_FRAME_DELTA_SECONDS = 1 / 30;
 
+// How often a hidden Milo rechecks whether he is back on screen (see `onFrame`).
+const HIDDEN_RECHECK_MS = 300;
+
 /*
  * The controller is overdamped (no overshoot), but its exponential tail creeps sub-
  * pixel for seconds, and high-contrast edges shimmer while they crawl. Once the error
@@ -121,12 +129,46 @@ const BLINK_PHASE_AFTER: Record<BlinkPhase, BlinkPhase> = {
   opening: 'waiting'
 };
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+/*
+ * Scratch.
+ */
+
+// Lazily created on the first `startMilos` call so importing this module has no side effects.
+let motionPreference: MediaQueryList | undefined;
+
 /*
  * Entry.
  */
 
-/** Brings every not-yet-started Milo on the page to life. Safe to call more than once. */
+/**
+ * Brings every not-yet-started Milo on the page to life. Safe to call more than once.
+ * Under `prefers-reduced-motion` Milo stays a static portrait: nothing starts while
+ * the preference is on, running loops shut themselves down when it flips on, and a
+ * flip back off sweeps the page again.
+ * @sideEffect Installs the reduced-motion listener and marks each adopted svg started.
+ */
 export function startMilos(): void {
+  if (!motionPreference) {
+    motionPreference = window.matchMedia(REDUCED_MOTION_QUERY);
+    motionPreference.addEventListener('change', () => startMilos());
+  }
+
+  if (!motionPreference.matches) {
+    adoptMilos();
+  }
+}
+
+/*
+ * Helpers.
+ */
+
+/**
+ * Starts every Milo svg on the page that is not already flying.
+ * @sideEffect Marks each adopted svg started.
+ */
+function adoptMilos(): void {
   for (const svg of document.querySelectorAll<SVGSVGElement>('svg[data-milo]')) {
     if (svg.dataset.miloStarted !== 'true') {
       svg.dataset.miloStarted = 'true';
@@ -134,10 +176,6 @@ export function startMilos(): void {
     }
   }
 }
-
-/*
- * Helpers.
- */
 
 function startMilo(svg: SVGSVGElement): void {
   const parts: MiloParts = {
@@ -157,28 +195,112 @@ function startMilo(svg: SVGSVGElement): void {
   const blink = createBlink();
 
   let previousTime: number | undefined;
-  const onFrame = (time: number) => {
-    // The face may be swapped out from under us (e.g. a Storybook re-render), so let go fully.
-    // Clearing the started flag lets a reattached svg come back to life on the next sweep.
-    if (!svg.isConnected) {
-      delete svg.dataset.miloStarted;
-      tracker.dispose();
-      return;
-    }
 
+  // `NaN` never equals itself, so the first frame always writes (see `applyPoseIfChanged`).
+  const writtenPose: WrittenPose = {x: NaN, y: NaN, eyeScale: NaN};
+
+  // Settles into the neutral portrait and releases the svg, so a later
+  // `startMilos` sweep can adopt it again. Posing a detached svg is a harmless
+  // no-op, which lets the removed and reduced-motion endings share this path.
+  const rest = () => {
+    centerAxis(axisX);
+    centerAxis(axisY);
+    applyPose(parts, axisX, axisY, 1);
+    delete svg.dataset.miloStarted;
+    tracker.dispose();
+  };
+
+  const advance = (time: number) => {
     const deltaSeconds =
       previousTime === undefined ? 0 : Math.min((time - previousTime) / 1000, MAX_FRAME_DELTA_SECONDS);
     previousTime = time;
 
     stepAxis(axisX, tracker.target.x, deltaSeconds);
     stepAxis(axisY, tracker.target.y, deltaSeconds);
-    const eyeScale = stepBlink(blink, deltaSeconds * 1000);
-    applyPose(parts, axisX, axisY, eyeScale);
+    applyPoseIfChanged(parts, axisX, axisY, stepBlink(blink, deltaSeconds * 1000), writtenPose);
+  };
 
+  const onFrame = (time: number) => {
+    const plan = planFrame(svg);
+
+    if (plan === 'rest') {
+      rest();
+      return;
+    }
+
+    // Dozing resets the clock so the resume never swallows the hidden stretch as one delta.
+    if (plan === 'sleep') {
+      previousTime = undefined;
+      window.setTimeout(() => requestAnimationFrame(onFrame), HIDDEN_RECHECK_MS);
+      return;
+    }
+
+    advance(time);
     requestAnimationFrame(onFrame);
   };
 
   requestAnimationFrame(onFrame);
+}
+
+/**
+ * Decides what this frame should do with a Milo. The face may be swapped out
+ * from under us (a Storybook re-render) or reduced motion may flip on, both of
+ * which end the ride. A hidden Milo (the header's, before it sticks) keeps
+ * real geometry but paints nothing, so it dozes on a slow recheck cadence
+ * instead of burning a rAF slot and blink writes every frame.
+ */
+function planFrame(svg: SVGSVGElement): FramePlan {
+  if (!svg.isConnected || checkPrefersReducedMotion()) {
+    return 'rest';
+  }
+
+  return checkIsHiddenFromPaint(svg) ? 'sleep' : 'step';
+}
+
+function checkPrefersReducedMotion(): boolean {
+  return motionPreference?.matches === true;
+}
+
+/** True when the svg has a box but paints nothing, treating unsupported engines as visible. */
+function checkIsHiddenFromPaint(svg: SVGSVGElement): boolean {
+  if (typeof svg.checkVisibility !== 'function') {
+    return false;
+  }
+
+  return !svg.checkVisibility({checkVisibilityCSS: true, checkOpacity: true});
+}
+
+/**
+ * Rests an axis exactly at center.
+ * @sideEffect Mutates `axis`.
+ */
+function centerAxis(axis: AxisMotion): void {
+  axis.value = 0;
+  axis.velocity = 0;
+}
+
+/**
+ * Writes the pose only when it differs from the last one written. Re-writing
+ * identical attribute values still dirties the SVG subtree and costs style and
+ * paint work every frame, so a Milo at rest between blinks (values frozen by
+ * the rest snap, eyes fully open) skips the DOM entirely.
+ * @sideEffect Mutates `writtenPose`.
+ */
+function applyPoseIfChanged(
+  parts: MiloParts,
+  axisX: AxisMotion,
+  axisY: AxisMotion,
+  eyeScale: number,
+  writtenPose: WrittenPose
+): void {
+  if (axisX.value === writtenPose.x && axisY.value === writtenPose.y && eyeScale === writtenPose.eyeScale) {
+    return;
+  }
+
+  applyPose(parts, axisX, axisY, eyeScale);
+  writtenPose.x = axisX.value;
+  writtenPose.y = axisY.value;
+  writtenPose.eyeScale = eyeScale;
 }
 
 /** Fails fast when a marker element is missing from the Milo markup. */
@@ -219,10 +341,10 @@ function applyPose(parts: MiloParts, axisX: AxisMotion, axisY: AxisMotion, eyeSc
 }
 
 /**
- * Follows the page-wide cursor position as a normalized offset from the svg's center,
- * each axis saturating at ±1 once the cursor passes the svg's edge. Registers window-
- * level listeners that live until `dispose` is called. The center is cached so
- * pointer events never force layout, and forgotten whenever the svg may have moved.
+ * Follows the page-wide cursor or finger position as a normalized offset from the
+ * svg's center, each axis saturating at ±1 once it passes the svg's edge. Registers
+ * window-level listeners that live until `dispose` is called. The center is cached
+ * so input events never force layout, and forgotten whenever the svg may have moved.
  */
 function trackCursor(svg: SVGSVGElement) {
   const target = {x: 0, y: 0};
@@ -232,11 +354,11 @@ function trackCursor(svg: SVGSVGElement) {
     bounds = undefined;
   };
 
-  const onPointerMove = (event: PointerEvent) => {
+  const updateTarget = (clientX: number, clientY: number) => {
     if (!bounds) {
       const rect = svg.getBoundingClientRect();
       // A hidden or collapsed svg has no usable geometry, and dividing by
-      // it would poison the target with NaN, so wait for a real layout.
+      // it would poison the target with `NaN`, so wait for a real layout.
       if (rect.width === 0) {
         return;
       }
@@ -248,15 +370,35 @@ function trackCursor(svg: SVGSVGElement) {
       };
     }
 
-    target.x = clampUnit((event.clientX - bounds.centerX) / bounds.halfSize);
-    target.y = clampUnit((event.clientY - bounds.centerY) / bounds.halfSize);
+    target.x = clampUnit((clientX - bounds.centerX) / bounds.halfSize);
+    target.y = clampUnit((clientY - bounds.centerY) / bounds.halfSize);
   };
+
+  // `isPrimary` keeps a second finger from wrestling the gaze away mid-drag.
+  const onPointerMove = (event: PointerEvent) => {
+    if (event.isPrimary) {
+      updateTarget(event.clientX, event.clientY);
+    }
+  };
+
+  /*
+   * Taps (and clicks) redirect the gaze even when they never move. Fingers are
+   * followed only for as long as the pointer stream lives: the browser fires
+   * `pointercancel` once a drag turns into a scroll, and Milo simply holds his
+   * last glance. (Touch events do keep firing through a scroll, but browsers
+   * disagree enough about when that following a scrolling finger reads as
+   * broken more often than charming. A non-scrolling host like the /milo stage
+   * opts out via `touch-action: none`, which keeps the pointer stream alive
+   * for the whole drag.)
+   */
+  const onPointerDown = onPointerMove;
 
   const resizeObserver = new ResizeObserver(forgetBounds);
   resizeObserver.observe(svg);
   window.addEventListener('resize', forgetBounds, {passive: true});
   window.addEventListener('scroll', forgetBounds, {passive: true, capture: true});
   window.addEventListener('pointermove', onPointerMove, {passive: true});
+  window.addEventListener('pointerdown', onPointerDown, {passive: true});
 
   return {
     target,
@@ -265,6 +407,7 @@ function trackCursor(svg: SVGSVGElement) {
       window.removeEventListener('resize', forgetBounds);
       window.removeEventListener('scroll', forgetBounds, {capture: true});
       window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerdown', onPointerDown);
     }
   };
 }

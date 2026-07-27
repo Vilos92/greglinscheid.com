@@ -1,6 +1,7 @@
 import {globalStyle, style} from '@vanilla-extract/css';
 
 import {media, touchTargetMin} from './breakpoints';
+import {hoverRule} from './interaction';
 import {palette} from './tokens';
 
 /*
@@ -76,15 +77,10 @@ export const breadcrumbLink = style({
   }
 });
 
-globalStyle(`${breadcrumbLink}:hover`, {
-  textDecoration: 'underline',
-  color: palette.linkHover,
-  '@media': {
-    [media.dark]: {
-      color: palette.linkHoverDark
-    }
-  }
-});
+globalStyle(
+  `${breadcrumbLink}:hover`,
+  hoverRule({textDecoration: 'underline', color: palette.linkHover}, {color: palette.linkHoverDark})
+);
 
 export const breadcrumbCurrent = style({
   lineHeight: 1,

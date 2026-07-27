@@ -2,6 +2,7 @@
 import BaseHead from './BaseHead.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import Footer from './Footer.astro';
+import Header from './Header.astro';
 import {MAIN_CONTENT_ID, main, mainFullBleed, skipLink} from '../styles/global.css';
 
 interface Props {
@@ -41,6 +42,7 @@ const {
   </head>
   <body>
     <a class={skipLink} href={`#${MAIN_CONTENT_ID}`}>Skip to content</a>
+    <Header />
     <main class={isFullBleed ? mainFullBleed : main} id={MAIN_CONTENT_ID} tabindex="-1">
       {hasBreadcrumbs ? <Breadcrumbs /> : undefined}
       <slot />
