@@ -42,6 +42,39 @@ without cross-document support (Firefox, mid-2026) simply navigate instantly. --
     }
   }
 </style>
+
+<!-- The at-rule above opts the whole site in (both pages of a navigation must),
+but the crossfade is only wanted around the Milo morph, so every other navigation
+skips its transition. The outgoing page is the primary gate — it always knows both
+URLs; the incoming page adds the same check where the Navigation API exists (its
+referrer is useless on back navigations). Inline so it registers before the first
+render opportunity, which is when pagereveal fires. -->
+<script is:inline>
+  const MILO_PATH = '/milo/';
+  const involvesMilo = (a, b) => a === MILO_PATH || b === MILO_PATH;
+
+  addEventListener('pageswap', event => {
+    if (!event.viewTransition) {
+      return;
+    }
+
+    const to = event.activation ? new URL(event.activation.entry.url).pathname : null;
+    if (to === null || !involvesMilo(location.pathname, to)) {
+      event.viewTransition.skipTransition();
+    }
+  });
+
+  addEventListener('pagereveal', event => {
+    const from = window.navigation?.activation?.from?.url;
+    if (!event.viewTransition || from === undefined) {
+      return;
+    }
+
+    if (!involvesMilo(new URL(from).pathname, location.pathname)) {
+      event.viewTransition.skipTransition();
+    }
+  });
+</script>
 <link rel="icon" href="/favicon.ico" />
 <meta name="generator" content={Astro.generator} />
 
