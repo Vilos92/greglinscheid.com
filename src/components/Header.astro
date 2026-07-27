@@ -45,5 +45,24 @@ the initial containing block), which assumes Header renders near the top of body
     });
 
     observer.observe(sentinel);
+
+    /*
+     * Mobile browsers collapse their toolbar during downward touch scrolls and
+     * leave the visual viewport offset below the layout viewport until the
+     * gesture settles (or the toolbar returns). `position: fixed; top: 0`
+     * anchors to the layout viewport, so without this the header's top slice
+     * rides up off screen while scrolling down. Pinning `top` to the visual
+     * viewport's offset keeps the whole bar visible; on desktop the offset is
+     * always 0 and this never fires.
+     */
+    const {visualViewport} = window;
+    if (visualViewport) {
+      const align = () => {
+        header.style.top = `${visualViewport.offsetTop}px`;
+      };
+
+      visualViewport.addEventListener('resize', align, {passive: true});
+      visualViewport.addEventListener('scroll', align, {passive: true});
+    }
   }
 </script>
