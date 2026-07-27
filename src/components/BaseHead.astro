@@ -32,10 +32,13 @@ function readText(value: string | undefined) {
  */
 function readCardImage(value: string | undefined) {
   const path = readText(value);
-  if (path === undefined || path.toLowerCase().endsWith('.svg')) {
+  if (path === undefined) {
     return undefined;
   }
-  return path;
+  // Read the extension off the bare path. A cache-busted hero like `/blog/x.svg?v=2`
+  // is still an SVG, and checking the raw string would sail straight past it.
+  const bare = path.replace(/[?#].*$/, '');
+  return bare.toLowerCase().endsWith('.svg') ? undefined : path;
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
