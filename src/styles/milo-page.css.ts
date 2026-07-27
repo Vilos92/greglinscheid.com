@@ -25,9 +25,13 @@ export const stage = style({
   overscrollBehavior: 'none'
 });
 
-// The svg's `width`/`height` attributes are just defaults. This caps him to the
-// viewport's short side so nothing clips on mobile, in `dvh` units so the
-// iOS URL bar can never shrink him out from under his own box.
+// The svg's `width`/`height` attributes are just defaults. The box caps to the
+// viewport's short side, in `dvh` so the iOS URL bar can never shrink him out
+// from under his own box. 92vw leaves a 4vw gutter per side, and 82dvh leaves
+// 9dvh bands above and below, clearing the close button's corner on typical
+// phones. Both are forgiving because worst-case ink (whiskers plus full head
+// deflection) stays inside roughly 90% of the box, and its corners are always
+// transparent (the viewBox reserves that rim as travel room for the chase).
 globalStyle(`${stage} svg[data-milo]`, {
   width: 'min(92vw, 82dvh)',
   height: 'min(92vw, 82dvh)',
