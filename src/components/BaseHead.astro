@@ -2,6 +2,7 @@
 import '../styles/code.css.ts';
 import '../styles/global.css.ts';
 import {siteTitle} from '../site';
+import {palette} from '../styles/tokens';
 
 interface Props {
   title: string;
@@ -12,12 +13,41 @@ interface Props {
   jsonLd?: Record<string, unknown>;
 }
 
+// Social card for pages that do not supply their own. Only blog posts (their hero)
+// and the 3D-to-SVG tool have a real card, so without a fallback every other page
+// shares as a bare text blob. Milo is the site's mark, so he stands in.
+const FALLBACK_IMAGE = '/og/default.png';
+const FALLBACK_IMAGE_ALT = 'Milo, the site mascot, a grey and white cat';
+
+/** Blank front matter reaches these props as an empty string, which means absent. */
+function readText(value: string | undefined) {
+  const trimmed = value?.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+/**
+ * A card no client can draw is the same as no card. Blog heroes are free-form paths
+ * and at least one is an SVG, which none of the major social platforms render, so it
+ * has to fall through to the fallback rather than ship an unrenderable preview.
+ */
+function readCardImage(value: string | undefined) {
+  const path = readText(value);
+  if (path === undefined || path.toLowerCase().endsWith('.svg')) {
+    return undefined;
+  }
+  return path;
+}
+
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const {title, description, image, imageAlt = siteTitle, keywords, jsonLd} = Astro.props;
+const {title, description, image, imageAlt, keywords, jsonLd} = Astro.props;
 
-// No fallback image: a page that wants a social card passes a real one.
-const imageURL = image === undefined ? undefined : new URL(image, Astro.site);
+const cardImage = readCardImage(image);
+const imageURL = new URL(cardImage ?? FALLBACK_IMAGE, Astro.site);
+// The alt has to follow the image that actually won. A page can pass an alt with no
+// usable image of its own, and describing Milo with that page's words would be wrong.
+const resolvedImageAlt =
+  cardImage === undefined ? FALLBACK_IMAGE_ALT : (readText(imageAlt) ?? siteTitle);
 ---
 
 <meta charset="utf-8" />
@@ -75,7 +105,21 @@ before the first render opportunity, which is when `pagereveal` fires. -->
     }
   });
 </script>
-<link rel="icon" href="/favicon.ico" />
+<!-- Milo, as the site mark. Safari still does not read SVG favicons, so the ICO is a
+live path for real traffic rather than a legacy fallback. Giving the ICO a concrete
+`sizes` and the SVG none is what keeps Chrome from downloading both. The older advice
+of `sizes="any"` does the opposite and makes it fetch each of them. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+
+<!-- Both need an explicit `prefers-color-scheme`, because a browser takes the first
+tag that matches and an unconditional one would shadow the dark variant. The manifest
+carries the same light value for installed windows, which cannot vary by scheme. -->
+<meta name="theme-color" content={palette.pageBg} media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content={palette.pageBgDark} media="(prefers-color-scheme: dark)" />
+
 <meta name="generator" content={Astro.generator} />
 
 <link rel="preconnect" href="https://fonts.bunny.net" />
@@ -98,15 +142,15 @@ before the first render opportunity, which is when `pagereveal` fires. -->
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-{imageURL ? <meta property="og:image" content={imageURL} /> : undefined}
-{imageURL ? <meta property="og:image:alt" content={imageAlt} /> : undefined}
+<meta property="og:image" content={imageURL} />
+<meta property="og:image:alt" content={resolvedImageAlt} />
 
-<meta name="twitter:card" content={imageURL ? 'summary_large_image' : 'summary'} />
+<meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:url" content={Astro.url} />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
-{imageURL ? <meta name="twitter:image" content={imageURL} /> : undefined}
-{imageURL ? <meta name="twitter:image:alt" content={imageAlt} /> : undefined}
+<meta name="twitter:image" content={imageURL} />
+<meta name="twitter:image:alt" content={resolvedImageAlt} />
 
 {
   jsonLd ? (
