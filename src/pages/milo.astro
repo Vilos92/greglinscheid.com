@@ -32,19 +32,19 @@ import '../styles/global.css';
       // the trailing slash on the origin check keeps lookalike hosts (say
       // this-site.com.evil.example) from ever passing as ours.
       const close = document.querySelector('[data-milo-close]');
-      const cameFromSite = history.length > 1 && document.referrer.startsWith(`${location.origin}/`);
+      const didComeFromSite = history.length > 1 && document.referrer.startsWith(`${location.origin}/`);
 
       // One shot per page view: Escape auto-repeat or a double press must not
       // queue extra history traversals past the page the visitor came from.
       // `pageshow` rearms it when a bfcache return brings this page back.
-      let leaving = false;
+      let isLeaving = false;
       const leave = () => {
-        if (leaving) {
+        if (isLeaving) {
           return;
         }
 
-        leaving = true;
-        if (cameFromSite) {
+        isLeaving = true;
+        if (didComeFromSite) {
           history.back();
         } else {
           location.assign('/');
@@ -52,7 +52,7 @@ import '../styles/global.css';
       };
 
       window.addEventListener('pageshow', () => {
-        leaving = false;
+        isLeaving = false;
       });
 
       if (close) {

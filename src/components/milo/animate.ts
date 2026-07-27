@@ -250,19 +250,19 @@ function startMilo(svg: SVGSVGElement): void {
  * instead of burning a rAF slot and blink writes every frame.
  */
 function planFrame(svg: SVGSVGElement): FramePlan {
-  if (!svg.isConnected || prefersReducedMotion()) {
+  if (!svg.isConnected || checkPrefersReducedMotion()) {
     return 'rest';
   }
 
-  return isHiddenFromPaint(svg) ? 'sleep' : 'step';
+  return checkIsHiddenFromPaint(svg) ? 'sleep' : 'step';
 }
 
-function prefersReducedMotion(): boolean {
+function checkPrefersReducedMotion(): boolean {
   return motionPreference?.matches === true;
 }
 
 /** True when the svg has a box but paints nothing, treating unsupported engines as visible. */
-function isHiddenFromPaint(svg: SVGSVGElement): boolean {
+function checkIsHiddenFromPaint(svg: SVGSVGElement): boolean {
   if (typeof svg.checkVisibility !== 'function') {
     return false;
   }

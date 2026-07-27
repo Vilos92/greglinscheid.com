@@ -51,7 +51,7 @@ exists, since its referrer is useless on back navigations. Inline so it register
 before the first render opportunity, which is when `pagereveal` fires. -->
 <script is:inline>
   const MILO_PATH = '/milo/';
-  const involvesMilo = (a, b) => a === MILO_PATH || b === MILO_PATH;
+  const checkInvolvesMilo = (a, b) => a === MILO_PATH || b === MILO_PATH;
 
   addEventListener('pageswap', event => {
     if (!event.viewTransition) {
@@ -59,7 +59,7 @@ before the first render opportunity, which is when `pagereveal` fires. -->
     }
 
     const to = event.activation ? new URL(event.activation.entry.url).pathname : null;
-    if (to === null || !involvesMilo(location.pathname, to)) {
+    if (to === null || !checkInvolvesMilo(location.pathname, to)) {
       event.viewTransition.skipTransition();
     }
   });
@@ -70,7 +70,7 @@ before the first render opportunity, which is when `pagereveal` fires. -->
       return;
     }
 
-    if (!involvesMilo(new URL(from).pathname, location.pathname)) {
+    if (!checkInvolvesMilo(new URL(from).pathname, location.pathname)) {
       event.viewTransition.skipTransition();
     }
   });
