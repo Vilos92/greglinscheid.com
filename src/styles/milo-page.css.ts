@@ -9,7 +9,7 @@ import {iconButton} from './icon-button.css';
  */
 
 // The stage never scrolls, and opting out of native gestures keeps
-// pointermove streaming for the whole drag so Milo can follow the finger.
+// `pointermove` streaming for the whole drag so Milo can follow the finger.
 export const stage = style({
   display: 'flex',
   alignItems: 'center',
@@ -23,8 +23,8 @@ export const stage = style({
   overscrollBehavior: 'none'
 });
 
-// The svg's width/height attributes are just defaults. This caps him to the
-// viewport's short side so nothing clips on mobile, in dvh units so the
+// The svg's `width`/`height` attributes are just defaults. This caps him to the
+// viewport's short side so nothing clips on mobile, in `dvh` units so the
 // iOS URL bar can never shrink him out from under his own box.
 globalStyle(`${stage} svg[data-milo]`, {
   width: 'min(92vw, 82dvh)',

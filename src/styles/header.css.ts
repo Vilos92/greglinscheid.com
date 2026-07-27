@@ -8,7 +8,7 @@ import {fonts, palette} from './tokens';
  * Styles.
  */
 
-// Marks the scroll depth past which the header appears. Header.astro observes
+// Marks the scroll depth past which the header appears. `Header.astro` observes
 // this element and flips `data-stuck` once it scrolls out of the viewport.
 // Around a bar height: with no static header at the top of the page, the bar
 // should arrive with the first real scroll gesture, not mid-page. Wheel
@@ -40,7 +40,7 @@ export const header = style({
   alignItems: 'center',
   gap: '0.75rem',
   padding: '0.4rem 1rem',
-  // Reserves the Milo's box (40px, per Header.astro) while he sits absolutely
+  // Reserves the Milo's box (40px, per `Header.astro`) while he sits absolutely
   // centered out of the flow on roomy screens.
   minHeight: 'calc(40px + 0.8rem)',
   backgroundColor: palette.pageBg,
@@ -98,7 +98,7 @@ globalStyle(`${miloLink} svg`, {
 });
 
 // The header Milo morphs into the /milo page's giant Milo via the shared
-// view-transition-name (opted in by BaseHead's @view-transition block). Named
+// `view-transition-name` (opted in by `BaseHead`'s `@view-transition` block). Named
 // only while the header is on screen, so a navigation that lands on a hidden
 // header gets the plain crossfade instead of Milo shrinking into an invisible
 // corner.
@@ -125,7 +125,7 @@ export const wordmark = style([
 ]);
 
 /*
- * The wordmark's two texts swap via display, so screen readers only ever see
+ * The wordmark's two texts swap via `display`, so screen readers only ever see
  * the visible one: the full name where there is room, "Home" beside the
  * centered Milo on narrow screens.
  */

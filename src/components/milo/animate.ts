@@ -91,7 +91,7 @@ const EAR_TRAVEL_RATIO = 0.25;
 // Clamp the frame delta so the physics stay stable across tab switches and long frames.
 const MAX_FRAME_DELTA_SECONDS = 1 / 30;
 
-// How often a hidden Milo rechecks whether he is back on screen (see onFrame).
+// How often a hidden Milo rechecks whether he is back on screen (see `onFrame`).
 const HIDDEN_RECHECK_MS = 300;
 
 /*
@@ -135,7 +135,7 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
  * Scratch.
  */
 
-// Lazily created on the first startMilos call so importing this module has no side effects.
+// Lazily created on the first `startMilos` call so importing this module has no side effects.
 let motionPreference: MediaQueryList | undefined;
 
 /*
@@ -196,11 +196,11 @@ function startMilo(svg: SVGSVGElement): void {
 
   let previousTime: number | undefined;
 
-  // NaN never equals itself, so the first frame always writes (see applyPoseIfChanged).
+  // `NaN` never equals itself, so the first frame always writes (see `applyPoseIfChanged`).
   const writtenPose: WrittenPose = {x: NaN, y: NaN, eyeScale: NaN};
 
   // Settles into the neutral portrait and releases the svg, so a later
-  // startMilos sweep can adopt it again. Posing a detached svg is a harmless
+  // `startMilos` sweep can adopt it again. Posing a detached svg is a harmless
   // no-op, which lets the removed and reduced-motion endings share this path.
   const rest = () => {
     centerAxis(axisX);
@@ -358,7 +358,7 @@ function trackCursor(svg: SVGSVGElement) {
     if (!bounds) {
       const rect = svg.getBoundingClientRect();
       // A hidden or collapsed svg has no usable geometry, and dividing by
-      // it would poison the target with NaN, so wait for a real layout.
+      // it would poison the target with `NaN`, so wait for a real layout.
       if (rect.width === 0) {
         return;
       }
@@ -384,7 +384,7 @@ function trackCursor(svg: SVGSVGElement) {
   /*
    * Taps (and clicks) redirect the gaze even when they never move. Fingers are
    * followed only for as long as the pointer stream lives: the browser fires
-   * pointercancel once a drag turns into a scroll, and Milo simply holds his
+   * `pointercancel` once a drag turns into a scroll, and Milo simply holds his
    * last glance. (Touch events do keep firing through a scroll, but browsers
    * disagree enough about when that following a scrolling finger reads as
    * broken more often than charming. A non-scrolling host like the /milo stage

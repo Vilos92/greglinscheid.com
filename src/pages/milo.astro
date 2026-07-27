@@ -27,7 +27,7 @@ import '../styles/global.css';
     </main>
 
     <script>
-      // The anchor's href stays a real link for no-JS visitors. The script
+      // The anchor's `href` stays a real link for no-JS visitors. The script
       // only upgrades it to return to wherever the visitor came from, and
       // the trailing slash on the origin check keeps lookalike hosts (say
       // this-site.com.evil.example) from ever passing as ours.
@@ -36,7 +36,7 @@ import '../styles/global.css';
 
       // One shot per page view: Escape auto-repeat or a double press must not
       // queue extra history traversals past the page the visitor came from.
-      // pageshow rearms it when a bfcache return brings this page back.
+      // `pageshow` rearms it when a bfcache return brings this page back.
       let leaving = false;
       const leave = () => {
         if (leaving) {
