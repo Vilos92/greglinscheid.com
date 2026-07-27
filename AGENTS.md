@@ -50,6 +50,8 @@ Living conventions for this repo. Ask whether new habits belong here vs `README.
 - **`data-*` attribute variants over class composition.** Encode discrete state with `data-` attributes and match them in `selectors`. Do not toggle separate BEM modifier classes.
 - **Runtime-varying values via `createVar` + `setElementVar`.** CSS variables that change at runtime flow through a `createVar()` in `.css.ts` and are updated by `setElementVar` from `@vanilla-extract/dynamic`. The static rule stays in `.css.ts`; only the value moves at runtime.
 - **Imperative `element.style` is the last resort.** Reach for it only when neither pattern above fits.
+- **Gate hover styling** with `hover()` (composable) or `hoverRule()` (for `globalStyle`) from `src/styles/interaction.ts`, so hover state applies only where the primary input can hover.
+- **Grow coarse-pointer tap targets with `tapExtension(vertical, horizontal)`:** padding plus an equal negative margin, zero layout shift. Cap `horizontal` at half any flex `gap` so adjacent targets meet edge to edge; where an overflow container would clip the extension (breadcrumbs), grow the row with `minHeight` instead.
 
 ## File layout (section comments)
 
@@ -69,11 +71,13 @@ Top-down: entry first, **Helpers.** last.
 
 **Order** (omit unused; no empty **Types.** / **Helpers.**):
 
-1. **Types.** · **Constants.**
+1. **Types.** · **Constants.** · **Scratch.**
 2. **Schemas.** (or inline single-schema in one file)
-3. Entry: **Script.** | **Component.** | **Styles.** | **Config.**
+3. Entry: **Script.** | **Component.** | **Styles.** | **Config.** | **Entry.** (exported entry function, e.g. `startMilos`)
 4. **Hooks.**
 5. **Helpers.**
+
+**Scratch.** holds module-scope state that gets mutated — including a `const` whose properties are mutated (`instanceCount`, `motionPreference`). It sits directly above the entry section.
 
 **Config** (`vite.config.ts`, `astro.config.mjs`): **Constants.** → **Config.** (default export). Module-level `const` above the entry; only `function` helpers may follow (hoisting).
 
@@ -93,7 +97,10 @@ Top-down: entry first, **Helpers.** last.
 - **State intent positively.** Explain what we do and why, not what we avoid or what could fail. Prefer `// ensures Y` over `// prevents X` when the code already makes X impossible.
 - **Layer once.** Put shared why on a constant, type field, or entry closure. Do not repeat the same rationale at every call site.
 - **JSDoc** on exports and non-trivial helpers when the contract is not obvious—often one crisp line is enough. Do not document module-private types (see **Exports**).
-- In prose, backtick **identifiers** (`siteUrl`), not section headers.
+- In prose, backtick **identifiers** (`siteUrl`, `pointercancel`, `Header.astro`), not section headers.
+- Default to **separate sentences** over semicolons or em dashes joining clauses. Either is fine occasionally for a tight parenthetical, but overuse gives the codebase a heavy editorial voice.
+- **Balance line widths** in multi-line comments, and never wrap mid-token (`display: none` stays on one line).
+- **`@sideEffect` (house tag):** flag named non-pure functions — mutation, async I/O, non-determinism, DOM writes, listener registration — with a terse clause naming the effect ("Mutates `pid`.", "Marks each adopted svg started."). Pure functions get **no** tag; closures stay untagged in this repo.
 - **Section blocks** (see **File layout**) label structure only — no extra explanation inside the marker.
 
 ## Naming
