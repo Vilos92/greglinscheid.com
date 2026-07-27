@@ -8,12 +8,14 @@ import {fonts, palette} from './tokens';
  * Styles.
  */
 
-// Marks the scroll depth past which the header appears. `Header.astro` observes
-// this element and flips `data-stuck` once it scrolls out of the viewport.
-// Around a bar height: with no static header at the top of the page, the bar
-// should arrive with the first real scroll gesture, not mid-page. Wheel
-// notches cover ground faster than thumbs, so fine pointers get a bit more
-// runway before the reveal.
+/**
+ * Marks the scroll depth past which the header appears. `Header.astro` observes
+ * this element and flips `data-stuck` once it scrolls out of the viewport.
+ * Around a bar height: with no static header at the top of the page, the bar
+ * should arrive with the first real scroll gesture, not mid-page. Wheel
+ * notches cover ground faster than thumbs, so fine pointers get a bit more
+ * runway before the reveal.
+ */
 export const headerSentinel = style({
   position: 'absolute',
   top: 0,
@@ -154,9 +156,11 @@ export const nav = style({
   gap: '1rem'
 });
 
-// The 0.8rem vertical extension clears the 44px touch-target minimum at every
-// base font size without inflating the nav's line height, and the 1rem gap is
-// at least double the 0.25rem sides, so adjacent hit boxes never overlap.
+/**
+ * The 0.8rem vertical extension clears the 44px touch-target minimum at every
+ * base font size without inflating the nav's line height, and the 1rem gap is
+ * at least double the 0.25rem sides, so adjacent hit boxes never overlap.
+ */
 export const navLink = style([
   {
     fontSize: '0.9rem',

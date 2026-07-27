@@ -8,8 +8,10 @@ import {iconButton} from './icon-button.css';
  * Styles.
  */
 
-// The stage never scrolls, and opting out of native gestures keeps
-// `pointermove` streaming for the whole drag so Milo can follow the finger.
+/**
+ * The stage never scrolls, and opting out of native gestures keeps
+ * `pointermove` streaming for the whole drag so Milo can follow the finger.
+ */
 export const stage = style({
   display: 'flex',
   alignItems: 'center',
@@ -33,8 +35,10 @@ globalStyle(`${stage} svg[data-milo]`, {
   viewTransitionName: 'milo'
 });
 
-// The safe-area insets keep the button reachable past notches and rounded
-// corners on phones.
+/**
+ * The safe-area insets keep the button reachable past notches and rounded
+ * corners on phones.
+ */
 export const closeButton = style([
   iconButton,
   {
