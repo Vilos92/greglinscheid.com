@@ -10,14 +10,14 @@ import {fonts, palette} from './tokens';
 
 // Marks the scroll depth past which the header appears. Header.astro observes
 // this element and flips `data-stuck` once it scrolls out of the viewport.
-// About one header height: with no static header at the top of the page, the
-// bar should arrive after the first real scroll gesture, not mid-page.
+// Under one bar height: with no static header at the top of the page, the
+// bar should arrive within the first real scroll gesture, not mid-page.
 export const headerSentinel = style({
   position: 'absolute',
   top: 0,
   left: 0,
   width: '1px',
-  height: '3rem',
+  height: '2rem',
   pointerEvents: 'none'
 });
 
