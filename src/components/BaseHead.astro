@@ -18,6 +18,11 @@ interface Props {
 // shares as a bare text blob. Milo is the site's mark, so he stands in.
 const FALLBACK_IMAGE = '/og/default.png';
 const FALLBACK_IMAGE_ALT = 'Milo, the site mascot, a grey and white cat';
+// The dimensions of the file above. Declaring them lets Slack and Facebook lay the
+// card out on the first crawl instead of waiting until they have fetched the image.
+// Only the fallback can claim a size, since page heroes are arbitrary files.
+const FALLBACK_IMAGE_WIDTH = '1200';
+const FALLBACK_IMAGE_HEIGHT = '630';
 
 /** Blank front matter reaches these props as an empty string, which means absent. */
 function readText(value: string | undefined) {
@@ -147,6 +152,14 @@ carries the same light value for installed windows, which cannot vary by scheme.
 <meta property="og:description" content={description} />
 <meta property="og:image" content={imageURL} />
 <meta property="og:image:alt" content={resolvedImageAlt} />
+{
+  cardImage === undefined ? (
+    <Fragment>
+      <meta property="og:image:width" content={FALLBACK_IMAGE_WIDTH} />
+      <meta property="og:image:height" content={FALLBACK_IMAGE_HEIGHT} />
+    </Fragment>
+  ) : undefined
+}
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:url" content={Astro.url} />
