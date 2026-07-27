@@ -63,6 +63,10 @@ the initial containing block), which assumes Header renders near the top of body
 
       visualViewport.addEventListener('resize', align, {passive: true});
       visualViewport.addEventListener('scroll', align, {passive: true});
+
+      // A page can arrive with the offset already nonzero (a bfcache restore
+      // mid-scroll), so align once now rather than waiting for an event.
+      align();
     }
   }
 </script>
