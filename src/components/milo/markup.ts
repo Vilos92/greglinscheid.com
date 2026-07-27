@@ -139,12 +139,16 @@ const browWhiskersLeftPath = computeWhiskerPath(browWhiskersLeft, 1.4);
 const browWhiskersRightPath = computeWhiskerPath(mirrorWhiskers(browWhiskersLeft), 1.4);
 
 /*
- * Markup.
+ * Scratch.
  */
 
 // Each render gets its own id namespace so several Milos on one page keep working even if
 // an earlier instance is removed (a url(#...) reference resolves to the first matching id).
 let instanceCount = 0;
+
+/*
+ * Markup.
+ */
 
 /** Renders Milo's complete SVG markup at the given square pixel size. */
 export function renderMiloSvg(size: number): string {

@@ -131,6 +131,10 @@ const BLINK_PHASE_AFTER: Record<BlinkPhase, BlinkPhase> = {
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
+/*
+ * Scratch.
+ */
+
 // Lazily created on the first startMilos call so importing this module has no side effects.
 let motionPreference: MediaQueryList | undefined;
 
