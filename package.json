@@ -36,7 +36,7 @@
     "astro": "^6.4.4",
     "fallow": "^2.66.1",
     "storybook": "^10.5.4",
-    "typescript": "~6.0.2",
+    "typescript": "~7.0.2",
     "vite-plus": "latest",
     "wrangler": "^4.87.0"
   },
