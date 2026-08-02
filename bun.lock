@@ -19,7 +19,7 @@
         "@vanilla-extract/css": "^1.20.1",
         "@vanilla-extract/vite-plugin": "^5.2.2",
         "astro": "^6.4.4",
-        "comment-fmt": "^0.1.4",
+        "comment-fmt": "^0.1.5",
         "fallow": "^2.66.1",
         "storybook": "^10.5.4",
         "typescript": "~7.0.2",
@@ -774,7 +774,7 @@
 
     "commander": ["commander@11.1.0", "", {}, "sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ=="],
 
-    "comment-fmt": ["comment-fmt@0.1.4", "", { "bin": { "comment-fmt": "dist/cli/index.mjs" } }, "sha512-koowyRo1MIROWlqfZPLXLu9oNLXPpjDL+T4yW6eITkN8DuAiF0uq/U9FM4eXXwAfIYDYQHT6SUAJVc37sSPW1Q=="],
+    "comment-fmt": ["comment-fmt@0.1.5", "", { "bin": { "comment-fmt": "dist/cli/index.mjs" } }, "sha512-vxO+3iKBj+5n8dJdZmI05I71kgDLJyMV4lleBJmA9LPm+Ddth6V3VwILmxBc/I9/vKlsP3hWF3jzXZQTIuRQiw=="],
 
     "common-ancestor-path": ["common-ancestor-path@2.0.0", "", {}, "sha512-dnN3ibLeoRf2HNC+OlCiNc5d2zxbLJXOtiZUudNFSXZrNSydxcCsSpRzXwfu7BBWCIfHPw+xTayeBvJCP/D8Ng=="],
 
