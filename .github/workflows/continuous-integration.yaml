@@ -57,6 +57,17 @@ jobs:
       - name: Test
         run: bun run test
 
+  comment-fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/install-bun-and-dependencies
+      - name: Comment format
+        run: bun run comment-fmt:check
+
   fallow:
     runs-on: ubuntu-latest
 

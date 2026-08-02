@@ -19,6 +19,7 @@
         "@vanilla-extract/css": "^1.20.1",
         "@vanilla-extract/vite-plugin": "^5.2.2",
         "astro": "^6.4.4",
+        "comment-fmt": "^0.1.10",
         "fallow": "^2.66.1",
         "storybook": "^10.5.4",
         "typescript": "~7.0.2",
@@ -772,6 +773,8 @@
     "comma-separated-tokens": ["comma-separated-tokens@2.0.3", "", {}, "sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg=="],
 
     "commander": ["commander@11.1.0", "", {}, "sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ=="],
+
+    "comment-fmt": ["comment-fmt@0.1.10", "", { "bin": { "comment-fmt": "dist/cli/index.mjs" } }, "sha512-u3Aj+000hBOgZVxz/f3E8PzF3j945z92BSx6hYHY0YvIu4HLI9a6e156oaWn5c2yZhTGASjJiLwCzIqxQCpVsg=="],
 
     "common-ancestor-path": ["common-ancestor-path@2.0.0", "", {}, "sha512-dnN3ibLeoRf2HNC+OlCiNc5d2zxbLJXOtiZUudNFSXZrNSydxcCsSpRzXwfu7BBWCIfHPw+xTayeBvJCP/D8Ng=="],
 
