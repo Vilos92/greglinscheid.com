@@ -15,12 +15,7 @@ export const footer = style({
   gap: '0.75rem',
   padding: '3rem 1em 2.5rem',
   color: palette.textMuted,
-  fontSize: '0.9em',
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark
-    }
-  }
+  fontSize: '0.9em'
 });
 
 export const footerCopy = style({
@@ -54,17 +49,9 @@ export const footerLink = style([
   tapExtension('0.8rem', '0.25rem')
 ]);
 
-globalStyle(
-  `${footerLink}:hover`,
-  hoverRule({color: palette.link, textDecoration: 'underline'}, {color: palette.linkDark})
-);
+globalStyle(`${footerLink}:hover`, hoverRule({color: palette.link, textDecoration: 'underline'}));
 
 export const footerSep = style({
   color: palette.textMuted,
-  userSelect: 'none',
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark
-    }
-  }
+  userSelect: 'none'
 });

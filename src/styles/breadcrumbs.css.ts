@@ -16,9 +16,6 @@ export const breadcrumbs = style({
   letterSpacing: '0.03em',
   textTransform: 'uppercase',
   '@media': {
-    [media.dark]: {
-      borderBottomColor: palette.borderDark
-    },
     [media.highContrast]: {
       borderBottomWidth: '2px'
     }
@@ -58,37 +55,19 @@ export const breadcrumbItem = style({
 globalStyle(`${breadcrumbItem}:not(:first-child)::before`, {
   content: "'/'",
   lineHeight: 1,
-  color: palette.textMuted,
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark
-    }
-  }
+  color: palette.textMuted
 });
 
 export const breadcrumbLink = style({
   lineHeight: 1,
   textDecoration: 'none',
-  color: palette.link,
-  '@media': {
-    [media.dark]: {
-      color: palette.linkDark
-    }
-  }
+  color: palette.link
 });
 
-globalStyle(
-  `${breadcrumbLink}:hover`,
-  hoverRule({textDecoration: 'underline', color: palette.linkHover}, {color: palette.linkHoverDark})
-);
+globalStyle(`${breadcrumbLink}:hover`, hoverRule({textDecoration: 'underline', color: palette.linkHover}));
 
 export const breadcrumbCurrent = style({
   lineHeight: 1,
   color: palette.text,
-  fontWeight: 600,
-  '@media': {
-    [media.dark]: {
-      color: palette.textDark
-    }
-  }
+  fontWeight: 600
 });

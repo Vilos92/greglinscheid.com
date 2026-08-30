@@ -1,5 +1,6 @@
 ---
 import Milo from './milo/Milo.astro';
+import ThemeToggle from './ThemeToggle.astro';
 import {
   header,
   headerSentinel,
@@ -25,6 +26,7 @@ the initial containing block), which assumes `Header` renders near the top of `b
     <span class={wordmarkFull}>Greg Linscheid</span>
     <span class={wordmarkShort}>Home</span>
   </a>
+  <ThemeToggle />
   <nav class={nav} aria-label="Site">
     <a class={navLink} href="/blog/">Blog</a>
     <a class={navLink} href="/tools/">Tools</a>

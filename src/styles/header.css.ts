@@ -54,10 +54,6 @@ export const header = style({
   visibility: 'hidden',
   transition: 'transform 200ms ease, visibility 0s 200ms',
   '@media': {
-    [media.dark]: {
-      backgroundColor: palette.pageBgDark,
-      borderBottomColor: palette.borderDark
-    },
     [media.reducedMotion]: {
       transition: 'none'
     },
@@ -115,12 +111,7 @@ export const wordmark = style([
     fontWeight: 700,
     color: palette.text,
     textDecoration: 'none',
-    whiteSpace: 'nowrap',
-    '@media': {
-      [media.dark]: {
-        color: palette.textDark
-      }
-    }
+    whiteSpace: 'nowrap'
   },
   hover({textDecoration: 'underline'}),
   tapExtension('0.8rem', '0.25rem')
@@ -168,9 +159,6 @@ export const navLink = style([
     textDecoration: 'none',
     whiteSpace: 'nowrap',
     '@media': {
-      [media.dark]: {
-        color: palette.textMutedDark
-      },
       [media.highContrast]: {
         textDecoration: 'underline',
         textDecorationThickness: '2px'
@@ -180,7 +168,4 @@ export const navLink = style([
   tapExtension('0.8rem', '0.25rem')
 ]);
 
-globalStyle(
-  `${navLink}:hover`,
-  hoverRule({color: palette.link, textDecoration: 'underline'}, {color: palette.linkDark})
-);
+globalStyle(`${navLink}:hover`, hoverRule({color: palette.link, textDecoration: 'underline'}));

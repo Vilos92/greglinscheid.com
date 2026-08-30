@@ -1,0 +1,82 @@
+---
+import {darkThemeIcon, lightThemeIcon, themeToggle} from '../styles/theme-toggle.css';
+---
+
+<button class={themeToggle} type="button" data-theme-toggle hidden>
+  <svg class={lightThemeIcon} viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+  </svg>
+  <svg class={darkThemeIcon} viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M21.752 15.002A9.718 9.718 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.598.748-3.752A9.753 9.753 0 0 0 3.75 12c0 5.385 4.365 9.75 9.75 9.75 3.34 0 6.287-1.68 8.002-4.248Z" />
+  </svg>
+</button>
+
+<script>
+  import {
+    computeNextThemeOverride,
+    computeResolvedTheme,
+    readThemeOverride,
+    THEME_STORAGE_KEY,
+    themePageBackground
+  } from '../lib/theme';
+
+  const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const themeColor = document.querySelector<HTMLMetaElement>('[data-theme-color]');
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  if (toggle) {
+    let override: ReturnType<typeof readThemeOverride>;
+
+    try {
+      override = readThemeOverride(window.localStorage.getItem(THEME_STORAGE_KEY));
+    } catch {
+      override = undefined;
+    }
+
+    /** @sideEffect Sets the document theme and updates the toggle's visible action. */
+    const renderTheme = () => {
+      const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+      const resolvedTheme = computeResolvedTheme(systemTheme, override);
+      const targetTheme = resolvedTheme === 'light' ? 'dark' : 'light';
+
+      if (override === undefined) {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.dataset.theme = override;
+      }
+
+      toggle.dataset.themeTarget = targetTheme;
+      toggle.ariaLabel = `Switch to ${targetTheme} mode`;
+      toggle.dataset.themeIcon = resolvedTheme;
+      toggle.hidden = false;
+
+      if (themeColor) {
+        themeColor.content = themePageBackground[resolvedTheme];
+      }
+    };
+
+    /** @sideEffect Persists a user-selected theme override when storage is available. */
+    const persistOverride = () => {
+      try {
+        if (override === undefined) {
+          window.localStorage.removeItem(THEME_STORAGE_KEY);
+        } else {
+          window.localStorage.setItem(THEME_STORAGE_KEY, override);
+        }
+      } catch {
+        // The page still applies the preference for this visit when storage is unavailable.
+      }
+    };
+
+    toggle.addEventListener('click', () => {
+      const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+      override = computeNextThemeOverride(systemTheme, override);
+      persistOverride();
+      renderTheme();
+    });
+
+    mediaQuery.addEventListener('change', renderTheme);
+    renderTheme();
+  }
+</script>

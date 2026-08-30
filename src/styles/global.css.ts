@@ -20,16 +20,12 @@ globalStyle('html', {
   lineHeight: 1.65,
   color: palette.text,
   backgroundColor: palette.pageBg,
-  // Enables CSS `light-dark()` on code blocks. Dark vars fallback in `code.css.ts`.
+  // `light-dark()` code colors resolve through this setting.
   colorScheme: 'light dark',
   textRendering: 'optimizeLegibility',
   WebkitFontSmoothing: 'antialiased',
   MozOsxFontSmoothing: 'grayscale',
   '@media': {
-    [media.dark]: {
-      color: palette.textDark,
-      backgroundColor: palette.pageBgDark
-    },
     [media.content]: {
       fontSize: '18px'
     },
@@ -52,9 +48,6 @@ globalStyle('a', {
   textDecoration: 'underline',
   textUnderlineOffset: '0.15em',
   '@media': {
-    [media.dark]: {
-      color: palette.linkDark
-    },
     [media.coarsePointer]: {
       textDecorationThickness: '2px'
     },
@@ -65,7 +58,7 @@ globalStyle('a', {
   }
 });
 
-globalStyle('a:hover', hoverRule({color: palette.linkHover}, {color: palette.linkHoverDark}));
+globalStyle('a:hover', hoverRule({color: palette.linkHover}));
 
 globalStyle('a:focus-visible', {
   outline: `2px solid ${palette.accent}`,
@@ -94,23 +87,13 @@ globalStyle('blockquote', {
   paddingLeft: '1.1em',
   borderLeft: `3px solid ${palette.accent}`,
   fontSize: '1.05em',
-  color: palette.textMuted,
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark
-    }
-  }
+  color: palette.textMuted
 });
 
 globalStyle('hr', {
   border: 'none',
   borderTop: `1px solid ${palette.border}`,
-  margin: '2rem 0',
-  '@media': {
-    [media.dark]: {
-      borderTopColor: palette.borderDark
-    }
-  }
+  margin: '2rem 0'
 });
 
 globalStyle('.sr-only', {
@@ -142,11 +125,6 @@ export const skipLink = style({
   transform: 'translateY(-250%)',
   transition: 'transform 150ms ease',
   '@media': {
-    [media.dark]: {
-      color: palette.textDark,
-      backgroundColor: palette.surfaceDark,
-      borderColor: palette.linkDark
-    },
     [media.coarsePointer]: {
       minHeight: touchTargetMin,
       display: 'inline-flex',

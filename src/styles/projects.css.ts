@@ -24,10 +24,5 @@ export const projectName = style({
 });
 
 export const sectionLead = style({
-  color: palette.textMuted,
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark
-    }
-  }
+  color: palette.textMuted
 });

@@ -7,9 +7,8 @@ import {fonts, palette} from './tokens';
  * Styles.
  */
 
-// Shiki `.astro-code` layout + theming. `defaultColor: false` in `astro.config.mjs` emits
-// `--shiki-*` vars only. We theme in CSS (not Shiki inline `light-dark()` — that stayed on
-// the light branch in dark mode here). `@media (prefers-color-scheme: dark)` uses dark vars.
+// Shiki emits light and dark variables with `defaultColor: false`; `light-dark()`
+// resolves them through the theme's `color-scheme`.
 
 globalStyle('pre.astro-code', {
   fontFamily: fonts.mono,
@@ -24,11 +23,6 @@ globalStyle('pre.astro-code', {
   color: 'light-dark(var(--shiki-light), var(--shiki-dark))',
   backgroundColor: 'light-dark(var(--shiki-light-bg), var(--shiki-dark-bg))',
   '@media': {
-    [media.dark]: {
-      borderColor: palette.borderDark,
-      color: 'var(--shiki-dark)',
-      backgroundColor: 'var(--shiki-dark-bg)'
-    },
     [media.highContrast]: {
       borderWidth: '2px'
     }
@@ -36,12 +30,7 @@ globalStyle('pre.astro-code', {
 });
 
 globalStyle('pre.astro-code span', {
-  color: 'light-dark(var(--shiki-light), var(--shiki-dark))',
-  '@media': {
-    [media.dark]: {
-      color: 'var(--shiki-dark)'
-    }
-  }
+  color: 'light-dark(var(--shiki-light), var(--shiki-dark))'
 });
 
 globalStyle(':not(pre) > code', {
@@ -50,11 +39,5 @@ globalStyle(':not(pre) > code', {
   padding: '0.15em 0.4em',
   borderRadius: '4px',
   backgroundColor: palette.codeBg,
-  color: palette.codeText,
-  '@media': {
-    [media.dark]: {
-      backgroundColor: palette.codeBgDark,
-      color: palette.codeTextDark
-    }
-  }
+  color: palette.codeText
 });
