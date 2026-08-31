@@ -16,6 +16,7 @@ import {darkThemeIcon, lightThemeIcon, themeToggle} from '../styles/theme-toggle
   import {
     computeNextThemeOverride,
     computeResolvedTheme,
+    persistThemeOverride,
     readThemeOverride,
     THEME_STORAGE_KEY,
     themePageBackground
@@ -56,23 +57,15 @@ import {darkThemeIcon, lightThemeIcon, themeToggle} from '../styles/theme-toggle
       }
     };
 
-    /** @sideEffect Persists a user-selected theme override when storage is available. */
-    const persistOverride = () => {
-      try {
-        if (override === undefined) {
-          window.localStorage.removeItem(THEME_STORAGE_KEY);
-        } else {
-          window.localStorage.setItem(THEME_STORAGE_KEY, override);
-        }
-      } catch {
-        // The page still applies the preference for this visit when storage is unavailable.
-      }
-    };
 
     toggle.addEventListener('click', () => {
       const systemTheme = mediaQuery.matches ? 'dark' : 'light';
       override = computeNextThemeOverride(systemTheme, override);
-      persistOverride();
+      try {
+        persistThemeOverride(window.localStorage, override);
+      } catch {
+        // The page still applies the preference for this visit when storage is unavailable.
+      }
       renderTheme();
     });
 

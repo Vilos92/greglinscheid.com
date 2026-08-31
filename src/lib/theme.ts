@@ -6,6 +6,8 @@ export type Theme = 'light' | 'dark';
 
 export type ThemeOverride = Theme | undefined;
 
+type ThemeStorage = Pick<Storage, 'removeItem' | 'setItem'>;
+
 /*
  * Constants.
  */
@@ -39,4 +41,14 @@ export function computeNextThemeOverride(systemTheme: Theme, override: ThemeOver
   const nextTheme: Theme = resolvedTheme === 'light' ? 'dark' : 'light';
 
   return nextTheme === systemTheme ? undefined : nextTheme;
+}
+
+/** @sideEffect Updates the persisted explicit theme preference. */
+export function persistThemeOverride(storage: ThemeStorage, override: ThemeOverride) {
+  if (override === undefined) {
+    storage.removeItem(THEME_STORAGE_KEY);
+    return;
+  }
+
+  storage.setItem(THEME_STORAGE_KEY, override);
 }
