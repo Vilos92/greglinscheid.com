@@ -31,13 +31,12 @@ export function hover(body: SelectorRule): StyleRule {
 /**
  * The rule body for a `globalStyle('x:hover', ...)` call, the counterpart of
  * `hover` for hover styles that vanilla-extract only allows as global rules.
- * Applies only on hover-capable devices, with an optional dark-scheme override.
+ * Applies only on hover-capable devices.
  */
-export function hoverRule(body: GlobalStyleRule, darkBody?: GlobalStyleRule): GlobalStyleRule {
+export function hoverRule(body: GlobalStyleRule): GlobalStyleRule {
   return {
     '@media': {
-      [media.hover]: body,
-      ...(darkBody === undefined ? {} : {[`${media.hover} and ${media.dark}`]: darkBody})
+      [media.hover]: body
     }
   };
 }

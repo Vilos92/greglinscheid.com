@@ -29,11 +29,6 @@ export const iconButton = style([
     cursor: 'pointer',
     textDecoration: 'none',
     '@media': {
-      [media.dark]: {
-        color: palette.textMutedDark,
-        backgroundColor: palette.surfaceDark,
-        borderColor: palette.borderDark
-      },
       [media.highContrast]: {
         borderWidth: '2px'
       }

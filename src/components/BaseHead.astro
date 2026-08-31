@@ -1,6 +1,7 @@
 ---
 import '../styles/code.css.ts';
 import '../styles/global.css.ts';
+import {THEME_STORAGE_KEY, themePageBackground} from '../lib/theme';
 import {siteTitle} from '../site';
 import {palette} from '../styles/tokens';
 
@@ -61,6 +62,16 @@ const resolvedImageAlt =
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
+<script is:inline define:vars={{themeStorageKey: THEME_STORAGE_KEY}}>
+  try {
+    const storedTheme = window.localStorage.getItem(themeStorageKey);
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      document.documentElement.dataset.theme = storedTheme;
+    }
+  } catch {
+    // The system preference remains available when browser storage is unavailable.
+  }
+</script>
 
 <!-- Cross-document view transitions: same-origin navigations crossfade, and the
 elements sharing a `view-transition-name` (the header Milo and the /milo Milo) morph
@@ -122,11 +133,24 @@ of `sizes="any"` does the opposite and makes it fetch each of them. -->
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 
-<!-- Both need an explicit `prefers-color-scheme`, because a browser takes the first
-tag that matches and an unconditional one would shadow the dark variant. The manifest
-carries the same light value for installed windows, which cannot vary by scheme. -->
-<meta name="theme-color" content={palette.pageBg} media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content={palette.pageBgDark} media="(prefers-color-scheme: dark)" />
+<!-- A single theme-color tag lets the client keep browser chrome aligned with both
+the system preference and an explicit site override. -->
+<meta
+  name="theme-color"
+  content={themePageBackground.light}
+  data-theme-color
+  data-light={themePageBackground.light}
+  data-dark={themePageBackground.dark}
+/>
+<script is:inline>
+  const themeColor = document.querySelector('meta[data-theme-color]');
+  const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialTheme = document.documentElement.dataset.theme ?? (isSystemDark ? 'dark' : 'light');
+
+  if (themeColor instanceof HTMLMetaElement) {
+    themeColor.content = initialTheme === 'dark' ? themeColor.dataset.dark : themeColor.dataset.light;
+  }
+</script>
 
 <meta name="generator" content={Astro.generator} />
 

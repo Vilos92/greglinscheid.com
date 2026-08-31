@@ -2,6 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "entry": [
     "src/site.{ts,tsx,js,jsx}",
+    // The theme client initializes from an Astro <script>, which Fallow cannot trace.
+    "src/lib/theme.ts",
     // Storybook loads these config modules via its own CLI, not a traced import.
     ".storybook/main.ts",
     ".storybook/preview.ts",

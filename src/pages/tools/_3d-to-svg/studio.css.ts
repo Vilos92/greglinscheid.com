@@ -81,13 +81,7 @@ const pane = style({
   borderRadius: '12px',
   border: `1px solid ${palette.border}`,
   backgroundColor: palette.surface,
-  overflow: 'hidden',
-  '@media': {
-    [media.dark]: {
-      borderColor: palette.borderDark,
-      backgroundColor: palette.surfaceDark
-    }
-  }
+  overflow: 'hidden'
 });
 
 export const viewport = style([
@@ -137,11 +131,6 @@ export const dropZone = style({
   cursor: 'pointer',
   transition: 'border-color 150ms ease, background-color 150ms ease',
   '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark,
-      borderColor: palette.borderDark,
-      backgroundColor: palette.surfaceDark
-    },
     [media.reducedMotion]: {
       transition: 'none'
     }
@@ -189,10 +178,6 @@ export const spinner = style({
   borderTopColor: palette.accent,
   animation: `${spin} 0.8s linear infinite`,
   '@media': {
-    [media.dark]: {
-      borderColor: palette.borderDark,
-      borderTopColor: palette.accent
-    },
     [media.reducedMotion]: {
       animation: 'none'
     }
@@ -205,11 +190,6 @@ export const dropError = style({
   margin: 0,
   fontSize: '0.85rem',
   color: palette.linkHover,
-  '@media': {
-    [media.dark]: {
-      color: palette.linkHoverDark
-    }
-  },
   selectors: {
     '&:empty': {
       display: 'none'
@@ -224,12 +204,7 @@ export const preview = style([
     display: 'grid',
     placeItems: 'center',
     padding: '12%',
-    color: palette.text,
-    '@media': {
-      [media.dark]: {
-        color: palette.textDark
-      }
-    }
+    color: palette.text
   }
 ]);
 
@@ -241,12 +216,7 @@ export const fieldset = style({
   margin: 0,
   padding: '1.1rem 1.25rem',
   border: `1px solid ${palette.border}`,
-  borderRadius: '12px',
-  '@media': {
-    [media.dark]: {
-      borderColor: palette.borderDark
-    }
-  }
+  borderRadius: '12px'
 });
 
 export const legend = style({
@@ -281,13 +251,7 @@ export const number = style({
   color: 'inherit',
   backgroundColor: palette.surface,
   border: `1px solid ${palette.border}`,
-  borderRadius: '6px',
-  '@media': {
-    [media.dark]: {
-      backgroundColor: palette.surfaceDark,
-      borderColor: palette.borderDark
-    }
-  }
+  borderRadius: '6px'
 });
 
 export const fieldRow = style({
@@ -341,11 +305,6 @@ export const button = style([
     borderRadius: '8px',
     cursor: 'pointer',
     '@media': {
-      [media.dark]: {
-        color: palette.textDark,
-        backgroundColor: palette.surfaceDark,
-        borderColor: palette.borderDark
-      },
       [media.coarsePointer]: {
         minHeight: touchTargetMin
       }
@@ -374,12 +333,7 @@ export const colorInput = style({
   border: `1px solid ${palette.border}`,
   borderRadius: '6px',
   background: 'none',
-  cursor: 'pointer',
-  '@media': {
-    [media.dark]: {
-      borderColor: palette.borderDark
-    }
-  }
+  cursor: 'pointer'
 });
 
 // The Pose and Output control cards sit side-by-side on wide screens and stack
@@ -440,17 +394,10 @@ export const snippetPre = style({
   fontFamily: fonts.mono,
   fontSize: '0.82em',
   lineHeight: 1.55,
-  color: '#1f2328',
-  backgroundColor: '#ffffff',
+  color: 'light-dark(#1f2328, #e1e4e8)',
+  backgroundColor: 'light-dark(#ffffff, #24292e)',
   border: `1px solid ${palette.border}`,
-  borderRadius: '10px',
-  '@media': {
-    [media.dark]: {
-      color: '#e1e4e8',
-      backgroundColor: '#24292e',
-      borderColor: palette.borderDark
-    }
-  }
+  borderRadius: '10px'
 });
 
 export const snippetCode = style({
@@ -462,9 +409,9 @@ export const snippetCode = style({
 });
 
 // Token colors mirror shiki's github-light / github-dark themes.
-export const codeTag = style({color: '#116329', '@media': {[media.dark]: {color: '#7ee787'}}});
-export const codeAttr = style({color: '#0550ae', '@media': {[media.dark]: {color: '#79b8ff'}}});
-export const codeString = style({color: '#0a3069', '@media': {[media.dark]: {color: '#a5d6ff'}}});
+export const codeTag = style({color: 'light-dark(#116329, #7ee787)'});
+export const codeAttr = style({color: 'light-dark(#0550ae, #79b8ff)'});
+export const codeString = style({color: 'light-dark(#0a3069, #a5d6ff)'});
 
 // Icon copy button (gdex-style): fixed size so it never resizes on click.
 export const copyButton = style([
@@ -505,11 +452,6 @@ export const headButton = style([
     borderRadius: '8px',
     cursor: 'pointer',
     '@media': {
-      [media.dark]: {
-        color: palette.textMutedDark,
-        backgroundColor: palette.surfaceDark,
-        borderColor: palette.borderDark
-      },
       [media.coarsePointer]: {
         minHeight: touchTargetMin
       }
@@ -545,10 +487,5 @@ export const copyIconCopied = style({
 export const attribution = style({
   marginTop: '2.5rem',
   fontSize: '0.85rem',
-  color: palette.textMuted,
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark
-    }
-  }
+  color: palette.textMuted
 });

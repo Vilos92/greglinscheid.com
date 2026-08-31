@@ -76,23 +76,13 @@ globalStyle(`${prose} table`, {
 globalStyle(`${prose} th`, {
   border: `1px solid ${palette.border}`,
   padding: '0.5em 0.75em',
-  textAlign: 'left',
-  '@media': {
-    [media.dark]: {
-      borderColor: palette.borderDark
-    }
-  }
+  textAlign: 'left'
 });
 
 globalStyle(`${prose} td`, {
   border: `1px solid ${palette.border}`,
   padding: '0.5em 0.75em',
-  textAlign: 'left',
-  '@media': {
-    [media.dark]: {
-      borderColor: palette.borderDark
-    }
-  }
+  textAlign: 'left'
 });
 
 export const postMeta = style({
@@ -112,12 +102,7 @@ export const postTitle = style({
 
 export const postDate = style({
   color: palette.textMuted,
-  fontSize: '0.95em',
-  '@media': {
-    [media.dark]: {
-      color: palette.textMutedDark
-    }
-  }
+  fontSize: '0.95em'
 });
 
 export const heroImage = style({
