@@ -36,7 +36,7 @@
     "@vanilla-extract/vite-plugin": "^5.2.2",
     "astro": "^6.4.4",
     "comment-fmt": "^0.1.10",
-    "fallow": "^2.66.1",
+    "fallow": "^2.104.0",
     "storybook": "^10.5.4",
     "typescript": "~7.0.2",
     "vite-plus": "latest",
