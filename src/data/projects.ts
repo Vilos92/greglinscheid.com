@@ -56,6 +56,23 @@ export const tools: readonly Project[] = [
 
 export const activeProjects: readonly Project[] = [
   {
+    name: 'nebulaser.io',
+    href: 'https://nebulaser.io',
+    details: [
+      {
+        kind: 'text',
+        value: 'A web-based multiplayer space combat game with physics-driven flight.'
+      },
+      {
+        kind: 'line',
+        parts: [
+          {kind: 'text', value: 'Match history and player stats: '},
+          {kind: 'link', href: 'https://hub.nebulaser.io', label: 'hub.nebulaser.io'}
+        ]
+      }
+    ]
+  },
+  {
     name: 'MilkTea',
     href: 'https://milktea.ink',
     details: [
