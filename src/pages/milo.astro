@@ -4,6 +4,7 @@
 // import still carries the base palette/typography (html/body rules, link
 // colors, focus outlines) without pulling in any site chrome.
 import BaseHead from '../components/BaseHead.astro';
+import Icon from '../components/Icon.astro';
 import Milo from '../components/milo/Milo.astro';
 import {closeButton, stage} from '../styles/milo-page.css';
 import '../styles/global.css';
@@ -19,10 +20,7 @@ import '../styles/global.css';
       <h1 class="sr-only">Milo</h1>
       <Milo size={400} />
       <a class={closeButton} href="/" aria-label="Close" data-milo-close>
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
-          <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          ></path>
-        </svg>
+        <Icon name="xmark" />
       </a>
     </main>
 

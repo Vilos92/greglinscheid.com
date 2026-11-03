@@ -1,0 +1,50 @@
+---
+/*
+ * Types.
+ */
+
+type Props = {
+  name: IconName;
+  size?: number;
+  class?: string;
+};
+
+type IconName = keyof typeof icons;
+
+/*
+ * Constants.
+ */
+
+// Nucleo UI outline icons draw on an 18px grid, so that is their crispest size.
+const NATIVE_SIZE = 18;
+
+/**
+ * Inner markup of each icon, copied from the licensed Nucleo UI set (outline,
+ * 18px). Keys match Nucleo labels so a swap or addition maps straight back to
+ * the library. Strokes read `--nucleo-stroke-width`, and `data-color="color-2"`
+ * marks the secondary paths Nucleo lets a consumer recolor.
+ */
+const icons = {
+  check: `<polyline points="2.75 9.25 6.75 14.25 15.25 3.75" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="var(--nucleo-stroke-width, 1.5)"></polyline>`,
+  copy: `<path d="M2.25 6.75V13.25C2.25 14.355 3.145 15.25 4.25 15.25H11.75" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" data-color="color-2" fill="none"></path><path d="M7.25 12.25H13.75C14.8546 12.25 15.75 11.355 15.75 10.25V4.75C15.75 3.645 14.8546 2.75 13.75 2.75H7.25C6.1454 2.75 5.25 3.645 5.25 4.75V10.25C5.25 11.355 6.1454 12.25 7.25 12.25Z" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>`,
+  download: `<path d="M12 6.25H12.335C13.3 6.25 14.127 6.939 14.302 7.888L15.315 13.388C15.541 14.617 14.598 15.75 13.348 15.75H4.65199C3.40199 15.75 2.45899 14.617 2.68499 13.388L3.69799 7.888C3.87299 6.939 4.69999 6.25 5.66499 6.25H5.99999" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" fill="none"></path><path d="M12 9.5L9 12.5L6 9.5" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" data-color="color-2" fill="none"></path><path d="M9 12.5V1.25" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" data-color="color-2" fill="none"></path>`,
+  upload: `<path d="M12 7.75H12.413C13.342 7.75 14.149 8.39005 14.361 9.30005L15.178 12.8C15.471 14.05 14.518 15.25 13.23 15.25H4.76999C3.48199 15.25 2.52999 14.05 2.82199 12.8L3.63899 9.30005C3.84999 8.39005 4.65699 7.75 5.58699 7.75H5.99999" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" fill="none"></path><path d="M6 4.75L9 1.75L12 4.75" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" data-color="color-2" fill="none"></path><path d="M9 2V12.5" stroke="currentColor" stroke-width="var(--nucleo-stroke-width, 1.5)" stroke-linecap="round" stroke-linejoin="round" data-color="color-2" fill="none"></path>`,
+  xmark: `<line x1="14" y1="4" x2="4" y2="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="var(--nucleo-stroke-width, 1.5)" data-color="color-2"></line><line x1="4" y1="4" x2="14" y2="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="var(--nucleo-stroke-width, 1.5)"></line>`
+};
+
+/*
+ * Component.
+ */
+
+const {name, size = NATIVE_SIZE, class: className} = Astro.props;
+---
+
+<!-- Decorative by contract: the control around the icon carries the accessible name. -->
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox={`0 0 ${NATIVE_SIZE} ${NATIVE_SIZE}`}
+  aria-hidden="true"
+  set:html={icons[name]}
+/>
