@@ -53,6 +53,11 @@ Living conventions for this repo. Ask whether new habits belong here vs `README.
 - **Gate hover styling** with `hover()` (composable) or `hoverRule()` (for `globalStyle`) from `src/styles/interaction.ts`, so hover state applies only where the primary input can hover.
 - **Grow coarse-pointer tap targets with `tapExtension(vertical, horizontal)`:** padding plus an equal negative margin, zero layout shift. Cap `horizontal` at half any flex `gap` so adjacent targets meet edge to edge; where an overflow container would clip the extension (breadcrumbs), grow the row with `minHeight` instead.
 
+## Icons
+
+- **Nucleo UI only** (outline, 18px). Do not mix in other Nucleo families (Core, Sharp, Micro, …) or hand-drawn SVGs.
+- **Render through `src/components/Icon.astro`** (`<Icon name="copy" />`). Add a new icon by pasting its inner markup from Nucleo into the `icons` record, keyed by its Nucleo label.
+
 ## File layout (section comments)
 
 **TypeScript** (`src/**/*.ts`, `*.tsx`): section markers are **multi-line block comments** (sentence-case label + period). Blank line before and after each block, and between the comment and the code below it:
