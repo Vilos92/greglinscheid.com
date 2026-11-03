@@ -467,8 +467,6 @@ export const headButton = style([
 ]);
 
 export const copyIconDefault = style({
-  width: '16px',
-  height: '16px',
   display: 'block',
   selectors: {
     [`${copyButton}[data-copied="true"] &`]: {display: 'none'}
@@ -476,8 +474,6 @@ export const copyIconDefault = style({
 });
 
 export const copyIconCopied = style({
-  width: '16px',
-  height: '16px',
   display: 'none',
   selectors: {
     [`${copyButton}[data-copied="true"] &`]: {display: 'block'}
